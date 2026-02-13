@@ -1,0 +1,45 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go build cache
+/build/
+dist/
+bin/
+
+# Others
+tmp/
+*.bru
+bruno.json
+
+# Go coverage
+coverage.out
+*.coverprofile
+
+# Go workspace
+go.work
+go.work.sum
+
+# Vendor
+vendor/
+
+# IDEs
+.vscode/
+.idea/
+.zed/
+*.iml
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+# Env files
+.env
+.env.*
