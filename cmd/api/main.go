@@ -1,7 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"github.com/gin-gonic/gin"
+)
 
 func main() {
-	fmt.Println("Hello Calth API")
+	var router *gin.Engine = gin.Default()
+
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{"message": "Calth API running", "status": "success"})
+	})
+
+	router.Run(":3000")
 }
