@@ -33,8 +33,17 @@ func main() {
 	var router *gin.Engine = gin.Default()
 	router.SetTrustedProxies(nil)
 
-	router.GET("/", func(c *gin.Context) {
+	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "Calth API running", "status": "success"})
+	})
+	router.GET("/health/db", func(c *gin.Context) {
+		if err := pool.Ping(c.Request.Context()); err != nil {
+			c.JSON(500, gin.H{"message": err.Error(), "status": "error"})
+			return
+		}
+		c.JSON(200, gin.H{
+			"message": "Database connected successfully", "status": "connected",
+		})
 	})
 
 	router.Run(":" + cfg.Port)
