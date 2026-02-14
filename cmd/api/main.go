@@ -56,6 +56,7 @@ func main() {
 
 	// User routes
 	router.POST("/users", userHandler.Create)
+	router.GET("/users/:id", userHandler.GetByID)
 
 	router.Run(":" + cfg.Port)
 }
