@@ -1,19 +1,18 @@
-package handler
+package user
 
 import (
 	"net/http"
 
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
-	"github.com/alanloffler/go-calth-api/internal/repository"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type UserHandler struct {
-	repo *repository.UserRepository
+	repo *UserRepository
 }
 
-func NewUserHandler(repo *repository.UserRepository) *UserHandler {
+func NewUserHandler(repo *UserRepository) *UserHandler {
 	return &UserHandler{repo: repo}
 }
 
