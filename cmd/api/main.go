@@ -6,8 +6,7 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/config"
 	"github.com/alanloffler/go-calth-api/internal/database"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
-	"github.com/alanloffler/go-calth-api/internal/handler"
-	"github.com/alanloffler/go-calth-api/internal/repository"
+	"github.com/alanloffler/go-calth-api/internal/user"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -34,8 +33,8 @@ func main() {
 
 	// Repositories and handlers
 	var queries *sqlc.Queries = sqlc.New(pool)
-	var userRepo *repository.UserRepository = repository.NewUserRepository(queries)
-	var userHandler *handler.UserHandler = handler.NewUserHandler(userRepo)
+	var userRepo *user.UserRepository = user.NewUserRepository(queries)
+	var userHandler *user.UserHandler = user.NewUserHandler(userRepo)
 
 	// Gin router
 	var router *gin.Engine = gin.Default()
