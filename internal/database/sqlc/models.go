@@ -9,10 +9,24 @@ import (
 )
 
 type Business struct {
-	ID        pgtype.UUID        `json:"id"`
-	Name      string             `json:"name"`
-	CreatedAt pgtype.Timestamptz `json:"createdAt"`
-	UpdatedAt pgtype.Timestamptz `json:"updatedAt"`
+	ID             pgtype.UUID        `json:"id"`
+	Slug           string             `json:"slug"`
+	TaxID          string             `json:"taxId"`
+	CompanyName    string             `json:"companyName"`
+	TradeName      string             `json:"tradeName"`
+	Description    string             `json:"description"`
+	Street         string             `json:"street"`
+	City           string             `json:"city"`
+	Province       string             `json:"province"`
+	Country        string             `json:"country"`
+	ZipCode        string             `json:"zipCode"`
+	Email          string             `json:"email"`
+	PhoneNumber    string             `json:"phoneNumber"`
+	WhatsappNumber pgtype.Text        `json:"whatsappNumber"`
+	Website        pgtype.Text        `json:"website"`
+	CreatedAt      pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt      pgtype.Timestamptz `json:"updatedAt"`
+	DeletedAt      pgtype.Timestamptz `json:"deletedAt"`
 }
 
 type Role struct {
