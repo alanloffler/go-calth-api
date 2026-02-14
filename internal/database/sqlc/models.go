@@ -9,32 +9,32 @@ import (
 )
 
 type Business struct {
-	ID        pgtype.UUID
-	Name      string
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
+	ID        pgtype.UUID        `json:"id"`
+	Name      string             `json:"name"`
+	CreatedAt pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt pgtype.Timestamptz `json:"updatedAt"`
 }
 
 type Role struct {
-	ID        pgtype.UUID
-	Name      string
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
+	ID        pgtype.UUID        `json:"id"`
+	Name      string             `json:"name"`
+	CreatedAt pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt pgtype.Timestamptz `json:"updatedAt"`
 }
 
 type User struct {
-	ID           pgtype.UUID
-	Ic           string
-	UserName     string
-	FirstName    string
-	LastName     string
-	Email        string
-	Password     string
-	PhoneNumber  string
-	RoleID       pgtype.UUID
-	BusinessID   pgtype.UUID
-	RefreshToken pgtype.Text
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
-	DeletedAt    pgtype.Timestamptz
+	ID           pgtype.UUID        `json:"id"`
+	Ic           string             `json:"ic"`
+	UserName     string             `json:"userName"`
+	FirstName    string             `json:"firstName"`
+	LastName     string             `json:"lastName"`
+	Email        string             `json:"email"`
+	Password     string             `json:"password"`
+	PhoneNumber  string             `json:"phoneNumber"`
+	RoleID       pgtype.UUID        `json:"roleId"`
+	BusinessID   pgtype.UUID        `json:"businessId"`
+	RefreshToken pgtype.Text        `json:"refreshToken"`
+	CreatedAt    pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt    pgtype.Timestamptz `json:"updatedAt"`
+	DeletedAt    pgtype.Timestamptz `json:"deletedAt"`
 }
