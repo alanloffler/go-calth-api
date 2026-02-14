@@ -22,15 +22,15 @@ INSERT INTO users (
 `
 
 type CreateUserParams struct {
-	Ic          string
-	UserName    string
-	FirstName   string
-	LastName    string
-	Email       string
-	Password    string
-	PhoneNumber string
-	RoleID      pgtype.UUID
-	BusinessID  pgtype.UUID
+	Ic          string      `json:"ic"`
+	UserName    string      `json:"userName"`
+	FirstName   string      `json:"firstName"`
+	LastName    string      `json:"lastName"`
+	Email       string      `json:"email"`
+	Password    string      `json:"password"`
+	PhoneNumber string      `json:"phoneNumber"`
+	RoleID      pgtype.UUID `json:"roleId"`
+	BusinessID  pgtype.UUID `json:"businessId"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
