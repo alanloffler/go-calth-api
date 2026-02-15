@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/alanloffler/go-calth-api/internal/business"
 	"github.com/alanloffler/go-calth-api/internal/config"
 	"github.com/alanloffler/go-calth-api/internal/database"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
@@ -34,7 +35,10 @@ func main() {
 	// Repositories and handlers
 	var queries *sqlc.Queries = sqlc.New(pool)
 	var userRepo *user.UserRepository = user.NewUserRepository(queries)
+	var businessRepo *business.BusinessRepository = business.NewBusinessRepository(queries)
+
 	var userHandler *user.UserHandler = user.NewUserHandler(userRepo)
+	var businessHandler *business.BusinessHandler = business.NewBusinessHandler(businessRepo)
 
 	// Gin router
 	var router *gin.Engine = gin.Default()
@@ -56,6 +60,9 @@ func main() {
 	// User routes
 	router.POST("/users", userHandler.Create)
 	router.GET("/users/:id", userHandler.GetByID)
+
+	// Business routes
+	router.POST("/businesses", businessHandler.Create)
 
 	router.Run(":" + cfg.Port)
 }
