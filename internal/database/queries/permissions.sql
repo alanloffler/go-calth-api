@@ -28,3 +28,8 @@ DELETE FROM permissions WHERE id = $1;
 UPDATE permissions SET deleted_at = now()
 WHERE id = $1 AND deleted_at IS NULL
 RETURNING *;
+
+-- name: RestorePermission :one
+UPDATE permissions SET deleted_at = NULL
+WHERE id = $1 AND deleted_at IS NOT NULL
+RETURNING *;
