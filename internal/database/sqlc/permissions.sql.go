@@ -7,6 +7,8 @@ package sqlc
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createPermission = `-- name: CreatePermission :one
@@ -31,6 +33,26 @@ func (q *Queries) CreatePermission(ctx context.Context, arg CreatePermissionPara
 		arg.ActionKey,
 		arg.Description,
 	)
+	var i Permission
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Category,
+		&i.ActionKey,
+		&i.Description,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const getPermission = `-- name: GetPermission :one
+SELECT id, name, category, action_key, description, created_at, updated_at, deleted_at FROM permissions WHERE id = $1
+`
+
+func (q *Queries) GetPermission(ctx context.Context, id pgtype.UUID) (Permission, error) {
+	row := q.db.QueryRow(ctx, getPermission, id)
 	var i Permission
 	err := row.Scan(
 		&i.ID,
@@ -76,4 +98,44 @@ func (q *Queries) GetPermissions(ctx context.Context) ([]Permission, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const update = `-- name: Update :one
+UPDATE permissions SET
+  name = COALESCE($2, name),
+  category = COALESCE($3, category),
+  action_key = COALESCE($4, action_key),
+  description = COALESCE($5, description)
+WHERE id = $1
+RETURNING id, name, category, action_key, description, created_at, updated_at, deleted_at
+`
+
+type UpdateParams struct {
+	ID          pgtype.UUID `json:"id"`
+	Name        pgtype.Text `json:"name"`
+	Category    pgtype.Text `json:"category"`
+	ActionKey   pgtype.Text `json:"actionKey"`
+	Description pgtype.Text `json:"description"`
+}
+
+func (q *Queries) Update(ctx context.Context, arg UpdateParams) (Permission, error) {
+	row := q.db.QueryRow(ctx, update,
+		arg.ID,
+		arg.Name,
+		arg.Category,
+		arg.ActionKey,
+		arg.Description,
+	)
+	var i Permission
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Category,
+		&i.ActionKey,
+		&i.Description,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
 }
