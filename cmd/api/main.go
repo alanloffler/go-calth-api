@@ -35,10 +35,8 @@ func main() {
 	// Repositories and handlers
 	var queries *sqlc.Queries = sqlc.New(pool)
 	var userRepo *user.UserRepository = user.NewUserRepository(queries)
-	var businessRepo *business.BusinessRepository = business.NewBusinessRepository(queries)
 
 	var userHandler *user.UserHandler = user.NewUserHandler(userRepo)
-	var businessHandler *business.BusinessHandler = business.NewBusinessHandler(businessRepo)
 
 	// Gin router
 	var router *gin.Engine = gin.Default()
@@ -61,9 +59,7 @@ func main() {
 	router.POST("/users", userHandler.Create)
 	router.GET("/users/:id", userHandler.GetByID)
 
-	// Business routes
-	router.POST("/businesses", businessHandler.Create)
-	router.GET("/businesses", businessHandler.GetAll)
+	business.RegisterRoutes(router, queries)
 
 	router.Run(":" + cfg.Port)
 }
