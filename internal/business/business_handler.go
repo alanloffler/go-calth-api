@@ -17,20 +17,20 @@ func NewBusinessHandler(repo *BusinessRepository) *BusinessHandler {
 }
 
 type CreateBusinessRequest struct {
-	Slug           string  `json:"slug" binding:"required"`
-	TaxId          string  `json:"taxId" binding:"required"`
-	CompanyName    string  `json:"companyName" binding:"required"`
-	TradeName      string  `json:"tradeName" binding:"required"`
-	Description    string  `json:"description" binding:"required"`
-	Street         string  `json:"street" binding:"required"`
-	City           string  `json:"city" binding:"required"`
-	Province       string  `json:"province" binding:"required"`
-	Country        string  `json:"country" binding:"required"`
-	ZipCode        string  `json:"zipCode" binding:"required"`
+	Slug           string  `json:"slug" binding:"required,min=3,max=50"`
+	TaxId          string  `json:"taxId" binding:"required,len=11,numeric"`
+	CompanyName    string  `json:"companyName" binding:"required,min=3,max=100"`
+	TradeName      string  `json:"tradeName" binding:"required,min=3,max=100"`
+	Description    string  `json:"description" binding:"required,min=3,max=100"`
+	Street         string  `json:"street" binding:"required,min=3,max=50"`
+	City           string  `json:"city" binding:"required,min=3,max=50"`
+	Province       string  `json:"province" binding:"required,min=3,max=50"`
+	Country        string  `json:"country" binding:"required,min=3,max=50"`
+	ZipCode        string  `json:"zipCode" binding:"required,min=4,max=10"`
 	Email          string  `json:"email" binding:"required,email"`
-	PhoneNumber    string  `json:"phoneNumber" binding:"required"`
-	WhatsappNumber *string `json:"whatsappNumber"`
-	Website        *string `json:"website"`
+	PhoneNumber    string  `json:"phoneNumber" binding:"required,len=10,numeric"`
+	WhatsappNumber *string `json:"whatsappNumber" binding:"omitempty,len=10,numeric"`
+	Website        *string `json:"website" binding:"omitempty,min=6"`
 }
 
 func (h *BusinessHandler) Create(c *gin.Context) {
