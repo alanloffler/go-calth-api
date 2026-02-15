@@ -1,0 +1,16 @@
+package user
+
+import (
+	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
+	"github.com/gin-gonic/gin"
+)
+
+func RegisterRoutes(router *gin.Engine, q *sqlc.Queries) {
+	var repo *UserRepository = NewUserRepository(q)
+	var handler *UserHandler = NewUserHandler(repo)
+	var users *gin.RouterGroup = router.Group("/users")
+
+	users.POST("", handler.Create)
+	users.GET("/:id", handler.GetByID)
+
+}
