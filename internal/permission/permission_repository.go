@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type PermissionRepository struct {
@@ -20,4 +21,8 @@ func (r *PermissionRepository) Create(ctx context.Context, arg sqlc.CreatePermis
 
 func (r *PermissionRepository) GetAll(ctx context.Context) ([]sqlc.Permission, error) {
 	return r.q.GetPermissions(ctx)
+}
+
+func (r *PermissionRepository) GetOneByID(ctx context.Context, id pgtype.UUID) (sqlc.Permission, error) {
+	return r.q.GetPermission(ctx, id)
 }
