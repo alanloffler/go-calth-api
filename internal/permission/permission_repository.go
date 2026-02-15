@@ -17,3 +17,7 @@ func NewPermissionRepository(q *sqlc.Queries) *PermissionRepository {
 func (r *PermissionRepository) Create(ctx context.Context, arg sqlc.CreatePermissionParams) (sqlc.Permission, error) {
 	return r.q.CreatePermission(ctx, arg)
 }
+
+func (r *PermissionRepository) GetAll(ctx context.Context) ([]sqlc.Permission, error) {
+	return r.q.GetPermissions(ctx)
+}
