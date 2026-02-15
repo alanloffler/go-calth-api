@@ -109,6 +109,28 @@ func (q *Queries) GetPermissions(ctx context.Context) ([]Permission, error) {
 	return items, nil
 }
 
+const softDeletePermission = `-- name: SoftDeletePermission :one
+UPDATE permissions SET deleted_at = now()
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING id, name, category, action_key, description, created_at, updated_at, deleted_at
+`
+
+func (q *Queries) SoftDeletePermission(ctx context.Context, id pgtype.UUID) (Permission, error) {
+	row := q.db.QueryRow(ctx, softDeletePermission, id)
+	var i Permission
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Category,
+		&i.ActionKey,
+		&i.Description,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const updatePermission = `-- name: UpdatePermission :one
 UPDATE permissions SET
   name = COALESCE($2, name),
