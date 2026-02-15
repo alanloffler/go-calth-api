@@ -18,13 +18,13 @@ func NewUserHandler(repo *UserRepository) *UserHandler {
 }
 
 type CreateUserRequest struct {
-	Ic          string `json:"ic" binding:"required"`
-	UserName    string `json:"userName" binding:"required"`
-	FirstName   string `json:"firstName" binding:"required"`
-	LastName    string `json:"lastName" binding:"required"`
-	Email       string `json:"email" binding:"required,email"`
-	Password    string `json:"password" binding:"required"`
-	PhoneNumber string `json:"phoneNumber" binding:"required"`
+	Ic          string `json:"ic" binding:"required,len=8"`
+	UserName    string `json:"userName" binding:"required,min=3,max=100"`
+	FirstName   string `json:"firstName" binding:"required,min=3,max=100"`
+	LastName    string `json:"lastName" binding:"required,min=3,max=100"`
+	Email       string `json:"email" binding:"required,email,max=100"`
+	Password    string `json:"password" binding:"required,min=8,max=100"`
+	PhoneNumber string `json:"phoneNumber" binding:"required,len=10,numeric"`
 	RoleID      string `json:"roleId" binding:"required,uuid"`
 	BusinessID  string `json:"businessId" binding:"required,uuid"`
 }
