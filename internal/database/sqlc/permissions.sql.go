@@ -100,17 +100,18 @@ func (q *Queries) GetPermissions(ctx context.Context) ([]Permission, error) {
 	return items, nil
 }
 
-const update = `-- name: Update :one
+const updatePermission = `-- name: UpdatePermission :one
 UPDATE permissions SET
   name = COALESCE($2, name),
   category = COALESCE($3, category),
   action_key = COALESCE($4, action_key),
-  description = COALESCE($5, description)
+  description = COALESCE($5, description),
+  updated_at = now()
 WHERE id = $1
 RETURNING id, name, category, action_key, description, created_at, updated_at, deleted_at
 `
 
-type UpdateParams struct {
+type UpdatePermissionParams struct {
 	ID          pgtype.UUID `json:"id"`
 	Name        pgtype.Text `json:"name"`
 	Category    pgtype.Text `json:"category"`
@@ -118,8 +119,8 @@ type UpdateParams struct {
 	Description pgtype.Text `json:"description"`
 }
 
-func (q *Queries) Update(ctx context.Context, arg UpdateParams) (Permission, error) {
-	row := q.db.QueryRow(ctx, update,
+func (q *Queries) UpdatePermission(ctx context.Context, arg UpdatePermissionParams) (Permission, error) {
+	row := q.db.QueryRow(ctx, updatePermission,
 		arg.ID,
 		arg.Name,
 		arg.Category,
