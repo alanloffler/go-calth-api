@@ -29,6 +29,17 @@ type Business struct {
 	DeletedAt      pgtype.Timestamptz `json:"deletedAt"`
 }
 
+type Permission struct {
+	ID          pgtype.UUID        `json:"id"`
+	Name        string             `json:"name"`
+	Category    string             `json:"category"`
+	ActionKey   string             `json:"actionKey"`
+	Description string             `json:"description"`
+	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt   pgtype.Timestamptz `json:"updatedAt"`
+	DeletedAt   pgtype.Timestamptz `json:"deletedAt"`
+}
+
 type Role struct {
 	ID        pgtype.UUID        `json:"id"`
 	Name      string             `json:"name"`
