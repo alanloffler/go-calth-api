@@ -40,6 +40,16 @@ func (h *BusinessHandler) Create(c *gin.Context) {
 		return
 	}
 
+	var whatsappNumber pgtype.Text
+	if req.WhatsappNumber != nil {
+		whatsappNumber = pgtype.Text{String: *req.Website, Valid: true}
+	}
+
+	var website pgtype.Text
+	if req.Website != nil {
+		website = pgtype.Text{String: *req.Website, Valid: true}
+	}
+
 	business, err := h.repo.Create(c.Request.Context(), sqlc.CreateBusinessParams{
 		Slug:           req.Slug,
 		TaxID:          req.TaxId,
@@ -53,8 +63,8 @@ func (h *BusinessHandler) Create(c *gin.Context) {
 		ZipCode:        req.ZipCode,
 		Email:          req.Email,
 		PhoneNumber:    req.PhoneNumber,
-		WhatsappNumber: pgtype.Text{String: "", Valid: req.WhatsappNumber != nil},
-		Website:        pgtype.Text{String: "", Valid: req.Website != nil},
+		WhatsappNumber: whatsappNumber,
+		Website:        website,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -62,4 +72,14 @@ func (h *BusinessHandler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, business)
+}
+
+func (h *BusinessHandler) GetAll(c *gin.Context) {
+	businesses, err := h.repo.GetAll(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error getting businesses"})
+		return
+	}
+
+	c.JSON(http.StatusOK, businesses)
 }
