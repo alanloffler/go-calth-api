@@ -26,3 +26,7 @@ func (r *PermissionRepository) GetAll(ctx context.Context) ([]sqlc.Permission, e
 func (r *PermissionRepository) GetOneByID(ctx context.Context, id pgtype.UUID) (sqlc.Permission, error) {
 	return r.q.GetPermission(ctx, id)
 }
+
+func (r *PermissionRepository) Update(ctx context.Context, arg sqlc.UpdatePermissionParams) (sqlc.Permission, error) {
+	return r.q.UpdatePermission(ctx, arg)
+}
