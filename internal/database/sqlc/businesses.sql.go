@@ -150,3 +150,83 @@ func (q *Queries) GetBusinesses(ctx context.Context) ([]Business, error) {
 	}
 	return items, nil
 }
+
+const updateBusiness = `-- name: UpdateBusiness :one
+UPDATE businesses SET
+  slug = COALESCE($2, slug),
+  tax_id = COALESCE($3, tax_id),
+  company_name = COALESCE($4, company_name),
+  trade_name = COALESCE($5, trade_name),
+  description = COALESCE($6, description),
+  street = COALESCE($7, street),
+  city = COALESCE($8, city),
+  province = COALESCE($9, province),
+  country = COALESCE($10, country),
+  zip_code = COALESCE($11, zip_code),
+  email = COALESCE($12, email),
+  phone_number = COALESCE($13, phone_number),
+  whatsapp_number = COALESCE($14, whatsapp_number),
+  website = COALESCE($15, website)
+WHERE id = $1
+RETURNING id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at
+`
+
+type UpdateBusinessParams struct {
+	ID             pgtype.UUID `json:"id"`
+	Slug           pgtype.Text `json:"slug"`
+	TaxID          pgtype.Text `json:"taxId"`
+	CompanyName    pgtype.Text `json:"companyName"`
+	TradeName      pgtype.Text `json:"tradeName"`
+	Description    pgtype.Text `json:"description"`
+	Street         pgtype.Text `json:"street"`
+	City           pgtype.Text `json:"city"`
+	Province       pgtype.Text `json:"province"`
+	Country        pgtype.Text `json:"country"`
+	ZipCode        pgtype.Text `json:"zipCode"`
+	Email          pgtype.Text `json:"email"`
+	PhoneNumber    pgtype.Text `json:"phoneNumber"`
+	WhatsappNumber pgtype.Text `json:"whatsappNumber"`
+	Website        pgtype.Text `json:"website"`
+}
+
+func (q *Queries) UpdateBusiness(ctx context.Context, arg UpdateBusinessParams) (Business, error) {
+	row := q.db.QueryRow(ctx, updateBusiness,
+		arg.ID,
+		arg.Slug,
+		arg.TaxID,
+		arg.CompanyName,
+		arg.TradeName,
+		arg.Description,
+		arg.Street,
+		arg.City,
+		arg.Province,
+		arg.Country,
+		arg.ZipCode,
+		arg.Email,
+		arg.PhoneNumber,
+		arg.WhatsappNumber,
+		arg.Website,
+	)
+	var i Business
+	err := row.Scan(
+		&i.ID,
+		&i.Slug,
+		&i.TaxID,
+		&i.CompanyName,
+		&i.TradeName,
+		&i.Description,
+		&i.Street,
+		&i.City,
+		&i.Province,
+		&i.Country,
+		&i.ZipCode,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.WhatsappNumber,
+		&i.Website,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
