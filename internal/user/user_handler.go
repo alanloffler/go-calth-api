@@ -3,6 +3,7 @@ package user
 import (
 	"net/http"
 
+	response "github.com/alanloffler/go-calth-api/internal/common"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -31,19 +32,19 @@ type CreateUserRequest struct {
 func (h *UserHandler) Create(c *gin.Context) {
 	var req CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error al crear usuario", err))
 		return
 	}
 
 	var roleID pgtype.UUID
 	if err := roleID.Scan(req.RoleID); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid roleId"})
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
 		return
 	}
 
 	var businessID pgtype.UUID
 	if err := businessID.Scan(req.BusinessID); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid businessId"})
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
 		return
 	}
 
@@ -59,23 +60,23 @@ func (h *UserHandler) Create(c *gin.Context) {
 		BusinessID:  businessID,
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al crear usuario", err))
 		return
 	}
 
-	c.JSON(http.StatusCreated, user)
+	c.JSON(http.StatusCreated, response.Created("Usuario creado", &user))
 }
 
 func (h *UserHandler) GetByID(c *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(c.Param("id")); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user id"})
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
 		return
 	}
 
 	user, err := h.repo.GetByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado", err))
 		return
 	}
 
