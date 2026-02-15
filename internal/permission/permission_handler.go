@@ -1,9 +1,11 @@
 package permission
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/alanloffler/go-calth-api/internal/common/response"
+	"github.com/alanloffler/go-calth-api/internal/common/utils"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -22,6 +24,13 @@ type CreatePermissionRequest struct {
 	Category    string `json:"category" binding:"required,min=3,max=100"`
 	ActionKey   string `json:"actionKey" binding:"required,min=3,max=100"`
 	Description string `json:"description" binding:"required,min=3,max=255"`
+}
+
+type UpdatePermissionRequest struct {
+	Name        *string `json:"name" binding:"omitempty,min=3,max=50"`
+	Category    *string `json:"category" binding:"omitempty,min=3,max=100"`
+	ActionKey   *string `json:"actionKey" binding:"omitempty,min=3,max=100"`
+	Description *string `json:"description" binding:"omitempty,min=3,max=255"`
 }
 
 func (h *PermissionHandler) Create(c *gin.Context) {
@@ -69,4 +78,33 @@ func (h *PermissionHandler) GetOneByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.Success("Permiso encontrado", &permission))
+}
+
+func (h *PermissionHandler) Update(c *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	log.Println(id)
+	var req UpdatePermissionRequest
+	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error al actualizar permiso", err))
+		return
+	}
+
+	permission, err := h.repo.Update(c.Request.Context(), sqlc.UpdatePermissionParams{
+		ID:          id,
+		Name:        utils.ToPgText(req.Name),
+		Category:    utils.ToPgText(req.Category),
+		ActionKey:   utils.ToPgText(req.ActionKey),
+		Description: utils.ToPgText(req.Description),
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar permiso", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Permiso actualizado", &permission))
 }
