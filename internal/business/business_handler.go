@@ -3,6 +3,7 @@ package business
 import (
 	"net/http"
 
+	response "github.com/alanloffler/go-calth-api/internal/common"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -36,7 +37,7 @@ type CreateBusinessRequest struct {
 func (h *BusinessHandler) Create(c *gin.Context) {
 	var req CreateBusinessRequest
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error al crear negocio", err))
 		return
 	}
 
@@ -67,35 +68,35 @@ func (h *BusinessHandler) Create(c *gin.Context) {
 		Website:        website,
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al crear negocio", err))
 		return
 	}
 
-	c.JSON(http.StatusCreated, business)
+	c.JSON(http.StatusCreated, response.Created("Negocio creado", &business))
 }
 
 func (h *BusinessHandler) GetAll(c *gin.Context) {
 	businesses, err := h.repo.GetAll(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error getting businesses"})
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Negocios no encontrados"))
 		return
 	}
 
-	c.JSON(http.StatusOK, businesses)
+	c.JSON(http.StatusOK, response.Success("Negocios encontrados", &businesses))
 }
 
 func (h *BusinessHandler) GetOneByID(c *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(c.Param("id")); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid business ID"})
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de Id inválido"))
 		return
 	}
 
 	business, err := h.repo.GetOneByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Business not found"})
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Negocio no encontrado"))
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Negocio encontrado", "statusCode": 200, "data": business})
+	c.JSON(http.StatusOK, response.Success("Negocio encontrado", &business))
 }
