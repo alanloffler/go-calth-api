@@ -138,3 +138,19 @@ func (h *PermissionHandler) SoftDelete(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.Success("Permiso eliminado", &permission))
 }
+
+func (h *PermissionHandler) Restore(c *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	permission, err := h.repo.Restore(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al restaurar permiso", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Permiso restaurado", &permission))
+}
