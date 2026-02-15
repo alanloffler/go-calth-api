@@ -23,3 +23,8 @@ RETURNING *;
 
 -- name: DeletePermission :exec
 DELETE FROM permissions WHERE id = $1;
+
+-- name: SoftDeletePermission :one
+UPDATE permissions SET deleted_at = now()
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING *;
