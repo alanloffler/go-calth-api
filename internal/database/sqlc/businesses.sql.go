@@ -77,3 +77,46 @@ func (q *Queries) CreateBusiness(ctx context.Context, arg CreateBusinessParams) 
 	)
 	return i, err
 }
+
+const getBusinesses = `-- name: GetBusinesses :many
+SELECT id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at FROM businesses
+`
+
+func (q *Queries) GetBusinesses(ctx context.Context) ([]Business, error) {
+	rows, err := q.db.Query(ctx, getBusinesses)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Business
+	for rows.Next() {
+		var i Business
+		if err := rows.Scan(
+			&i.ID,
+			&i.Slug,
+			&i.TaxID,
+			&i.CompanyName,
+			&i.TradeName,
+			&i.Description,
+			&i.Street,
+			&i.City,
+			&i.Province,
+			&i.Country,
+			&i.ZipCode,
+			&i.Email,
+			&i.PhoneNumber,
+			&i.WhatsappNumber,
+			&i.Website,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
