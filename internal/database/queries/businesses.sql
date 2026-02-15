@@ -8,3 +8,6 @@ INSERT INTO businesses (
 
 -- name: GetBusinesses :many
 SELECT * FROM businesses;
+
+-- name: GetBusiness :one
+SELECT * FROM businesses WHERE id = $1;
