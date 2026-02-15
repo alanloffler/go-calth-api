@@ -78,7 +78,7 @@ func (h *BusinessHandler) Create(c *gin.Context) {
 func (h *BusinessHandler) GetAll(c *gin.Context) {
 	businesses, err := h.repo.GetAll(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Negocios no encontrados"))
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Negocios no encontrados", err))
 		return
 	}
 
@@ -88,13 +88,13 @@ func (h *BusinessHandler) GetAll(c *gin.Context) {
 func (h *BusinessHandler) GetOneByID(c *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(c.Param("id")); err != nil {
-		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de Id inválido"))
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de Id inválido", err))
 		return
 	}
 
 	business, err := h.repo.GetOneByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Negocio no encontrado"))
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Negocio no encontrado", err))
 		return
 	}
 
