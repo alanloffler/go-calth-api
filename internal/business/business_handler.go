@@ -34,6 +34,23 @@ type CreateBusinessRequest struct {
 	Website        *string `json:"website" binding:"omitempty,min=6"`
 }
 
+type UpdateBusinessRequest struct {
+	Slug           *string `json:"slug" binding:"omitempty,min=3,max=50"`
+	TaxId          *string `json:"taxId" binding:"omitempty,len=11,numeric"`
+	CompanyName    *string `json:"companyName" binding:"omitempty,min=3,max=100"`
+	TradeName      *string `json:"tradeName" binding:"omitempty,min=3,max=100"`
+	Description    *string `json:"description" binding:"omitempty,min=3,max=100"`
+	Street         *string `json:"street" binding:"omitempty,min=3,max=50"`
+	City           *string `json:"city" binding:"omitempty,min=3,max=50"`
+	Province       *string `json:"province" binding:"omitempty,min=3,max=50"`
+	Country        *string `json:"country" binding:"omitempty,min=3,max=50"`
+	ZipCode        *string `json:"zipCode" binding:"omitempty,min=4,max=10"`
+	Email          *string `json:"email" binding:"omitempty,email"`
+	PhoneNumber    *string `json:"phoneNumber" binding:"omitempty,len=10,numeric"`
+	WhatsappNumber *string `json:"whatsappNumber" binding:"omitempty,len=10,numeric"`
+	Website        *string `json:"website" binding:"omitempty,min=6"`
+}
+
 func (h *BusinessHandler) Create(c *gin.Context) {
 	var req CreateBusinessRequest
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
@@ -43,7 +60,7 @@ func (h *BusinessHandler) Create(c *gin.Context) {
 
 	var whatsappNumber pgtype.Text
 	if req.WhatsappNumber != nil {
-		whatsappNumber = pgtype.Text{String: *req.Website, Valid: true}
+		whatsappNumber = pgtype.Text{String: *req.WhatsappNumber, Valid: true}
 	}
 
 	var website pgtype.Text
@@ -99,4 +116,50 @@ func (h *BusinessHandler) GetOneByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.Success("Negocio encontrado", &business))
+}
+
+func (h *BusinessHandler) Update(c *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	var req UpdateBusinessRequest
+	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error al actualizar negocio", err))
+		return
+	}
+
+	business, err := h.repo.Update(c.Request.Context(), sqlc.UpdateBusinessParams{
+		ID:             id,
+		Slug:           toPgText(req.Slug),
+		TaxID:          toPgText(req.TaxId),
+		CompanyName:    toPgText(req.CompanyName),
+		TradeName:      toPgText(req.TradeName),
+		Description:    toPgText(req.Description),
+		Street:         toPgText(req.Street),
+		City:           toPgText(req.City),
+		Province:       toPgText(req.Province),
+		Country:        toPgText(req.Country),
+		ZipCode:        toPgText(req.ZipCode),
+		Email:          toPgText(req.Email),
+		PhoneNumber:    toPgText(req.PhoneNumber),
+		WhatsappNumber: toPgText(req.WhatsappNumber),
+		Website:        toPgText(req.Website),
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar negocio", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Negocio actualizado", &business))
+}
+
+func toPgText(s *string) pgtype.Text {
+	if s != nil {
+		return pgtype.Text{String: *s, Valid: true}
+	}
+
+	return pgtype.Text{}
 }
