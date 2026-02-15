@@ -3,7 +3,8 @@ package business
 import (
 	"net/http"
 
-	response "github.com/alanloffler/go-calth-api/internal/common"
+	"github.com/alanloffler/go-calth-api/internal/common/response"
+	"github.com/alanloffler/go-calth-api/internal/common/utils"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -133,20 +134,20 @@ func (h *BusinessHandler) Update(c *gin.Context) {
 
 	business, err := h.repo.Update(c.Request.Context(), sqlc.UpdateBusinessParams{
 		ID:             id,
-		Slug:           toPgText(req.Slug),
-		TaxID:          toPgText(req.TaxId),
-		CompanyName:    toPgText(req.CompanyName),
-		TradeName:      toPgText(req.TradeName),
-		Description:    toPgText(req.Description),
-		Street:         toPgText(req.Street),
-		City:           toPgText(req.City),
-		Province:       toPgText(req.Province),
-		Country:        toPgText(req.Country),
-		ZipCode:        toPgText(req.ZipCode),
-		Email:          toPgText(req.Email),
-		PhoneNumber:    toPgText(req.PhoneNumber),
-		WhatsappNumber: toPgText(req.WhatsappNumber),
-		Website:        toPgText(req.Website),
+		Slug:           utils.ToPgText(req.Slug),
+		TaxID:          utils.ToPgText(req.TaxId),
+		CompanyName:    utils.ToPgText(req.CompanyName),
+		TradeName:      utils.ToPgText(req.TradeName),
+		Description:    utils.ToPgText(req.Description),
+		Street:         utils.ToPgText(req.Street),
+		City:           utils.ToPgText(req.City),
+		Province:       utils.ToPgText(req.Province),
+		Country:        utils.ToPgText(req.Country),
+		ZipCode:        utils.ToPgText(req.ZipCode),
+		Email:          utils.ToPgText(req.Email),
+		PhoneNumber:    utils.ToPgText(req.PhoneNumber),
+		WhatsappNumber: utils.ToPgText(req.WhatsappNumber),
+		Website:        utils.ToPgText(req.Website),
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar negocio", err))
@@ -154,12 +155,4 @@ func (h *BusinessHandler) Update(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.Success("Negocio actualizado", &business))
-}
-
-func toPgText(s *string) pgtype.Text {
-	if s != nil {
-		return pgtype.Text{String: *s, Valid: true}
-	}
-
-	return pgtype.Text{}
 }
