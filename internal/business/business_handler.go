@@ -83,3 +83,19 @@ func (h *BusinessHandler) GetAll(c *gin.Context) {
 
 	c.JSON(http.StatusOK, businesses)
 }
+
+func (h *BusinessHandler) GetOneByID(c *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid business ID"})
+		return
+	}
+
+	business, err := h.repo.GetOneByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Business not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Negocio encontrado", "statusCode": 200, "data": business})
+}
