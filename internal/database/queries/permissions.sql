@@ -7,3 +7,15 @@ INSERT INTO permissions (
 
 -- name: GetPermissions :many
 SELECT * FROM permissions;
+
+-- name: GetPermission :one
+SELECT * FROM permissions WHERE id = $1;
+
+-- name: Update :one
+UPDATE permissions SET
+  name = COALESCE(sqlc.narg('name'), name),
+  category = COALESCE(sqlc.narg('category'), category),
+  action_key = COALESCE(sqlc.narg('action_key'), action_key),
+  description = COALESCE(sqlc.narg('description'), description)
+WHERE id = $1
+RETURNING *;
