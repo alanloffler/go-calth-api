@@ -122,3 +122,19 @@ func (h *PermissionHandler) Delete(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.Success[any]("Permiso eliminado", nil))
 }
+
+func (h *PermissionHandler) SoftDelete(c *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	permission, err := h.repo.SoftDelete(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al eliminar permiso", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Permiso eliminado", &permission))
+}
