@@ -3,7 +3,7 @@ package user
 import (
 	"net/http"
 
-	response "github.com/alanloffler/go-calth-api/internal/common"
+	"github.com/alanloffler/go-calth-api/internal/common/response"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
