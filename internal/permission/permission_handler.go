@@ -43,3 +43,13 @@ func (h *PermissionHandler) Create(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.Created("Permiso creado", &permission))
 }
+
+func (h *PermissionHandler) GetAll(c *gin.Context) {
+	permissions, err := h.repo.GetAll(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Permisos no encontrados", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Permisos encontrados", &permissions))
+}
