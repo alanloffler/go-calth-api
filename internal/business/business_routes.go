@@ -12,4 +12,5 @@ func RegisterRoutes(router *gin.Engine, q *sqlc.Queries) {
 
 	businesses.POST("", handler.Create)
 	businesses.GET("", handler.GetAll)
+	businesses.GET("/:id", handler.GetOneByID)
 }
