@@ -30,3 +30,7 @@ func (r *PermissionRepository) GetOneByID(ctx context.Context, id pgtype.UUID) (
 func (r *PermissionRepository) Update(ctx context.Context, arg sqlc.UpdatePermissionParams) (sqlc.Permission, error) {
 	return r.q.UpdatePermission(ctx, arg)
 }
+
+func (r *PermissionRepository) Delete(ctx context.Context, id pgtype.UUID) error {
+	return r.q.DeletePermission(ctx, id)
+}
