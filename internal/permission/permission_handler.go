@@ -6,6 +6,7 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/common/response"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type PermissionHandler struct {
@@ -52,4 +53,20 @@ func (h *PermissionHandler) GetAll(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.Success("Permisos encontrados", &permissions))
+}
+
+func (h *PermissionHandler) GetOneByID(c *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	permission, err := h.repo.GetOneByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Permiso no encontrado", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Permiso encontrado", &permission))
 }
