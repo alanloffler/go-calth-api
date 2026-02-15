@@ -20,3 +20,6 @@ UPDATE permissions SET
   updated_at = now()
 WHERE id = $1
 RETURNING *;
+
+-- name: DeletePermission :exec
+DELETE FROM permissions WHERE id = $1;
