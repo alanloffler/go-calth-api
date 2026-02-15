@@ -63,6 +63,7 @@ func main() {
 
 	// Business routes
 	router.POST("/businesses", businessHandler.Create)
+	router.GET("/businesses", businessHandler.GetAll)
 
 	router.Run(":" + cfg.Port)
 }
