@@ -1,7 +1,6 @@
 package permission
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/alanloffler/go-calth-api/internal/common/response"
@@ -87,7 +86,6 @@ func (h *PermissionHandler) Update(c *gin.Context) {
 		return
 	}
 
-	log.Println(id)
 	var req UpdatePermissionRequest
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error al actualizar permiso", err))
@@ -107,4 +105,20 @@ func (h *PermissionHandler) Update(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.Success("Permiso actualizado", &permission))
+}
+
+func (h *PermissionHandler) Delete(c *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	err := h.repo.Delete(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al eliminar permiso", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success[any]("Permiso eliminado", nil))
 }
