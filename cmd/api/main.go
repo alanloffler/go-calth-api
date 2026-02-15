@@ -8,6 +8,7 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/database"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/alanloffler/go-calth-api/internal/health"
+	"github.com/alanloffler/go-calth-api/internal/permission"
 	"github.com/alanloffler/go-calth-api/internal/user"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -43,6 +44,7 @@ func main() {
 	health.RegisterRoutes(router, pool)
 	user.RegisterRoutes(router, queries)
 	business.RegisterRoutes(router, queries)
+	permission.RegisterRoutes(router, queries)
 
 	router.Run(":" + cfg.Port)
 }
