@@ -32,11 +32,8 @@ func main() {
 
 	defer pool.Close()
 
-	// Repositories and handlers
+	// sqlc queries
 	var queries *sqlc.Queries = sqlc.New(pool)
-	var userRepo *user.UserRepository = user.NewUserRepository(queries)
-
-	var userHandler *user.UserHandler = user.NewUserHandler(userRepo)
 
 	// Gin router
 	var router *gin.Engine = gin.Default()
@@ -55,10 +52,7 @@ func main() {
 		})
 	})
 
-	// User routes
-	router.POST("/users", userHandler.Create)
-	router.GET("/users/:id", userHandler.GetByID)
-
+	user.RegisterRoutes(router, queries)
 	business.RegisterRoutes(router, queries)
 
 	router.Run(":" + cfg.Port)
