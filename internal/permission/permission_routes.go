@@ -11,4 +11,5 @@ func RegisterRoutes(router *gin.Engine, q *sqlc.Queries) {
 	var permissions *gin.RouterGroup = router.Group("/permissions")
 
 	permissions.POST("", handler.Create)
+	permissions.GET("", handler.GetAll)
 }
