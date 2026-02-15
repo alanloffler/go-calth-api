@@ -38,3 +38,7 @@ func (r *PermissionRepository) Delete(ctx context.Context, id pgtype.UUID) error
 func (r *PermissionRepository) SoftDelete(ctx context.Context, id pgtype.UUID) (sqlc.Permission, error) {
 	return r.q.SoftDeletePermission(ctx, id)
 }
+
+func (r *PermissionRepository) Restore(ctx context.Context, id pgtype.UUID) (sqlc.Permission, error) {
+	return r.q.RestorePermission(ctx, id)
+}
