@@ -7,6 +7,7 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/config"
 	"github.com/alanloffler/go-calth-api/internal/database"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
+	"github.com/alanloffler/go-calth-api/internal/health"
 	"github.com/alanloffler/go-calth-api/internal/user"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -39,19 +40,7 @@ func main() {
 	var router *gin.Engine = gin.Default()
 	router.SetTrustedProxies(nil)
 
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "Calth API running", "status": "success"})
-	})
-	router.GET("/health/db", func(c *gin.Context) {
-		if err := pool.Ping(c.Request.Context()); err != nil {
-			c.JSON(500, gin.H{"message": err.Error(), "status": "error"})
-			return
-		}
-		c.JSON(200, gin.H{
-			"message": "Database connected successfully", "status": "connected",
-		})
-	})
-
+	health.RegisterRoutes(router, pool)
 	user.RegisterRoutes(router, queries)
 	business.RegisterRoutes(router, queries)
 
