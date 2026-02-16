@@ -12,7 +12,7 @@ SELECT * FROM permissions WHERE deleted_at IS NULL;
 SELECT * FROM permissions;
 
 -- name: GetPermission :one
-SELECT * FROM permissions WHERE id = $1;
+SELECT * FROM permissions WHERE id = $1 AND deleted_at IS NULL;
 
 -- name: UpdatePermission :one
 UPDATE permissions SET
