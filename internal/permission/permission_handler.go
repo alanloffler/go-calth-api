@@ -140,9 +140,14 @@ func (h *PermissionHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	err := h.repo.Delete(c.Request.Context(), id)
+	rows, err := h.repo.Delete(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al eliminar permiso", err))
+		return
+	}
+
+	if rows == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Permiso no encontrado"))
 		return
 	}
 
