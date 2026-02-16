@@ -14,6 +14,11 @@ ORDER BY action_key ASC;
 SELECT * FROM permissions
 ORDER BY action_key ASC;
 
+-- name: GetPermissionsByCategory :many
+SELECT * FROM permissions
+WHERE category = $1
+ORDER BY action_key ASC;
+
 -- name: GetPermission :one
 SELECT * FROM permissions
 WHERE id = $1 AND deleted_at IS NULL;
