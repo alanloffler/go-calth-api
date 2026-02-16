@@ -89,6 +89,22 @@ func (h *PermissionHandler) GetOneByID(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Success("Permiso encontrado", &permission))
 }
 
+func (h *PermissionHandler) GetOneByIDWithSoftDeleted(c *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	permission, err := h.repo.GetOneByIDWithSoftDeleted(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Permiso no encontrado", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Permiso encontrado", &permission))
+}
+
 func (h *PermissionHandler) Update(c *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(c.Param("id")); err != nil {
