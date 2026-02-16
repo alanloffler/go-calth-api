@@ -109,12 +109,12 @@ func (q *Queries) GetPermissions(ctx context.Context) ([]Permission, error) {
 	return items, nil
 }
 
-const getPermissionsWithSoftRemoved = `-- name: GetPermissionsWithSoftRemoved :many
+const getPermissionsWithSoftDeleted = `-- name: GetPermissionsWithSoftDeleted :many
 SELECT id, name, category, action_key, description, created_at, updated_at, deleted_at FROM permissions
 `
 
-func (q *Queries) GetPermissionsWithSoftRemoved(ctx context.Context) ([]Permission, error) {
-	rows, err := q.db.Query(ctx, getPermissionsWithSoftRemoved)
+func (q *Queries) GetPermissionsWithSoftDeleted(ctx context.Context) ([]Permission, error) {
+	rows, err := q.db.Query(ctx, getPermissionsWithSoftDeleted)
 	if err != nil {
 		return nil, err
 	}
