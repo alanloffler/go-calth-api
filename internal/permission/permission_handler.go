@@ -1,12 +1,16 @@
 package permission
 
 import (
+	"log"
 	"net/http"
+	"sort"
+	"strings"
 
 	"github.com/alanloffler/go-calth-api/internal/common/response"
 	"github.com/alanloffler/go-calth-api/internal/common/utils"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -30,6 +34,21 @@ type UpdatePermissionRequest struct {
 	Category    *string `json:"category" binding:"omitempty,min=3,max=100"`
 	ActionKey   *string `json:"actionKey" binding:"omitempty,min=3,max=100"`
 	Description *string `json:"description" binding:"omitempty,min=3,max=255"`
+}
+
+type PermissionAction struct {
+	ID        pgtype.UUID        `json:"id"`
+	Name      string             `json:"name"`
+	Key       string             `json:"key"`
+	Value     bool               `json:"value"`
+	DeletedAt pgtype.Timestamptz `json:"deletedAt"`
+}
+
+type GroupedPermission struct {
+	ID      string             `json:"id"`
+	Name    string             `json:"name"`
+	Module  string             `json:"module"`
+	Actions []PermissionAction `json:"actions"`
 }
 
 func (h *PermissionHandler) Create(c *gin.Context) {
@@ -83,6 +102,66 @@ func (h *PermissionHandler) GetAllByCategory(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.Success("Permisos encontrados", &permissions))
+}
+
+func (h *PermissionHandler) GetAllGrouped(c *gin.Context) {
+	permissions, err := h.repo.GetAllWithSoftDeleted(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Permisos no encontrados", err))
+		return
+	}
+
+	grouped := make(map[string][]sqlc.Permission)
+	for _, p := range permissions {
+		grouped[p.Category] = append(grouped[p.Category], p)
+		log.Println(grouped[p.Category])
+	}
+
+	data := make([]GroupedPermission, 0, len(grouped))
+	for category, perms := range grouped {
+		actions := make([]PermissionAction, len(perms))
+		for i, p := range perms {
+			actions[i] = PermissionAction{
+				ID:        p.ID,
+				Name:      p.Name,
+				Key:       p.ActionKey,
+				Value:     false,
+				DeletedAt: p.DeletedAt,
+			}
+		}
+		sort.Slice(actions, func(i, j int) bool {
+			return actions[i].Name < actions[j].Name
+		})
+
+		data = append(data, GroupedPermission{
+			ID:      uuid.New().String(),
+			Name:    getCategoryName(category),
+			Module:  category,
+			Actions: actions,
+		})
+	}
+
+	c.JSON(http.StatusOK, response.Success("Permisos encontrados", &data))
+}
+
+func getCategoryName(category string) string {
+	categoryNames := map[string]string{
+		"admin":           "Administradores",
+		"business":        "Negocio",
+		"calendar":        "Agenda",
+		"events":          "Turnos",
+		"medical_history": "Historias médicas",
+		"patient":         "Pacientes",
+		"permissions":     "Permisos",
+		"professional":    "Profesionales",
+		"roles":           "Roles",
+		"settings":        "Configuraciones",
+	}
+
+	if name, ok := categoryNames[category]; ok {
+		return name
+	}
+	return strings.ToUpper(category[:1]) + category[1:]
 }
 
 func (h *PermissionHandler) GetOneByID(c *gin.Context) {
