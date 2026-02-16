@@ -6,7 +6,7 @@ INSERT INTO permissions (
 ) RETURNING *;
 
 -- name: GetPermissions :many
-SELECT * FROM permissions;
+SELECT * FROM permissions WHERE deleted_at IS NULL;
 
 -- name: GetPermission :one
 SELECT * FROM permissions WHERE id = $1;
