@@ -76,6 +76,26 @@ func (q *Queries) GetPermission(ctx context.Context, id pgtype.UUID) (Permission
 	return i, err
 }
 
+const getPermissionWithSoftDeleted = `-- name: GetPermissionWithSoftDeleted :one
+SELECT id, name, category, action_key, description, created_at, updated_at, deleted_at FROM permissions WHERE id = $1
+`
+
+func (q *Queries) GetPermissionWithSoftDeleted(ctx context.Context, id pgtype.UUID) (Permission, error) {
+	row := q.db.QueryRow(ctx, getPermissionWithSoftDeleted, id)
+	var i Permission
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Category,
+		&i.ActionKey,
+		&i.Description,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const getPermissions = `-- name: GetPermissions :many
 SELECT id, name, category, action_key, description, created_at, updated_at, deleted_at FROM permissions WHERE deleted_at IS NULL
 `
