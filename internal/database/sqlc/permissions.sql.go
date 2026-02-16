@@ -57,7 +57,7 @@ func (q *Queries) DeletePermission(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getPermission = `-- name: GetPermission :one
-SELECT id, name, category, action_key, description, created_at, updated_at, deleted_at FROM permissions WHERE id = $1
+SELECT id, name, category, action_key, description, created_at, updated_at, deleted_at FROM permissions WHERE id = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) GetPermission(ctx context.Context, id pgtype.UUID) (Permission, error) {
