@@ -63,8 +63,8 @@ func (h *PermissionHandler) GetAll(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Success("Permisos encontrados", &permissions))
 }
 
-func (h *PermissionHandler) GetAllWithSoftRemoved(c *gin.Context) {
-	permissions, err := h.repo.GetAllWithSoftRemoved(c.Request.Context())
+func (h *PermissionHandler) GetAllWithSoftDeleted(c *gin.Context) {
+	permissions, err := h.repo.GetAllWithSoftDeleted(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Permisos no encontrados", err))
 		return
