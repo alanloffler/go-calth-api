@@ -41,10 +41,13 @@ type Permission struct {
 }
 
 type Role struct {
-	ID        pgtype.UUID        `json:"id"`
-	Name      string             `json:"name"`
-	CreatedAt pgtype.Timestamptz `json:"createdAt"`
-	UpdatedAt pgtype.Timestamptz `json:"updatedAt"`
+	ID          pgtype.UUID        `json:"id"`
+	Name        string             `json:"name"`
+	Value       string             `json:"value"`
+	Description string             `json:"description"`
+	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt   pgtype.Timestamptz `json:"updatedAt"`
+	DeletedAt   pgtype.Timestamptz `json:"deletedAt"`
 }
 
 type User struct {
