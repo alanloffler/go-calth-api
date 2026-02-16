@@ -1,0 +1,10 @@
+ALTER TABLE roles
+    ADD COLUMN value VARCHAR(100) NOT NULL DEFAULT '',
+    ADD COLUMN description VARCHAR(100) NOT NULL DEFAULT '',
+    ADD COLUMN deleted_at TIMESTAMPTZ;
+
+ALTER TABLE roles
+    ALTER COLUMN value DROP DEFAULT,
+    ALTER COLUMN description DROP DEFAULT;
+
+CREATE UNIQUE INDEX idx_role_value ON roles (value);
