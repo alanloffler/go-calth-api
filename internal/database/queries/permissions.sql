@@ -24,7 +24,7 @@ UPDATE permissions SET
   action_key = COALESCE(sqlc.narg('action_key'), action_key),
   description = COALESCE(sqlc.narg('description'), description),
   updated_at = now()
-WHERE id = $1
+WHERE id = $1 AND deleted_at IS NULL
 RETURNING *;
 
 -- name: DeletePermission :exec
