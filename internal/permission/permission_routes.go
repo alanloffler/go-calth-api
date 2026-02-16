@@ -13,6 +13,7 @@ func RegisterRoutes(router *gin.Engine, q *sqlc.Queries) {
 	permissions.POST("", handler.Create)
 	permissions.GET("", handler.GetAll)
 	permissions.GET("/soft", handler.GetAllWithSoftDeleted)
+	permissions.GET("/category/:category", handler.GetAllByCategory)
 	permissions.GET("/:id", handler.GetOneByID)
 	permissions.GET("/:id/soft", handler.GetOneByIDWithSoftDeleted)
 	permissions.PATCH("/:id", handler.Update)
