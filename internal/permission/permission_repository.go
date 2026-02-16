@@ -39,7 +39,7 @@ func (r *PermissionRepository) Update(ctx context.Context, arg sqlc.UpdatePermis
 	return r.q.UpdatePermission(ctx, arg)
 }
 
-func (r *PermissionRepository) Delete(ctx context.Context, id pgtype.UUID) error {
+func (r *PermissionRepository) Delete(ctx context.Context, id pgtype.UUID) (int64, error) {
 	return r.q.DeletePermission(ctx, id)
 }
 
