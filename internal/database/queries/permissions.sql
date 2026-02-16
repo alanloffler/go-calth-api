@@ -6,16 +6,21 @@ INSERT INTO permissions (
 ) RETURNING *;
 
 -- name: GetPermissions :many
-SELECT * FROM permissions WHERE deleted_at IS NULL;
+SELECT * FROM permissions
+WHERE deleted_at IS NULL
+ORDER BY action_key ASC;
 
 -- name: GetPermissionsWithSoftDeleted :many
-SELECT * FROM permissions;
+SELECT * FROM permissions
+ORDER BY action_key ASC;
 
 -- name: GetPermission :one
-SELECT * FROM permissions WHERE id = $1 AND deleted_at IS NULL;
+SELECT * FROM permissions
+WHERE id = $1 AND deleted_at IS NULL;
 
 -- name: GetPermissionWithSoftDeleted :one
-SELECT * FROM permissions WHERE id = $1;
+SELECT * FROM permissions
+WHERE id = $1;
 
 -- name: UpdatePermission :one
 UPDATE permissions SET
@@ -28,7 +33,8 @@ WHERE id = $1 AND deleted_at IS NULL
 RETURNING *;
 
 -- name: DeletePermission :exec
-DELETE FROM permissions WHERE id = $1;
+DELETE FROM permissions
+WHERE id = $1;
 
 -- name: SoftDeletePermission :one
 UPDATE permissions SET deleted_at = now()
