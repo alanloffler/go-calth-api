@@ -32,9 +32,9 @@ UPDATE permissions SET
 WHERE id = $1 AND deleted_at IS NULL
 RETURNING *;
 
--- name: DeletePermission :exec
+-- name: DeletePermission :execrows
 DELETE FROM permissions
-WHERE id = $1;
+WHERE id = $1 AND deleted_at IS NULL;
 
 -- name: SoftDeletePermission :one
 UPDATE permissions SET deleted_at = now()
