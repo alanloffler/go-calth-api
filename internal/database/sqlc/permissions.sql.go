@@ -47,14 +47,17 @@ func (q *Queries) CreatePermission(ctx context.Context, arg CreatePermissionPara
 	return i, err
 }
 
-const deletePermission = `-- name: DeletePermission :exec
+const deletePermission = `-- name: DeletePermission :execrows
 DELETE FROM permissions
-WHERE id = $1
+WHERE id = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) DeletePermission(ctx context.Context, id pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, deletePermission, id)
-	return err
+func (q *Queries) DeletePermission(ctx context.Context, id pgtype.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, deletePermission, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const getPermission = `-- name: GetPermission :one
