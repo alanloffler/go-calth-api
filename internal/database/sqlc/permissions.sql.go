@@ -213,7 +213,7 @@ UPDATE permissions SET
   action_key = COALESCE($4, action_key),
   description = COALESCE($5, description),
   updated_at = now()
-WHERE id = $1
+WHERE id = $1 AND deleted_at IS NULL
 RETURNING id, name, category, action_key, description, created_at, updated_at, deleted_at
 `
 
