@@ -8,6 +8,9 @@ INSERT INTO permissions (
 -- name: GetPermissions :many
 SELECT * FROM permissions WHERE deleted_at IS NULL;
 
+-- name: GetPermissionsWithSoftRemoved :many
+SELECT * FROM permissions;
+
 -- name: GetPermission :one
 SELECT * FROM permissions WHERE id = $1;
 
