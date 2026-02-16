@@ -1,7 +1,6 @@
 package permission
 
 import (
-	"log"
 	"net/http"
 	"sort"
 	"strings"
@@ -114,7 +113,6 @@ func (h *PermissionHandler) GetAllGrouped(c *gin.Context) {
 	grouped := make(map[string][]sqlc.Permission)
 	for _, p := range permissions {
 		grouped[p.Category] = append(grouped[p.Category], p)
-		log.Println(grouped[p.Category])
 	}
 
 	data := make([]GroupedPermission, 0, len(grouped))
