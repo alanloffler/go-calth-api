@@ -48,7 +48,8 @@ func (q *Queries) CreatePermission(ctx context.Context, arg CreatePermissionPara
 }
 
 const deletePermission = `-- name: DeletePermission :exec
-DELETE FROM permissions WHERE id = $1
+DELETE FROM permissions
+WHERE id = $1
 `
 
 func (q *Queries) DeletePermission(ctx context.Context, id pgtype.UUID) error {
@@ -57,7 +58,8 @@ func (q *Queries) DeletePermission(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getPermission = `-- name: GetPermission :one
-SELECT id, name, category, action_key, description, created_at, updated_at, deleted_at FROM permissions WHERE id = $1 AND deleted_at IS NULL
+SELECT id, name, category, action_key, description, created_at, updated_at, deleted_at FROM permissions
+WHERE id = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) GetPermission(ctx context.Context, id pgtype.UUID) (Permission, error) {
@@ -77,7 +79,8 @@ func (q *Queries) GetPermission(ctx context.Context, id pgtype.UUID) (Permission
 }
 
 const getPermissionWithSoftDeleted = `-- name: GetPermissionWithSoftDeleted :one
-SELECT id, name, category, action_key, description, created_at, updated_at, deleted_at FROM permissions WHERE id = $1
+SELECT id, name, category, action_key, description, created_at, updated_at, deleted_at FROM permissions
+WHERE id = $1
 `
 
 func (q *Queries) GetPermissionWithSoftDeleted(ctx context.Context, id pgtype.UUID) (Permission, error) {
@@ -97,7 +100,9 @@ func (q *Queries) GetPermissionWithSoftDeleted(ctx context.Context, id pgtype.UU
 }
 
 const getPermissions = `-- name: GetPermissions :many
-SELECT id, name, category, action_key, description, created_at, updated_at, deleted_at FROM permissions WHERE deleted_at IS NULL
+SELECT id, name, category, action_key, description, created_at, updated_at, deleted_at FROM permissions
+WHERE deleted_at IS NULL
+ORDER BY action_key ASC
 `
 
 func (q *Queries) GetPermissions(ctx context.Context) ([]Permission, error) {
@@ -131,6 +136,7 @@ func (q *Queries) GetPermissions(ctx context.Context) ([]Permission, error) {
 
 const getPermissionsWithSoftDeleted = `-- name: GetPermissionsWithSoftDeleted :many
 SELECT id, name, category, action_key, description, created_at, updated_at, deleted_at FROM permissions
+ORDER BY action_key ASC
 `
 
 func (q *Queries) GetPermissionsWithSoftDeleted(ctx context.Context) ([]Permission, error) {
