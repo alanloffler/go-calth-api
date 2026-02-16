@@ -31,6 +31,10 @@ func (r *PermissionRepository) GetOneByID(ctx context.Context, id pgtype.UUID) (
 	return r.q.GetPermission(ctx, id)
 }
 
+func (r *PermissionRepository) GetOneByIDWithSoftDeleted(ctx context.Context, id pgtype.UUID) (sqlc.Permission, error) {
+	return r.q.GetPermissionWithSoftDeleted(ctx, id)
+}
+
 func (r *PermissionRepository) Update(ctx context.Context, arg sqlc.UpdatePermissionParams) (sqlc.Permission, error) {
 	return r.q.UpdatePermission(ctx, arg)
 }
