@@ -14,6 +14,9 @@ SELECT * FROM permissions;
 -- name: GetPermission :one
 SELECT * FROM permissions WHERE id = $1 AND deleted_at IS NULL;
 
+-- name: GetPermissionWithSoftDeleted :one
+SELECT * FROM permissions WHERE id = $1;
+
 -- name: UpdatePermission :one
 UPDATE permissions SET
   name = COALESCE(sqlc.narg('name'), name),
