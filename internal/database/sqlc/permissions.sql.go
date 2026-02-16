@@ -137,6 +137,41 @@ func (q *Queries) GetPermissions(ctx context.Context) ([]Permission, error) {
 	return items, nil
 }
 
+const getPermissionsByCategory = `-- name: GetPermissionsByCategory :many
+SELECT id, name, category, action_key, description, created_at, updated_at, deleted_at FROM permissions
+WHERE category = $1
+ORDER BY action_key ASC
+`
+
+func (q *Queries) GetPermissionsByCategory(ctx context.Context, category string) ([]Permission, error) {
+	rows, err := q.db.Query(ctx, getPermissionsByCategory, category)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Permission
+	for rows.Next() {
+		var i Permission
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Category,
+			&i.ActionKey,
+			&i.Description,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getPermissionsWithSoftDeleted = `-- name: GetPermissionsWithSoftDeleted :many
 SELECT id, name, category, action_key, description, created_at, updated_at, deleted_at FROM permissions
 ORDER BY action_key ASC
