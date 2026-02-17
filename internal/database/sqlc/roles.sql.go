@@ -75,6 +75,26 @@ func (q *Queries) GetRole(ctx context.Context, id pgtype.UUID) (Role, error) {
 	return i, err
 }
 
+const getRoleWithSoftDeleted = `-- name: GetRoleWithSoftDeleted :one
+SELECT id, name, value, description, created_at, updated_at, deleted_at FROM roles
+WHERE id = $1
+`
+
+func (q *Queries) GetRoleWithSoftDeleted(ctx context.Context, id pgtype.UUID) (Role, error) {
+	row := q.db.QueryRow(ctx, getRoleWithSoftDeleted, id)
+	var i Role
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Value,
+		&i.Description,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const getRoles = `-- name: GetRoles :many
 SELECT id, name, value, description, created_at, updated_at, deleted_at FROM roles
 WHERE deleted_at IS NULL
