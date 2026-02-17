@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/alanloffler/go-calth-api/internal/common/response"
+	"github.com/alanloffler/go-calth-api/internal/common/utils"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -21,6 +22,12 @@ type CreateRoleRequest struct {
 	Name        string `json:"name" binding:"required,min=3,max=100"`
 	Value       string `json:"value" binding:"required,min=3,max=100"`
 	Description string `json:"description" binding:"required,min=3,max=100"`
+}
+
+type UpdateRoleRequest struct {
+	Name        *string `json:"name" binding:"omitempty,min=3,max=100"`
+	Value       *string `json:"value" binding:"omitempty,min=3,max=100"`
+	Description *string `json:"description" binding:"omitempty,min=3,max=100"`
 }
 
 func (h *RoleHandler) Create(c *gin.Context) {
@@ -93,6 +100,33 @@ func (h *RoleHandler) GetOneByIDWithSoftDeleted(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.Success("Rol encontrado", &role))
+}
+
+func (h *RoleHandler) Update(c *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	var req UpdateRoleRequest
+	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error al actualizar rol", err))
+		return
+	}
+
+	role, err := h.repo.Update(c.Request.Context(), sqlc.UpdateRoleParams{
+		ID:          id,
+		Name:        utils.ToPgText(req.Name),
+		Value:       utils.ToPgText(req.Value),
+		Description: utils.ToPgText(req.Description),
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar rol", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Rol actualizado", &role))
 }
 
 func (h *RoleHandler) Delete(c *gin.Context) {
