@@ -235,10 +235,47 @@ func (h *RoleHandler) GetOneByIDWithSoftDeleted(c *gin.Context) {
 		return
 	}
 
-	role, err := h.repo.GetOneByIDWithSoftDeleted(c.Request.Context(), id)
+	rows, err := h.repo.GetOneByIDWithSoftDeleted(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Rol no encontrado", err))
 		return
+	}
+
+	if len(rows) == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Rol no encontrado", err))
+		return
+	}
+
+	role := RoleWithPermissions{
+		ID:              rows[0].ID,
+		Name:            rows[0].Name,
+		Value:           rows[0].Value,
+		Description:     rows[0].Description,
+		CreatedAt:       rows[0].CreatedAt,
+		UpdatedAt:       rows[0].UpdatedAt,
+		DeletedAt:       rows[0].DeletedAt,
+		RolePermissions: []RolePermissionDetail{},
+	}
+
+	for _, row := range rows {
+		if row.RoleID.Valid {
+			role.RolePermissions = append(role.RolePermissions, RolePermissionDetail{
+				RoleID:       row.RoleID,
+				PermissionID: row.PermissionID,
+				CreatedAt:    row.RpCreatedAt,
+				UpdatedAt:    row.RpUpdatedAt,
+				Permission: PermissionDetail{
+					ID:          row.PID,
+					Name:        row.PName.String,
+					Category:    row.PCategory.String,
+					ActionKey:   row.PActionKey.String,
+					Description: row.PDescription.String,
+					CreatedAt:   row.PCreatedAt,
+					UpdatedAt:   row.PUpdatedAt,
+					DeletedAt:   row.PDeletedAt,
+				},
+			})
+		}
 	}
 
 	c.JSON(http.StatusOK, response.Success("Rol encontrado", &role))
