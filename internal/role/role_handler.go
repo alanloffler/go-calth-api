@@ -7,21 +7,34 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/common/utils"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type RoleHandler struct {
 	repo *RoleRepository
+	pool *pgxpool.Pool
 }
 
-func NewRoleHandler(repo *RoleRepository) *RoleHandler {
-	return &RoleHandler{repo: repo}
+func NewRoleHandler(repo *RoleRepository, pool *pgxpool.Pool) *RoleHandler {
+	return &RoleHandler{repo: repo, pool: pool}
+}
+
+type PermissionAction struct {
+	ID    string `json:"id" binding:"required,uuid"`
+	Value bool   `json:"value"`
+}
+
+type PermissionGroup struct {
+	Actions []PermissionAction `json:"actions" binding:"required,dive"`
 }
 
 type CreateRoleRequest struct {
-	Name        string `json:"name" binding:"required,min=3,max=100"`
-	Value       string `json:"value" binding:"required,min=3,max=100"`
-	Description string `json:"description" binding:"required,min=3,max=100"`
+	Name        string            `json:"name" binding:"required,min=3,max=100"`
+	Value       string            `json:"value" binding:"required,min=3,max=100"`
+	Description string            `json:"description" binding:"required,min=3,max=100"`
+	Permissions []PermissionGroup `json:"permissions"`
 }
 
 type UpdateRoleRequest struct {
@@ -37,7 +50,53 @@ func (h *RoleHandler) Create(c *gin.Context) {
 		return
 	}
 
-	role, err := h.repo.Create(c.Request.Context(), sqlc.CreateRoleParams{
+	ctx := c.Request.Context()
+
+	// Enabled permission IDs not duplicated
+	seen := make(map[string]bool)
+	var permissionIDs []pgtype.UUID
+	for _, group := range req.Permissions {
+		for _, action := range group.Actions {
+			if action.Value && !seen[action.ID] {
+				seen[action.ID] = true
+				parsed, err := uuid.Parse(action.ID)
+				if err != nil {
+					c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "ID de permiso inválido", err))
+					return
+				}
+
+				permissionIDs = append(permissionIDs, pgtype.UUID{Bytes: parsed, Valid: true})
+			}
+		}
+	}
+
+	// No permissions, create without transaction
+	if len(permissionIDs) == 0 {
+		role, err := h.repo.Create(ctx, sqlc.CreateRoleParams{
+			Name:        req.Name,
+			Value:       req.Value,
+			Description: req.Description,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al crear rol", err))
+			return
+		}
+
+		c.JSON(http.StatusOK, response.Success("Rol creado", &role))
+		return
+	}
+
+	// With permissions, use transaction
+	tx, err := h.pool.Begin(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al iniciar transacción", err))
+		return
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := sqlc.New(tx)
+
+	role, err := qtx.CreateRole(ctx, sqlc.CreateRoleParams{
 		Name:        req.Name,
 		Value:       req.Value,
 		Description: req.Description,
@@ -47,7 +106,23 @@ func (h *RoleHandler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, response.Success("Rol creado", &role))
+	for _, permID := range permissionIDs {
+		_, err := qtx.CreateRolePermission(ctx, sqlc.CreateRolePermissionParams{
+			RoleID:       role.ID,
+			PermissionID: permID,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al asignar permiso", err))
+			return
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al confirmar transacción", err))
+		return
+	}
+
+	c.JSON(http.StatusCreated, response.Created("Rol creado", &role))
 }
 
 func (h *RoleHandler) GetAll(c *gin.Context) {
