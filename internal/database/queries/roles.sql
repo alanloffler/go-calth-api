@@ -7,6 +7,11 @@ VALUES (
 )
 RETURNING *;
 
+-- name: GetRoles :many
+SELECT * FROM roles
+WHERE deleted_at IS NULL
+ORDER BY value ASC;
+
 -- name: DeleteRole :execrows
 DELETE FROM roles
 WHERE id = $1 AND deleted_at IS NULL;
