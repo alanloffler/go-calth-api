@@ -11,5 +11,6 @@ func RegisterRoutes(router *gin.Engine, q *sqlc.Queries) {
 	var roles *gin.RouterGroup = router.Group("/roles")
 
 	roles.POST("", handler.Create)
+	roles.GET("", handler.GetAll)
 	roles.DELETE("/:id", handler.Delete)
 }
