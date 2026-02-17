@@ -20,6 +20,10 @@ ORDER BY value ASC;
 SELECT * FROM roles
 WHERE id = $1 AND deleted_at IS NULL;
 
+-- name: GetRoleWithSoftDeleted :one
+SELECT * FROM roles
+WHERE id = $1;
+
 -- name: DeleteRole :execrows
 DELETE FROM roles
 WHERE id = $1 AND deleted_at IS NULL;
