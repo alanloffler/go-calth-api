@@ -203,3 +203,40 @@ func (q *Queries) SoftDeleteRole(ctx context.Context, id pgtype.UUID) (Role, err
 	)
 	return i, err
 }
+
+const updateRole = `-- name: UpdateRole :one
+UPDATE roles SET
+    name = COALESCE($2, name),
+    value = COALESCE($3, value),
+    description = COALESCE($4, description),
+    updated_at = now()
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING id, name, value, description, created_at, updated_at, deleted_at
+`
+
+type UpdateRoleParams struct {
+	ID          pgtype.UUID `json:"id"`
+	Name        pgtype.Text `json:"name"`
+	Value       pgtype.Text `json:"value"`
+	Description pgtype.Text `json:"description"`
+}
+
+func (q *Queries) UpdateRole(ctx context.Context, arg UpdateRoleParams) (Role, error) {
+	row := q.db.QueryRow(ctx, updateRole,
+		arg.ID,
+		arg.Name,
+		arg.Value,
+		arg.Description,
+	)
+	var i Role
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Value,
+		&i.Description,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
