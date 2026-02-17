@@ -45,7 +45,7 @@ func main() {
 	health.RegisterRoutes(router, pool)
 	user.RegisterRoutes(router, queries)
 	business.RegisterRoutes(router, queries)
-	role.RegisterRoutes(router, queries)
+	role.RegisterRoutes(router, queries, pool)
 	permission.RegisterRoutes(router, queries)
 
 	router.Run(":" + cfg.Port)
