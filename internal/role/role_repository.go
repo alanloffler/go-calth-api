@@ -19,6 +19,10 @@ func (r *RoleRepository) Create(ctx context.Context, arg sqlc.CreateRoleParams) 
 	return r.q.CreateRole(ctx, arg)
 }
 
+func (r *RoleRepository) GetAll(ctx context.Context) ([]sqlc.Role, error) {
+	return r.q.GetRoles(ctx)
+}
+
 func (r *RoleRepository) Delete(ctx context.Context, id pgtype.UUID) (int64, error) {
 	return r.q.DeleteRole(ctx, id)
 }
