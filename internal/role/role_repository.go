@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type RoleRepository struct {
@@ -16,4 +17,8 @@ func NewRoleRepository(q *sqlc.Queries) *RoleRepository {
 
 func (r *RoleRepository) Create(ctx context.Context, arg sqlc.CreateRoleParams) (sqlc.Role, error) {
 	return r.q.CreateRole(ctx, arg)
+}
+
+func (r *RoleRepository) Delete(ctx context.Context, id pgtype.UUID) (int64, error) {
+	return r.q.DeleteRole(ctx, id)
 }
