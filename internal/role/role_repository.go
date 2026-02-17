@@ -27,6 +27,10 @@ func (r *RoleRepository) GetAllWithSoftDeleted(ctx context.Context) ([]sqlc.Role
 	return r.q.GetRolesWithSoftDeleted(ctx)
 }
 
+func (r *RoleRepository) GetOneByID(ctx context.Context, id pgtype.UUID) (sqlc.Role, error) {
+	return r.q.GetRole(ctx, id)
+}
+
 func (r *RoleRepository) Delete(ctx context.Context, id pgtype.UUID) (int64, error) {
 	return r.q.DeleteRole(ctx, id)
 }
