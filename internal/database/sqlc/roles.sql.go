@@ -55,6 +55,26 @@ func (q *Queries) DeleteRole(ctx context.Context, id pgtype.UUID) (int64, error)
 	return result.RowsAffected(), nil
 }
 
+const getRole = `-- name: GetRole :one
+SELECT id, name, value, description, created_at, updated_at, deleted_at FROM roles
+WHERE id = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) GetRole(ctx context.Context, id pgtype.UUID) (Role, error) {
+	row := q.db.QueryRow(ctx, getRole, id)
+	var i Role
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Value,
+		&i.Description,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const getRoles = `-- name: GetRoles :many
 SELECT id, name, value, description, created_at, updated_at, deleted_at FROM roles
 WHERE deleted_at IS NULL
