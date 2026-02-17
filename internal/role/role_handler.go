@@ -6,6 +6,7 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/common/response"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type RoleHandler struct {
@@ -40,4 +41,25 @@ func (h *RoleHandler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.Success("Rol creado", &role))
+}
+
+func (h *RoleHandler) Delete(c *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	rows, err := h.repo.Delete(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al eliminar rol", err))
+		return
+	}
+
+	if rows == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Rol no encontrado"))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success[any]("Rol eliminado", nil))
 }
