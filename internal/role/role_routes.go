@@ -3,11 +3,12 @@ package role
 import (
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func RegisterRoutes(router *gin.Engine, q *sqlc.Queries) {
+func RegisterRoutes(router *gin.Engine, q *sqlc.Queries, pool *pgxpool.Pool) {
 	var repo *RoleRepository = NewRoleRepository(q)
-	var handler *RoleHandler = NewRoleHandler(repo)
+	var handler *RoleHandler = NewRoleHandler(repo, pool)
 	var roles *gin.RouterGroup = router.Group("/roles")
 
 	roles.POST("", handler.Create)
