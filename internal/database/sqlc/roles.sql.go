@@ -54,3 +54,37 @@ func (q *Queries) DeleteRole(ctx context.Context, id pgtype.UUID) (int64, error)
 	}
 	return result.RowsAffected(), nil
 }
+
+const getRoles = `-- name: GetRoles :many
+SELECT id, name, value, description, created_at, updated_at, deleted_at FROM roles
+WHERE deleted_at IS NULL
+ORDER BY value ASC
+`
+
+func (q *Queries) GetRoles(ctx context.Context) ([]Role, error) {
+	rows, err := q.db.Query(ctx, getRoles)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Role
+	for rows.Next() {
+		var i Role
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Value,
+			&i.Description,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
