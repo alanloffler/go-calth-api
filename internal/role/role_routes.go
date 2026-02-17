@@ -15,4 +15,5 @@ func RegisterRoutes(router *gin.Engine, q *sqlc.Queries) {
 	roles.GET("/soft", handler.GetAllWithSoftDeleted)
 	roles.DELETE("/:id", handler.Delete)
 	roles.DELETE("/:id/soft", handler.SoftDelete)
+	roles.PATCH("/:id/restore", handler.Restore)
 }
