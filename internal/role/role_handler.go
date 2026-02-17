@@ -38,9 +38,10 @@ type CreateRoleRequest struct {
 }
 
 type UpdateRoleRequest struct {
-	Name        *string `json:"name" binding:"omitempty,min=3,max=100"`
-	Value       *string `json:"value" binding:"omitempty,min=3,max=100"`
-	Description *string `json:"description" binding:"omitempty,min=3,max=100"`
+	Name        *string           `json:"name" binding:"omitempty,min=3,max=100"`
+	Value       *string           `json:"value" binding:"omitempty,min=3,max=100"`
+	Description *string           `json:"description" binding:"omitempty,min=3,max=100"`
+	Permissions []PermissionGroup `json:"permissions"`
 }
 
 type RoleWithPermissions struct {
@@ -294,7 +295,35 @@ func (h *RoleHandler) Update(c *gin.Context) {
 		return
 	}
 
-	role, err := h.repo.Update(c.Request.Context(), sqlc.UpdateRoleParams{
+	ctx := c.Request.Context()
+
+	seen := make(map[string]bool)
+	var permissionIDs []pgtype.UUID
+	for _, group := range req.Permissions {
+		for _, action := range group.Actions {
+			if action.Value && !seen[action.ID] {
+				seen[action.ID] = true
+				parsed, err := uuid.Parse(action.ID)
+				if err != nil {
+					c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "ID de permiso inválido", err))
+					return
+				}
+
+				permissionIDs = append(permissionIDs, pgtype.UUID{Bytes: parsed, Valid: true})
+			}
+		}
+	}
+
+	tx, err := h.pool.Begin(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al iniciar transacción", err))
+		return
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := sqlc.New(tx)
+
+	_, err = qtx.UpdateRole(ctx, sqlc.UpdateRoleParams{
 		ID:          id,
 		Name:        utils.ToPgText(req.Name),
 		Value:       utils.ToPgText(req.Value),
@@ -303,6 +332,66 @@ func (h *RoleHandler) Update(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar rol", err))
 		return
+	}
+
+	err = qtx.DeleteRolePermissionsByRoleID(ctx, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al eliminar permisos del rol", err))
+		return
+	}
+
+	for _, permID := range permissionIDs {
+		_, err := qtx.CreateRolePermission(ctx, sqlc.CreateRolePermissionParams{
+			RoleID:       id,
+			PermissionID: permID,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al asignar permiso", err))
+			return
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al confirmar la transacción", err))
+		return
+	}
+
+	rows, err := h.repo.GetOneByID(ctx, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al obtener rol actualizado", err))
+		return
+	}
+
+	role := RoleWithPermissions{
+		ID:              rows[0].ID,
+		Name:            rows[0].Name,
+		Value:           rows[0].Value,
+		Description:     rows[0].Description,
+		CreatedAt:       rows[0].CreatedAt,
+		UpdatedAt:       rows[0].UpdatedAt,
+		DeletedAt:       rows[0].DeletedAt,
+		RolePermissions: []RolePermissionDetail{},
+	}
+
+	for _, row := range rows {
+		if row.RoleID.Valid {
+			role.RolePermissions = append(role.RolePermissions, RolePermissionDetail{
+				RoleID:       row.RoleID,
+				PermissionID: row.PermissionID,
+				CreatedAt:    row.RpCreatedAt,
+				UpdatedAt:    row.RpUpdatedAt,
+				Permission: PermissionDetail{
+					ID:          row.PID,
+					Name:        row.PName.String,
+					Category:    row.PCategory.String,
+					ActionKey:   row.PActionKey.String,
+					Description: row.PDescription.String,
+					CreatedAt:   row.PCreatedAt,
+					UpdatedAt:   row.PUpdatedAt,
+					DeletedAt:   row.PDeletedAt,
+				},
+			})
+		}
 	}
 
 	c.JSON(http.StatusOK, response.Success("Rol actualizado", &role))
