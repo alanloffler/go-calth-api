@@ -24,6 +24,15 @@ WHERE id = $1 AND deleted_at IS NULL;
 SELECT * FROM roles
 WHERE id = $1;
 
+-- name: UpdateRole :one
+UPDATE roles SET
+    name = COALESCE(sqlc.narg('name'), name),
+    value = COALESCE(sqlc.narg('value'), value),
+    description = COALESCE(sqlc.narg('description'), description),
+    updated_at = now()
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING *;
+
 -- name: DeleteRole :execrows
 DELETE FROM roles
 WHERE id = $1 AND deleted_at IS NULL;
