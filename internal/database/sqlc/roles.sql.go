@@ -130,24 +130,79 @@ func (q *Queries) GetRoleWithPermissions(ctx context.Context, id pgtype.UUID) ([
 	return items, nil
 }
 
-const getRoleWithSoftDeleted = `-- name: GetRoleWithSoftDeleted :one
-SELECT id, name, value, description, created_at, updated_at, deleted_at FROM roles
-WHERE id = $1
+const getRoleWithPermissionsWithSoftDeleted = `-- name: GetRoleWithPermissionsWithSoftDeleted :many
+SELECT
+   r.id, r.name, r.value, r.description, r.created_at, r.updated_at, r.deleted_at,
+   rp.role_id, rp.permission_id, rp.created_at AS rp_created_at, rp.updated_at AS rp_updated_at,
+   p.id AS p_id, p.name AS p_name, p.category AS p_category, p.action_key AS p_action_key,
+   p.description AS p_description, p.created_at AS p_created_at, p.updated_at AS p_updated_at,
+   p.deleted_at AS p_deleted_at
+FROM roles r
+LEFT JOIN role_permissions rp ON rp.role_id = r.id
+LEFT JOIN permissions p ON p.id = rp.permission_id
+WHERE r.id = $1
 `
 
-func (q *Queries) GetRoleWithSoftDeleted(ctx context.Context, id pgtype.UUID) (Role, error) {
-	row := q.db.QueryRow(ctx, getRoleWithSoftDeleted, id)
-	var i Role
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Value,
-		&i.Description,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-	)
-	return i, err
+type GetRoleWithPermissionsWithSoftDeletedRow struct {
+	ID           pgtype.UUID        `json:"id"`
+	Name         string             `json:"name"`
+	Value        string             `json:"value"`
+	Description  string             `json:"description"`
+	CreatedAt    pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt    pgtype.Timestamptz `json:"updatedAt"`
+	DeletedAt    pgtype.Timestamptz `json:"deletedAt"`
+	RoleID       pgtype.UUID        `json:"roleId"`
+	PermissionID pgtype.UUID        `json:"permissionId"`
+	RpCreatedAt  pgtype.Timestamptz `json:"rpCreatedAt"`
+	RpUpdatedAt  pgtype.Timestamptz `json:"rpUpdatedAt"`
+	PID          pgtype.UUID        `json:"pId"`
+	PName        pgtype.Text        `json:"pName"`
+	PCategory    pgtype.Text        `json:"pCategory"`
+	PActionKey   pgtype.Text        `json:"pActionKey"`
+	PDescription pgtype.Text        `json:"pDescription"`
+	PCreatedAt   pgtype.Timestamptz `json:"pCreatedAt"`
+	PUpdatedAt   pgtype.Timestamptz `json:"pUpdatedAt"`
+	PDeletedAt   pgtype.Timestamptz `json:"pDeletedAt"`
+}
+
+func (q *Queries) GetRoleWithPermissionsWithSoftDeleted(ctx context.Context, id pgtype.UUID) ([]GetRoleWithPermissionsWithSoftDeletedRow, error) {
+	rows, err := q.db.Query(ctx, getRoleWithPermissionsWithSoftDeleted, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetRoleWithPermissionsWithSoftDeletedRow
+	for rows.Next() {
+		var i GetRoleWithPermissionsWithSoftDeletedRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Value,
+			&i.Description,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+			&i.RoleID,
+			&i.PermissionID,
+			&i.RpCreatedAt,
+			&i.RpUpdatedAt,
+			&i.PID,
+			&i.PName,
+			&i.PCategory,
+			&i.PActionKey,
+			&i.PDescription,
+			&i.PCreatedAt,
+			&i.PUpdatedAt,
+			&i.PDeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getRoles = `-- name: GetRoles :many
