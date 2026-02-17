@@ -34,3 +34,7 @@ func (r *RoleRepository) Delete(ctx context.Context, id pgtype.UUID) (int64, err
 func (r *RoleRepository) SoftDelete(ctx context.Context, id pgtype.UUID) (sqlc.Role, error) {
 	return r.q.SoftDeleteRole(ctx, id)
 }
+
+func (r *RoleRepository) Restore(ctx context.Context, id pgtype.UUID) (sqlc.Role, error) {
+	return r.q.RestoreRole(ctx, id)
+}
