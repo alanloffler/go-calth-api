@@ -99,3 +99,19 @@ func (h *RoleHandler) SoftDelete(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.Success("Rol eliminado", &role))
 }
+
+func (h *RoleHandler) Restore(c *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	role, err := h.repo.Restore(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al restaurar rol", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Rol restaurado", &role))
+}
