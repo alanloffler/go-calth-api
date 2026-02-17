@@ -16,6 +16,10 @@ ORDER BY value ASC;
 SELECT * FROM roles
 ORDER BY value ASC;
 
+-- name: GetRole :one
+SELECT * FROM roles
+WHERE id = $1 AND deleted_at IS NULL;
+
 -- name: DeleteRole :execrows
 DELETE FROM roles
 WHERE id = $1 AND deleted_at IS NULL;
