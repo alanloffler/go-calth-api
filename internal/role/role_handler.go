@@ -63,6 +63,22 @@ func (h *RoleHandler) GetAllWithSoftDeleted(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Success("Roles encontrados", &permissions))
 }
 
+func (h *RoleHandler) GetOneByID(c *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	role, err := h.repo.GetOneByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Rol no encontrado", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Rol encontrado", &role))
+}
+
 func (h *RoleHandler) Delete(c *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(c.Param("id")); err != nil {
