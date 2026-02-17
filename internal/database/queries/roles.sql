@@ -16,6 +16,10 @@ ORDER BY value ASC;
 SELECT * FROM roles
 ORDER BY value ASC;
 
+-- name: GetRoleByValue :one
+SELECT * FROM roles
+WHERE value = $1;
+
 -- name: GetRoleWithPermissions :many
 SELECT
    r.id, r.name, r.value, r.description, r.created_at, r.updated_at, r.deleted_at,
