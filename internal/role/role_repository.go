@@ -35,6 +35,10 @@ func (r *RoleRepository) GetOneByIDWithSoftDeleted(ctx context.Context, id pgtyp
 	return r.q.GetRoleWithPermissionsWithSoftDeleted(ctx, id)
 }
 
+func (r *RoleRepository) GetOneByValue(ctx context.Context, value string) (sqlc.Role, error) {
+	return r.q.GetRoleByValue(ctx, value)
+}
+
 func (r *RoleRepository) Update(ctx context.Context, arg sqlc.UpdateRoleParams) (sqlc.Role, error) {
 	return r.q.UpdateRole(ctx, arg)
 }
