@@ -83,6 +83,12 @@ func (h *RoleHandler) Create(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
+	_, err := h.repo.q.GetRoleByValue(ctx, req.Value)
+	if err == nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "El rol ya existe"))
+		return
+	}
+
 	// Enabled permission IDs not duplicated
 	seen := make(map[string]bool)
 	var permissionIDs []pgtype.UUID
@@ -296,6 +302,14 @@ func (h *RoleHandler) Update(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
+
+	if req.Value != nil {
+		existing, err := h.repo.GetOneByValue(ctx, *req.Value)
+		if err == nil && existing.ID != id {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "El rol ya existe"))
+			return
+		}
+	}
 
 	seen := make(map[string]bool)
 	var permissionIDs []pgtype.UUID
