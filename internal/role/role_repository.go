@@ -23,6 +23,10 @@ func (r *RoleRepository) GetAll(ctx context.Context) ([]sqlc.Role, error) {
 	return r.q.GetRoles(ctx)
 }
 
+func (r *RoleRepository) GetAllWithSoftDeleted(ctx context.Context) ([]sqlc.Role, error) {
+	return r.q.GetRolesWithSoftDeleted(ctx)
+}
+
 func (r *RoleRepository) Delete(ctx context.Context, id pgtype.UUID) (int64, error) {
 	return r.q.DeleteRole(ctx, id)
 }
