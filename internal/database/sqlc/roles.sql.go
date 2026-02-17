@@ -88,3 +88,24 @@ func (q *Queries) GetRoles(ctx context.Context) ([]Role, error) {
 	}
 	return items, nil
 }
+
+const softDeleteRole = `-- name: SoftDeleteRole :one
+UPDATE roles SET deleted_at = now()
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING id, name, value, description, created_at, updated_at, deleted_at
+`
+
+func (q *Queries) SoftDeleteRole(ctx context.Context, id pgtype.UUID) (Role, error) {
+	row := q.db.QueryRow(ctx, softDeleteRole, id)
+	var i Role
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Value,
+		&i.Description,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
