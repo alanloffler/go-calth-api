@@ -50,6 +50,13 @@ type Role struct {
 	DeletedAt   pgtype.Timestamptz `json:"deletedAt"`
 }
 
+type RolePermission struct {
+	RoleID       pgtype.UUID        `json:"roleId"`
+	PermissionID pgtype.UUID        `json:"permissionId"`
+	CreatedAt    pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt    pgtype.Timestamptz `json:"updatedAt"`
+}
+
 type User struct {
 	ID           pgtype.UUID        `json:"id"`
 	Ic           string             `json:"ic"`
