@@ -7,6 +7,8 @@ package sqlc
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createRole = `-- name: CreateRole :one
@@ -38,4 +40,17 @@ func (q *Queries) CreateRole(ctx context.Context, arg CreateRoleParams) (Role, e
 		&i.DeletedAt,
 	)
 	return i, err
+}
+
+const deleteRole = `-- name: DeleteRole :execrows
+DELETE FROM roles
+WHERE id = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) DeleteRole(ctx context.Context, id pgtype.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteRole, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
