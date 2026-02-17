@@ -15,3 +15,8 @@ ORDER BY value ASC;
 -- name: DeleteRole :execrows
 DELETE FROM roles
 WHERE id = $1 AND deleted_at IS NULL;
+
+-- name: SoftDeleteRole :one
+UPDATE roles SET deleted_at = now()
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING *;
