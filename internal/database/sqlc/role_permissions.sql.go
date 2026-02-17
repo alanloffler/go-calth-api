@@ -37,3 +37,12 @@ func (q *Queries) CreateRolePermission(ctx context.Context, arg CreateRolePermis
 	)
 	return i, err
 }
+
+const deleteRolePermissionsByRoleID = `-- name: DeleteRolePermissionsByRoleID :exec
+DELETE FROM role_permissions WHERE role_id = $1
+`
+
+func (q *Queries) DeleteRolePermissionsByRoleID(ctx context.Context, roleID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteRolePermissionsByRoleID, roleID)
+	return err
+}
