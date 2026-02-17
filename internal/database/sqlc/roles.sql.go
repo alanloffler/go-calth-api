@@ -89,6 +89,39 @@ func (q *Queries) GetRoles(ctx context.Context) ([]Role, error) {
 	return items, nil
 }
 
+const getRolesWithSoftDeleted = `-- name: GetRolesWithSoftDeleted :many
+SELECT id, name, value, description, created_at, updated_at, deleted_at FROM roles
+ORDER BY value ASC
+`
+
+func (q *Queries) GetRolesWithSoftDeleted(ctx context.Context) ([]Role, error) {
+	rows, err := q.db.Query(ctx, getRolesWithSoftDeleted)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Role
+	for rows.Next() {
+		var i Role
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Value,
+			&i.Description,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const softDeleteRole = `-- name: SoftDeleteRole :one
 UPDATE roles SET deleted_at = now()
 WHERE id = $1 AND deleted_at IS NULL
