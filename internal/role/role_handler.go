@@ -43,6 +43,16 @@ func (h *RoleHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Success("Rol creado", &role))
 }
 
+func (h *RoleHandler) GetAll(c *gin.Context) {
+	permissions, err := h.repo.GetAll(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Roles no encontrados", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Roles encontrados", &permissions))
+}
+
 func (h *RoleHandler) Delete(c *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(c.Param("id")); err != nil {
