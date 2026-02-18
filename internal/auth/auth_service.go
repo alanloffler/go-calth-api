@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/alanloffler/go-calth-api/internal/config"
-	"github.com/golang-jwt/jwt"
 	"github.com/golang-jwt/jwt/v5"
 )
 
