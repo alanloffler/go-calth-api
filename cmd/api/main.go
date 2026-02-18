@@ -9,6 +9,7 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/database"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/alanloffler/go-calth-api/internal/health"
+	"github.com/alanloffler/go-calth-api/internal/middleware"
 	"github.com/alanloffler/go-calth-api/internal/permission"
 	"github.com/alanloffler/go-calth-api/internal/role"
 	"github.com/alanloffler/go-calth-api/internal/user"
@@ -43,12 +44,20 @@ func main() {
 	var router *gin.Engine = gin.Default()
 	router.SetTrustedProxies(nil)
 
+	var authService *auth.AuthService = auth.NewAuthService(cfg)
+
+	// Public routes
 	health.RegisterRoutes(router, pool)
 	auth.RegisterRoutes(router, queries, cfg)
 	user.RegisterRoutes(router, queries)
-	business.RegisterRoutes(router, queries)
 	role.RegisterRoutes(router, queries, pool)
 	permission.RegisterRoutes(router, queries)
+
+	// Protected routes
+	protected := router.Group("/")
+	protected.Use(middleware.AuthMiddleware(authService))
+
+	business.RegisterRoutes(protected, queries)
 
 	router.Run(":" + cfg.Port)
 }
