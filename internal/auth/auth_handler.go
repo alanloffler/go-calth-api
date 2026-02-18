@@ -14,11 +14,11 @@ import (
 
 type AuthHandler struct {
 	service *AuthService
-	queries *sqlc.Queries
+	repo    *AuthRepository
 }
 
-func NewAuthHandler(service *AuthService, queries *sqlc.Queries) *AuthHandler {
-	return &AuthHandler{service: service, queries: queries}
+func NewAuthHandler(service *AuthService, repo *AuthRepository) *AuthHandler {
+	return &AuthHandler{service: service, repo: repo}
 }
 
 type LoginRequest struct {
@@ -48,7 +48,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	user, err := h.queries.GetUserByEmail(c.Request.Context(), sqlc.GetUserByEmailParams{
+	user, err := h.repo.GetUserByEmail(c.Request.Context(), sqlc.GetUserByEmailParams{
 		BusinessID: businessID,
 		Email:      req.Email,
 	})
@@ -72,7 +72,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	_, err = h.queries.UpdateRefreshToken(c.Request.Context(), sqlc.UpdateRefreshTokenParams{
+	_, err = h.repo.UpdateRefreshToken(c.Request.Context(), sqlc.UpdateRefreshTokenParams{
 		ID:           user.ID,
 		RefreshToken: pgtype.Text{String: tokenPair.RefreshToken, Valid: true},
 	})
@@ -103,7 +103,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		return
 	}
 
-	_, err = h.queries.ClearRefreshToken(c.Request.Context(), userID)
+	_, err = h.repo.ClearRefreshToken(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al cerrar sesión", err))
 		return
@@ -131,7 +131,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	user, err := h.queries.GetUserByID(c.Request.Context(), userID)
+	user, err := h.repo.GetUserByID(c.Request.Context(), userID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no encontrado", err))
@@ -152,7 +152,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	_, err = h.queries.UpdateRefreshToken(c.Request.Context(), sqlc.UpdateRefreshTokenParams{
+	_, err = h.repo.UpdateRefreshToken(c.Request.Context(), sqlc.UpdateRefreshTokenParams{
 		ID:           user.ID,
 		RefreshToken: pgtype.Text{String: tokenPair.RefreshToken, Valid: true},
 	})
