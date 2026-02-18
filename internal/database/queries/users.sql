@@ -21,3 +21,9 @@ UPDATE users
 SET refresh_token = $2, updated_at = now()
 WHERE id = $1
 RETURNING *;
+
+-- name: ClearRefreshToken :one
+UPDATE users
+SET refresh_token = NULL, updated_at = now()
+WHERE id = $1
+RETURNING *;
