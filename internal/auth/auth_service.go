@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"time"
 
 	"github.com/alanloffler/go-calth-api/internal/config"
@@ -41,6 +42,14 @@ func (s *AuthService) GenerateTokenPair(userID, businessID, roleID string) (*Tok
 	return &TokenPair{AccessToken: accessToken, RefreshToken: refreshToken}, nil
 }
 
+func (s *AuthService) ValidateAccessToken(tokenStr string) (*TokenClaims, error) {
+	return s.validateToken(tokenStr, s.cfg.JwtSecret)
+}
+
+func (s *AuthService) ValidateRefreshToken(tokenStr string) (*TokenClaims, error) {
+	return s.validateToken(tokenStr, s.cfg.JwtRefreshSecret)
+}
+
 func (s *AuthService) generateToken(userID, businessID, roleID, secret, expiry string) (string, error) {
 	duration, err := time.ParseDuration(expiry)
 	if err != nil {
@@ -59,4 +68,23 @@ func (s *AuthService) generateToken(userID, businessID, roleID, secret, expiry s
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secret))
+}
+
+func (s *AuthService) validateToken(tokenStr, secret string) (*TokenClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenStr, &TokenClaims{}, func(t *jwt.Token) (any, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return []byte(secret), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	claims, ok := token.Claims.(*TokenClaims)
+	if !ok || !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	return claims, nil
 }
