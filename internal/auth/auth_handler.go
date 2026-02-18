@@ -77,3 +77,31 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.Success("Inicio de sesión exitoso", tokenPair))
 }
+
+func (h *AuthHandler) Logout(c *gin.Context) {
+	var req LogoutRequest
+	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error de validación de datos", err))
+		return
+	}
+
+	claims, err := h.service.ValidateRefreshToken(req.RefreshToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Token inválido o expirado", err))
+		return
+	}
+
+	var userID pgtype.UUID
+	if err := userID.Scan(claims.UserID); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "ID de usuario inválido"))
+		return
+	}
+
+	_, err = h.queries.ClearRefreshToken(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al cerrar sesión", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success[any]("Sesión cerrada exitosamente", nil))
+}
