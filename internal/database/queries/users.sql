@@ -10,3 +10,8 @@ INSERT INTO users (
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9
 ) RETURNING *;
+
+-- AUTH
+-- name: GetUserByEmail :one
+SELECT * FROM users
+WHERE business_id = $1 AND email = $2 AND deleted_at IS NULL;
