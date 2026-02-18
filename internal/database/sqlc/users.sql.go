@@ -11,6 +11,35 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const clearRefreshToken = `-- name: ClearRefreshToken :one
+UPDATE users
+SET refresh_token = NULL, updated_at = now()
+WHERE id = $1
+RETURNING id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
+`
+
+func (q *Queries) ClearRefreshToken(ctx context.Context, id pgtype.UUID) (User, error) {
+	row := q.db.QueryRow(ctx, clearRefreshToken, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Ic,
+		&i.UserName,
+		&i.FirstName,
+		&i.LastName,
+		&i.Email,
+		&i.Password,
+		&i.PhoneNumber,
+		&i.RoleID,
+		&i.BusinessID,
+		&i.RefreshToken,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (
     ic, user_name, first_name, last_name,
