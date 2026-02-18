@@ -8,8 +8,12 @@ import (
 )
 
 type Config struct {
-	DatabaseURL string
-	Port        string
+	DatabaseURL      string
+	Port             string
+	JwtSecret        string
+	JwtRefreshSecret string
+	JwtAccessExpiry  string
+	JwtRefreshExpiry string
 }
 
 func Load() (*Config, error) {
@@ -20,8 +24,12 @@ func Load() (*Config, error) {
 	}
 
 	var config *Config = &Config{
-		DatabaseURL: os.Getenv("DATABASE_URL"),
-		Port:        os.Getenv("PORT"),
+		DatabaseURL:      os.Getenv("DATABASE_URL"),
+		Port:             os.Getenv("PORT"),
+		JwtSecret:        os.Getenv("JWT_SECRET"),
+		JwtRefreshSecret: os.Getenv("JWT_REFRESH_SECRET"),
+		JwtAccessExpiry:  os.Getenv("JWT_ACCESS_EXPIRY"),
+		JwtRefreshExpiry: os.Getenv("JWT_REFRESH_EXPIRY"),
 	}
 
 	return config, nil
