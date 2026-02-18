@@ -105,3 +105,55 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.Success[any]("Sesión cerrada exitosamente", nil))
 }
+
+func (h *AuthHandler) Refresh(c *gin.Context) {
+	var req RefreshRequest
+	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error de validación de datos", err))
+		return
+	}
+
+	claims, err := h.service.ValidateRefreshToken(req.RefreshToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Token inválido o expirado", err))
+		return
+	}
+
+	var userID pgtype.UUID
+	if err := userID.Scan(claims.UserID); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "ID de usuario inválido"))
+		return
+	}
+
+	user, err := h.queries.GetUserByID(c.Request.Context(), userID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no encontrado", err))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al buscar usuario", err))
+		return
+	}
+
+	if !user.RefreshToken.Valid || user.RefreshToken.String != req.RefreshToken {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Token de refresco inválido", err))
+		return
+	}
+
+	tokenPair, err := h.service.GenerateTokenPair(userID.String(), user.BusinessID.String(), user.RoleID.String())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al generar tokens", err))
+		return
+	}
+
+	h.queries.UpdateRefreshToken(c.Request.Context(), sqlc.UpdateRefreshTokenParams{
+		ID:           user.ID,
+		RefreshToken: pgtype.Text{String: tokenPair.RefreshToken, Valid: true},
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al guardar token", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Token refrescado exitosamente", tokenPair))
+}
