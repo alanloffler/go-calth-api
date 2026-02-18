@@ -15,3 +15,9 @@ INSERT INTO users (
 -- name: GetUserByEmail :one
 SELECT * FROM users
 WHERE business_id = $1 AND email = $2 AND deleted_at IS NULL;
+
+-- name: UpdateRefreshToken :one
+UPDATE users
+SET refresh_token = $2, updated_at = now()
+WHERE id = $1
+RETURNING *;
