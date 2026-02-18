@@ -146,7 +146,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	h.queries.UpdateRefreshToken(c.Request.Context(), sqlc.UpdateRefreshTokenParams{
+	_, err = h.queries.UpdateRefreshToken(c.Request.Context(), sqlc.UpdateRefreshTokenParams{
 		ID:           user.ID,
 		RefreshToken: pgtype.Text{String: tokenPair.RefreshToken, Valid: true},
 	})
