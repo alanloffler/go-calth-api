@@ -65,6 +65,39 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at FROM users
+WHERE business_id = $1 AND email = $2 AND deleted_at IS NULL
+`
+
+type GetUserByEmailParams struct {
+	BusinessID pgtype.UUID `json:"businessId"`
+	Email      string      `json:"email"`
+}
+
+// AUTH
+func (q *Queries) GetUserByEmail(ctx context.Context, arg GetUserByEmailParams) (User, error) {
+	row := q.db.QueryRow(ctx, getUserByEmail, arg.BusinessID, arg.Email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Ic,
+		&i.UserName,
+		&i.FirstName,
+		&i.LastName,
+		&i.Email,
+		&i.Password,
+		&i.PhoneNumber,
+		&i.RoleID,
+		&i.BusinessID,
+		&i.RefreshToken,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const getUserByID = `-- name: GetUserByID :one
 SELECT id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at FROM users
 WHERE id = $1 AND deleted_at IS NULL
