@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/alanloffler/go-calth-api/internal/auth"
 	"github.com/alanloffler/go-calth-api/internal/business"
 	"github.com/alanloffler/go-calth-api/internal/config"
 	"github.com/alanloffler/go-calth-api/internal/database"
@@ -43,6 +44,7 @@ func main() {
 	router.SetTrustedProxies(nil)
 
 	health.RegisterRoutes(router, pool)
+	auth.RegisterRoutes(router, queries, cfg)
 	user.RegisterRoutes(router, queries)
 	business.RegisterRoutes(router, queries)
 	role.RegisterRoutes(router, queries, pool)
