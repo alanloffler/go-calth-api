@@ -154,6 +154,47 @@ func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 	return i, err
 }
 
+const getUsers = `-- name: GetUsers :many
+SELECT id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at FROM users
+WHERE deleted_at IS NULL
+ORDER BY last_name ASC
+`
+
+func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
+	rows, err := q.db.Query(ctx, getUsers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Ic,
+			&i.UserName,
+			&i.FirstName,
+			&i.LastName,
+			&i.Email,
+			&i.Password,
+			&i.PhoneNumber,
+			&i.RoleID,
+			&i.BusinessID,
+			&i.RefreshToken,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const restoreUser = `-- name: RestoreUser :execrows
 UPDATE users
 SET deleted_at = NULL
