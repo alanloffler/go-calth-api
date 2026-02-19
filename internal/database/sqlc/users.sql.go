@@ -187,3 +187,56 @@ func (q *Queries) UpdateRefreshToken(ctx context.Context, arg UpdateRefreshToken
 	)
 	return i, err
 }
+
+const updateUser = `-- name: UpdateUser :one
+UPDATE users
+SET ic = $2, user_name = $3, first_name = $4, last_name = $5,
+    email = $6, password = $7, phone_number = $8, role_id = $9,
+    updated_at = now()
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
+`
+
+type UpdateUserParams struct {
+	ID          pgtype.UUID `json:"id"`
+	Ic          string      `json:"ic"`
+	UserName    string      `json:"userName"`
+	FirstName   string      `json:"firstName"`
+	LastName    string      `json:"lastName"`
+	Email       string      `json:"email"`
+	Password    string      `json:"password"`
+	PhoneNumber string      `json:"phoneNumber"`
+	RoleID      pgtype.UUID `json:"roleId"`
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, updateUser,
+		arg.ID,
+		arg.Ic,
+		arg.UserName,
+		arg.FirstName,
+		arg.LastName,
+		arg.Email,
+		arg.Password,
+		arg.PhoneNumber,
+		arg.RoleID,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Ic,
+		&i.UserName,
+		&i.FirstName,
+		&i.LastName,
+		&i.Email,
+		&i.Password,
+		&i.PhoneNumber,
+		&i.RoleID,
+		&i.BusinessID,
+		&i.RefreshToken,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
