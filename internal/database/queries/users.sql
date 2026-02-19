@@ -1,7 +1,3 @@
--- name: GetUserByID :one
-SELECT * FROM users
-WHERE id = $1 AND deleted_at IS NULL;
-
 -- name: CreateUser :one
 INSERT INTO users (
     ic, user_name, first_name, last_name,
@@ -19,6 +15,14 @@ ORDER BY last_name ASC;
 -- name: GetUsersWithSoftDeleted :many
 SELECT * FROM users
 ORDER BY last_name ASC;
+
+-- name: GetUserByID :one
+SELECT * FROM users
+WHERE id = $1 AND deleted_at IS NULL;
+
+-- name: GetUserByIDWithSoftDeleted :one
+SELECT * FROM users
+WHERE id = $1 AND deleted_at IS NOT NULL;
 
 -- name: UpdateUser :one
 UPDATE users
