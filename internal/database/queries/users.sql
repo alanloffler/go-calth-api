@@ -32,6 +32,10 @@ SET ic = $2, user_name = $3, first_name = $4, last_name = $5,
 WHERE id = $1 AND deleted_at IS NULL
 RETURNING *;
 
+-- name: DeleteUser :execrows
+DELETE FROM users
+WHERE id = $1 AND deleted_at IS NULL;
+
 -- name: SoftDeleteUser :execrows
 UPDATE users
 SET deleted_at = now()
