@@ -30,10 +30,6 @@ type LoginRequest struct {
 	Password   string `json:"password" binding:"required"`
 }
 
-type LogoutRequest struct {
-	RefreshToken string `json:"refreshToken" binding:"required"`
-}
-
 type RefreshRequest struct {
 	RefreshToken string `json:"refreshToken" binding:"required"`
 }
@@ -94,13 +90,13 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
-	var req LogoutRequest
-	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error de validación de datos", err))
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Token requerido"))
 		return
 	}
 
-	claims, err := h.service.ValidateRefreshToken(req.RefreshToken)
+	claims, err := h.service.ValidateRefreshToken(refreshToken)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Token inválido o expirado", err))
 		return
@@ -117,6 +113,9 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al cerrar sesión", err))
 		return
 	}
+
+	c.SetCookie("access_token", "", -1, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
+	c.SetCookie("refresh_token", "", -1, "/auth/refresh", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
 
 	c.JSON(http.StatusOK, response.Success[any]("Sesión cerrada exitosamente", nil))
 }
