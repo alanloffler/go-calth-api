@@ -80,7 +80,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	refreshMaxAge := parseDurationToSeconds(h.cfg.JwtRefreshExpiry)
 
 	c.SetCookie("access_token", tokenPair.AccessToken, accessMaxAge, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
-	c.SetCookie("refresh_token", tokenPair.RefreshToken, refreshMaxAge, "/auth/refresh", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
+	c.SetCookie("refresh_token", tokenPair.RefreshToken, refreshMaxAge, "/auth", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
 
 	c.JSON(http.StatusOK, response.Success[any]("Inicio de sesión exitoso", nil))
 }
@@ -111,7 +111,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	}
 
 	c.SetCookie("access_token", "", -1, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
-	c.SetCookie("refresh_token", "", -1, "/auth/refresh", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
+	c.SetCookie("refresh_token", "", -1, "/auth", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
 
 	c.JSON(http.StatusOK, response.Success[any]("Sesión cerrada exitosamente", nil))
 }
@@ -169,7 +169,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	refreshMaxAge := parseDurationToSeconds(h.cfg.JwtRefreshExpiry)
 
 	c.SetCookie("access_token", tokenPair.AccessToken, accessMaxAge, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
-	c.SetCookie("refresh_token", tokenPair.RefreshToken, refreshMaxAge, "/auth/refresh", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
+	c.SetCookie("refresh_token", tokenPair.RefreshToken, refreshMaxAge, "/auth", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
 
 	c.JSON(http.StatusOK, response.Success[any]("Token refrescado exitosamente", nil))
 }
