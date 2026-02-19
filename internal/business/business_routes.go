@@ -14,4 +14,5 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries) {
 	businesses.GET("", handler.GetAll)
 	businesses.GET("/:id", handler.GetOneByID)
 	businesses.PATCH("/:id", handler.Update)
+	businesses.DELETE("/:id", handler.Delete)
 }
