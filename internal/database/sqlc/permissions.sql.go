@@ -47,17 +47,14 @@ func (q *Queries) CreatePermission(ctx context.Context, arg CreatePermissionPara
 	return i, err
 }
 
-const deletePermission = `-- name: DeletePermission :execrows
+const deletePermission = `-- name: DeletePermission :exec
 DELETE FROM permissions
 WHERE id = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) DeletePermission(ctx context.Context, id pgtype.UUID) (int64, error) {
-	result, err := q.db.Exec(ctx, deletePermission, id)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected(), nil
+func (q *Queries) DeletePermission(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deletePermission, id)
+	return err
 }
 
 const getPermission = `-- name: GetPermission :one
@@ -206,48 +203,32 @@ func (q *Queries) GetPermissionsWithSoftDeleted(ctx context.Context) ([]Permissi
 	return items, nil
 }
 
-const restorePermission = `-- name: RestorePermission :one
+const restorePermission = `-- name: RestorePermission :execrows
 UPDATE permissions SET deleted_at = NULL
 WHERE id = $1 AND deleted_at IS NOT NULL
 RETURNING id, name, category, action_key, description, created_at, updated_at, deleted_at
 `
 
-func (q *Queries) RestorePermission(ctx context.Context, id pgtype.UUID) (Permission, error) {
-	row := q.db.QueryRow(ctx, restorePermission, id)
-	var i Permission
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Category,
-		&i.ActionKey,
-		&i.Description,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-	)
-	return i, err
+func (q *Queries) RestorePermission(ctx context.Context, id pgtype.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, restorePermission, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
-const softDeletePermission = `-- name: SoftDeletePermission :one
+const softDeletePermission = `-- name: SoftDeletePermission :execrows
 UPDATE permissions SET deleted_at = now()
 WHERE id = $1 AND deleted_at IS NULL
 RETURNING id, name, category, action_key, description, created_at, updated_at, deleted_at
 `
 
-func (q *Queries) SoftDeletePermission(ctx context.Context, id pgtype.UUID) (Permission, error) {
-	row := q.db.QueryRow(ctx, softDeletePermission, id)
-	var i Permission
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Category,
-		&i.ActionKey,
-		&i.Description,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-	)
-	return i, err
+func (q *Queries) SoftDeletePermission(ctx context.Context, id pgtype.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, softDeletePermission, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const updatePermission = `-- name: UpdatePermission :one
