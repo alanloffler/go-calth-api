@@ -154,6 +154,33 @@ func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 	return i, err
 }
 
+const getUserByIDWithSoftDeleted = `-- name: GetUserByIDWithSoftDeleted :one
+SELECT id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at FROM users
+WHERE id = $1 AND deleted_at IS NOT NULL
+`
+
+func (q *Queries) GetUserByIDWithSoftDeleted(ctx context.Context, id pgtype.UUID) (User, error) {
+	row := q.db.QueryRow(ctx, getUserByIDWithSoftDeleted, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Ic,
+		&i.UserName,
+		&i.FirstName,
+		&i.LastName,
+		&i.Email,
+		&i.Password,
+		&i.PhoneNumber,
+		&i.RoleID,
+		&i.BusinessID,
+		&i.RefreshToken,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const getUsers = `-- name: GetUsers :many
 SELECT id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at FROM users
 WHERE deleted_at IS NULL
