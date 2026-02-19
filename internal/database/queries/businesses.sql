@@ -30,3 +30,7 @@ UPDATE businesses SET
   website = COALESCE(sqlc.narg('website'), website)
 WHERE id = $1
 RETURNING *;
+
+-- name: DeleteBusiness :exec
+DELETE FROM businesses
+WHERE id = $1;
