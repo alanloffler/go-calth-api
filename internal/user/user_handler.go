@@ -95,6 +95,16 @@ func (h *UserHandler) GetAll(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Success("Usuarios encontrados", &users))
 }
 
+func (h *UserHandler) GetAllWithSoftDeleted(c *gin.Context) {
+	users, err := h.repo.GetAllWithSoftDeleted(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuarios no encontrados", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Usuarios encontrados", &users))
+}
+
 func (h *UserHandler) GetByID(c *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(c.Param("id")); err != nil {
