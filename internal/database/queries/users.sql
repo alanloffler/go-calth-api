@@ -25,6 +25,12 @@ SET deleted_at = now()
 WHERE id = $1 AND deleted_at IS NULL
 RETURNING *;
 
+-- name: RestoreUser :execrows
+UPDATE users
+SET deleted_at = NULL
+WHERE id = $1 AND deleted_at IS NOT NULL
+RETURNING *;
+
 -- AUTH
 -- name: GetUserByEmail :one
 SELECT * FROM users
