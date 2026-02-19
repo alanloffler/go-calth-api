@@ -292,46 +292,32 @@ func (q *Queries) GetRolesWithSoftDeleted(ctx context.Context) ([]Role, error) {
 	return items, nil
 }
 
-const restoreRole = `-- name: RestoreRole :one
+const restoreRole = `-- name: RestoreRole :execrows
 UPDATE roles SET deleted_at = NULL
 WHERE id = $1 AND deleted_at IS NOT NULL
 RETURNING id, name, value, description, created_at, updated_at, deleted_at
 `
 
-func (q *Queries) RestoreRole(ctx context.Context, id pgtype.UUID) (Role, error) {
-	row := q.db.QueryRow(ctx, restoreRole, id)
-	var i Role
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Value,
-		&i.Description,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-	)
-	return i, err
+func (q *Queries) RestoreRole(ctx context.Context, id pgtype.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, restoreRole, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
-const softDeleteRole = `-- name: SoftDeleteRole :one
+const softDeleteRole = `-- name: SoftDeleteRole :execrows
 UPDATE roles SET deleted_at = now()
 WHERE id = $1 AND deleted_at IS NULL
 RETURNING id, name, value, description, created_at, updated_at, deleted_at
 `
 
-func (q *Queries) SoftDeleteRole(ctx context.Context, id pgtype.UUID) (Role, error) {
-	row := q.db.QueryRow(ctx, softDeleteRole, id)
-	var i Role
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Value,
-		&i.Description,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-	)
-	return i, err
+func (q *Queries) SoftDeleteRole(ctx context.Context, id pgtype.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, softDeleteRole, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const updateRole = `-- name: UpdateRole :one
