@@ -31,6 +31,10 @@ func (r *UserRepository) GetByID(ctx context.Context, id pgtype.UUID) (sqlc.User
 	return r.q.GetUserByID(ctx, id)
 }
 
+func (r *UserRepository) GetByIDWithSoftDeleted(ctx context.Context, id pgtype.UUID) (sqlc.User, error) {
+	return r.q.GetUserByIDWithSoftDeleted(ctx, id)
+}
+
 func (r *UserRepository) Update(ctx context.Context, arg sqlc.UpdateUserParams) (sqlc.User, error) {
 	return r.q.UpdateUser(ctx, arg)
 }
