@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/alanloffler/go-calth-api/internal/common/response"
 	"github.com/alanloffler/go-calth-api/internal/config"
@@ -83,7 +84,13 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, response.Success("Inicio de sesión exitoso", tokenPair))
+	accessMaxAge := parseDurationToSeconds(h.cfg.JwtAccessExpiry)
+	refreshMaxAge := parseDurationToSeconds(h.cfg.JwtRefreshExpiry)
+
+	c.SetCookie("access_token", tokenPair.AccessToken, accessMaxAge, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
+	c.SetCookie("refresh_token", tokenPair.RefreshToken, refreshMaxAge, "/auth/refresh", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
+
+	c.JSON(http.StatusOK, response.Success[any]("Inicio de sesión exitoso", nil))
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
@@ -164,4 +171,13 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.Success("Token refrescado exitosamente", tokenPair))
+}
+
+// Helpers
+func parseDurationToSeconds(expiry string) int {
+	d, err := time.ParseDuration(expiry)
+	if err != nil {
+		return 0
+	}
+	return int(d.Seconds())
 }
