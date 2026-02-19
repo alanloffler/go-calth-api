@@ -11,6 +11,7 @@ func RegisterRoutes(router *gin.Engine, q *sqlc.Queries) {
 	var users *gin.RouterGroup = router.Group("/users")
 
 	users.POST("", handler.Create)
+	users.GET("", handler.GetAll)
 	users.GET("/:id", handler.GetByID)
 	users.PATCH("/:id", handler.Update)
 	users.PATCH("/:id/restore", handler.Restore)
