@@ -16,6 +16,10 @@ SELECT * FROM users
 WHERE deleted_at IS NULL
 ORDER BY last_name ASC;
 
+-- name: GetUsersWithSoftDeleted :many
+SELECT * FROM users
+ORDER BY last_name ASC;
+
 -- name: UpdateUser :one
 UPDATE users
 SET ic = $2, user_name = $3, first_name = $4, last_name = $5,
