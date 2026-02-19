@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/alanloffler/go-calth-api/internal/common/response"
+	"github.com/alanloffler/go-calth-api/internal/config"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
@@ -13,12 +14,13 @@ import (
 )
 
 type AuthHandler struct {
-	service *AuthService
+	cfg     *config.Config
 	repo    *AuthRepository
+	service *AuthService
 }
 
-func NewAuthHandler(service *AuthService, repo *AuthRepository) *AuthHandler {
-	return &AuthHandler{service: service, repo: repo}
+func NewAuthHandler(cfg *config.Config, repo *AuthRepository, service *AuthService) *AuthHandler {
+	return &AuthHandler{cfg: cfg, repo: repo, service: service}
 }
 
 type LoginRequest struct {
