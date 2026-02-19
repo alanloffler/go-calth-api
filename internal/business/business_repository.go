@@ -30,3 +30,7 @@ func (r *BusinessRepository) GetOneByID(ctx context.Context, id pgtype.UUID) (sq
 func (r *BusinessRepository) Update(ctx context.Context, arg sqlc.UpdateBusinessParams) (sqlc.Business, error) {
 	return r.q.UpdateBusiness(ctx, arg)
 }
+
+func (r *BusinessRepository) Delete(ctx context.Context, id pgtype.UUID) error {
+	return r.q.DeleteBusiness(ctx, id)
+}
