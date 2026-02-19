@@ -57,12 +57,12 @@ RETURNING *;
 DELETE FROM roles
 WHERE id = $1 AND deleted_at IS NULL;
 
--- name: SoftDeleteRole :one
+-- name: SoftDeleteRole :execrows
 UPDATE roles SET deleted_at = now()
 WHERE id = $1 AND deleted_at IS NULL
 RETURNING *;
 
--- name: RestoreRole :one
+-- name: RestoreRole :execrows
 UPDATE roles SET deleted_at = NULL
 WHERE id = $1 AND deleted_at IS NOT NULL
 RETURNING *;
