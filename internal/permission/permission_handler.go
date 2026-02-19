@@ -229,14 +229,9 @@ func (h *PermissionHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	rows, err := h.repo.Delete(c.Request.Context(), id)
+	err := h.repo.Delete(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al eliminar permiso", err))
-		return
-	}
-
-	if rows == 0 {
-		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Permiso no encontrado"))
 		return
 	}
 
@@ -250,13 +245,17 @@ func (h *PermissionHandler) SoftDelete(c *gin.Context) {
 		return
 	}
 
-	permission, err := h.repo.SoftDelete(c.Request.Context(), id)
+	rows, err := h.repo.SoftDelete(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al eliminar permiso", err))
 		return
 	}
+	if rows == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Permiso no encontrado"))
+		return
+	}
 
-	c.JSON(http.StatusOK, response.Success("Permiso eliminado", &permission))
+	c.JSON(http.StatusOK, response.Success[any]("Permiso eliminado", nil))
 }
 
 func (h *PermissionHandler) Restore(c *gin.Context) {
@@ -266,11 +265,15 @@ func (h *PermissionHandler) Restore(c *gin.Context) {
 		return
 	}
 
-	permission, err := h.repo.Restore(c.Request.Context(), id)
+	rows, err := h.repo.Restore(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al restaurar permiso", err))
 		return
 	}
+	if rows == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Permiso no encontrado"))
+		return
+	}
 
-	c.JSON(http.StatusOK, response.Success("Permiso restaurado", &permission))
+	c.JSON(http.StatusOK, response.Success[any]("Permiso restaurado", nil))
 }
