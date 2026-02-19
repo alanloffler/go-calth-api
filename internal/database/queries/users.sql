@@ -19,6 +19,12 @@ SET ic = $2, user_name = $3, first_name = $4, last_name = $5,
 WHERE id = $1 AND deleted_at IS NULL
 RETURNING *;
 
+-- name: SoftDeleteUser :execrows
+UPDATE users
+SET deleted_at = now()
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING *;
+
 -- AUTH
 -- name: GetUserByEmail :one
 SELECT * FROM users
