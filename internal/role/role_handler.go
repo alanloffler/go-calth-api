@@ -439,13 +439,17 @@ func (h *RoleHandler) SoftDelete(c *gin.Context) {
 		return
 	}
 
-	role, err := h.repo.SoftDelete(c.Request.Context(), id)
+	rows, err := h.repo.SoftDelete(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error al eliminar rol"))
 		return
 	}
+	if rows == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Role no encontrado"))
+		return
+	}
 
-	c.JSON(http.StatusOK, response.Success("Rol eliminado", &role))
+	c.JSON(http.StatusOK, response.Success[any]("Rol eliminado", nil))
 }
 
 func (h *RoleHandler) Restore(c *gin.Context) {
@@ -455,11 +459,15 @@ func (h *RoleHandler) Restore(c *gin.Context) {
 		return
 	}
 
-	role, err := h.repo.Restore(c.Request.Context(), id)
+	rows, err := h.repo.Restore(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al restaurar rol", err))
 		return
 	}
+	if rows == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Rol no encontrado"))
+		return
+	}
 
-	c.JSON(http.StatusOK, response.Success("Rol restaurado", &role))
+	c.JSON(http.StatusOK, response.Success[any]("Rol restaurado", nil))
 }
