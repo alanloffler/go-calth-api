@@ -78,6 +78,16 @@ func (q *Queries) CreateBusiness(ctx context.Context, arg CreateBusinessParams) 
 	return i, err
 }
 
+const deleteBusiness = `-- name: DeleteBusiness :exec
+DELETE FROM businesses
+WHERE id = $1
+`
+
+func (q *Queries) DeleteBusiness(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteBusiness, id)
+	return err
+}
+
 const getBusiness = `-- name: GetBusiness :one
 SELECT id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at FROM businesses WHERE id = $1
 `
