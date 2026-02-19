@@ -121,6 +121,22 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+func (h *UserHandler) GetByIDWithSoftDeleted(c *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	user, err := h.repo.GetByIDWithSoftDeleted(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Usuario encontrado", &user))
+}
+
 func (h *UserHandler) Update(c *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(c.Param("id")); err != nil {
