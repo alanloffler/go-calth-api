@@ -19,6 +19,10 @@ func (r *UserRepository) Create(ctx context.Context, arg sqlc.CreateUserParams) 
 	return r.q.CreateUser(ctx, arg)
 }
 
+func (r *UserRepository) GetAll(ctx context.Context) ([]sqlc.User, error) {
+	return r.q.GetUsers(ctx)
+}
+
 func (r *UserRepository) GetByID(ctx context.Context, id pgtype.UUID) (sqlc.User, error) {
 	return r.q.GetUserByID(ctx, id)
 }
