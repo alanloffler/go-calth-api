@@ -30,10 +30,6 @@ type LoginRequest struct {
 	Password   string `json:"password" binding:"required"`
 }
 
-type RefreshRequest struct {
-	RefreshToken string `json:"refreshToken" binding:"required"`
-}
-
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
@@ -121,13 +117,13 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 }
 
 func (h *AuthHandler) Refresh(c *gin.Context) {
-	var req RefreshRequest
-	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error de validación de datos", err))
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Token requerido"))
 		return
 	}
 
-	claims, err := h.service.ValidateRefreshToken(req.RefreshToken)
+	claims, err := h.service.ValidateRefreshToken(refreshToken)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Token inválido o expirado", err))
 		return
@@ -149,8 +145,8 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	if !user.RefreshToken.Valid || user.RefreshToken.String != req.RefreshToken {
-		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Token de refresco inválido", err))
+	if !user.RefreshToken.Valid || user.RefreshToken.String != refreshToken {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Token de refresco inválido"))
 		return
 	}
 
@@ -161,7 +157,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	}
 
 	_, err = h.repo.UpdateRefreshToken(c.Request.Context(), sqlc.UpdateRefreshTokenParams{
-		ID:           user.ID,
+		ID:           userID,
 		RefreshToken: pgtype.Text{String: tokenPair.RefreshToken, Valid: true},
 	})
 	if err != nil {
@@ -169,7 +165,13 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, response.Success("Token refrescado exitosamente", tokenPair))
+	accessMaxAge := parseDurationToSeconds(h.cfg.JwtAccessExpiry)
+	refreshMaxAge := parseDurationToSeconds(h.cfg.JwtRefreshExpiry)
+
+	c.SetCookie("access_token", tokenPair.AccessToken, accessMaxAge, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
+	c.SetCookie("refresh_token", tokenPair.RefreshToken, refreshMaxAge, "/auth/refresh", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
+
+	c.JSON(http.StatusOK, response.Success[any]("Token refrescado exitosamente", nil))
 }
 
 // Helpers
