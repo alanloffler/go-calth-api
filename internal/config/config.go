@@ -14,6 +14,8 @@ type Config struct {
 	JwtRefreshSecret string
 	JwtAccessExpiry  string
 	JwtRefreshExpiry string
+	CookieDomain     string
+	CookieSecure     bool
 }
 
 func Load() (*Config, error) {
@@ -30,6 +32,8 @@ func Load() (*Config, error) {
 		JwtRefreshSecret: os.Getenv("JWT_REFRESH_SECRET"),
 		JwtAccessExpiry:  os.Getenv("JWT_ACCESS_EXPIRY"),
 		JwtRefreshExpiry: os.Getenv("JWT_REFRESH_EXPIRY"),
+		CookieDomain:     os.Getenv("COOKIE_DOMAIN"),
+		CookieSecure:     os.Getenv("COOKIE_SECURE") == "true",
 	}
 
 	return config, nil
