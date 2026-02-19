@@ -42,17 +42,14 @@ func (q *Queries) CreateRole(ctx context.Context, arg CreateRoleParams) (Role, e
 	return i, err
 }
 
-const deleteRole = `-- name: DeleteRole :execrows
+const deleteRole = `-- name: DeleteRole :exec
 DELETE FROM roles
 WHERE id = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) DeleteRole(ctx context.Context, id pgtype.UUID) (int64, error) {
-	result, err := q.db.Exec(ctx, deleteRole, id)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected(), nil
+func (q *Queries) DeleteRole(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteRole, id)
+	return err
 }
 
 const getRoleByValue = `-- name: GetRoleByValue :one
