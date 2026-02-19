@@ -9,7 +9,7 @@ import (
 func RegisterRoutes(router *gin.Engine, q *sqlc.Queries, cfg *config.Config) {
 	var service *AuthService = NewAuthService(cfg)
 	var repo *AuthRepository = NewAuthRepository(q)
-	var handler *AuthHandler = NewAuthHandler(service, repo)
+	var handler *AuthHandler = NewAuthHandler(cfg, repo, service)
 	var auth *gin.RouterGroup = router.Group("/auth")
 
 	auth.POST("/login", handler.Login)
