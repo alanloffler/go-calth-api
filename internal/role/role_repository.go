@@ -43,7 +43,7 @@ func (r *RoleRepository) Update(ctx context.Context, arg sqlc.UpdateRoleParams) 
 	return r.q.UpdateRole(ctx, arg)
 }
 
-func (r *RoleRepository) Delete(ctx context.Context, id pgtype.UUID) (int64, error) {
+func (r *RoleRepository) Delete(ctx context.Context, id pgtype.UUID) error {
 	return r.q.DeleteRole(ctx, id)
 }
 
