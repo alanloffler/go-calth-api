@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/alanloffler/go-calth-api/internal/auth"
 	"github.com/alanloffler/go-calth-api/internal/common/response"
@@ -11,13 +10,11 @@ import (
 
 func AuthMiddleware(service *auth.AuthService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+		tokenStr, err := c.Cookie("access_token")
+		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Token requerido"))
 			return
 		}
-
-		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 
 		claims, err := service.ValidateAccessToken(tokenStr)
 		if err != nil {
