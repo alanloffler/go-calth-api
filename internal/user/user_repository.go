@@ -39,7 +39,7 @@ func (r *UserRepository) Update(ctx context.Context, arg sqlc.UpdateUserParams) 
 	return r.q.UpdateUser(ctx, arg)
 }
 
-func (r *UserRepository) Delete(ctx context.Context, id pgtype.UUID) (int64, error) {
+func (r *UserRepository) Delete(ctx context.Context, id pgtype.UUID) error {
 	return r.q.DeleteUser(ctx, id)
 }
 
