@@ -7,6 +7,7 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserHandler struct {
@@ -48,13 +49,19 @@ func (h *UserHandler) Create(c *gin.Context) {
 		return
 	}
 
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al procesar contraseña", err))
+		return
+	}
+
 	user, err := h.repo.Create(c.Request.Context(), sqlc.CreateUserParams{
 		Ic:          req.Ic,
 		UserName:    req.UserName,
 		FirstName:   req.FirstName,
 		LastName:    req.LastName,
 		Email:       req.Email,
-		Password:    req.Password,
+		Password:    string(hashedPassword),
 		PhoneNumber: req.PhoneNumber,
 		RoleID:      roleID,
 		BusinessID:  businessID,
