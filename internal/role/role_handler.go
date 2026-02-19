@@ -418,14 +418,9 @@ func (h *RoleHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	rows, err := h.repo.Delete(c.Request.Context(), id)
+	err := h.repo.Delete(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al eliminar rol", err))
-		return
-	}
-
-	if rows == 0 {
-		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Rol no encontrado"))
 		return
 	}
 
