@@ -164,11 +164,17 @@ func (h *BusinessHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	err := h.repo.Delete(c.Request.Context(), id)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al eliminar negocio", err))
-		return
-	}
+	// TODO:
+	// Plan:
+	// log.Println("Init transaction")
+	// log.Println("Remove users, on cascade other related content")
+	// log.Println("Remove business")
+	//
+	// err := h.repo.Delete(c.Request.Context(), id)
+	// if err != nil {
+	// 	c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al eliminar negocio", err))
+	// 	return
+	// }
 
 	c.JSON(http.StatusOK, response.Success[any]("Negocio eliminado", nil))
 }
