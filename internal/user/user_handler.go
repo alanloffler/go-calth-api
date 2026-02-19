@@ -30,6 +30,17 @@ type CreateUserRequest struct {
 	BusinessID  string `json:"businessId" binding:"required,uuid"`
 }
 
+type UpdateUserRequest struct {
+	Ic          string  `json:"ic" binding:"required,len=8"`
+	UserName    string  `json:"userName" binding:"required,min=3,max=100"`
+	FirstName   string  `json:"firstName" binding:"required,min=3,max=100"`
+	LastName    string  `json:"lastName" binding:"required,min=3,max=100"`
+	Email       string  `json:"email" binding:"required,email,max=100"`
+	Password    *string `json:"password" binding:"omitempty,min=8,max=100"`
+	PhoneNumber string  `json:"phoneNumber" binding:"required,len=10,numeric"`
+	RoleID      string  `json:"roleId" binding:"required,uuid"`
+}
+
 func (h *UserHandler) Create(c *gin.Context) {
 	var req CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -88,4 +99,58 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, user)
+}
+
+func (h *UserHandler) Update(c *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	var req UpdateUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error de validación de datos", err))
+		return
+	}
+
+	var roleID pgtype.UUID
+	if err := roleID.Scan(req.RoleID); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	current, err := h.repo.GetByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado", err))
+		return
+	}
+
+	passwordHash := current.Password
+	if req.Password != nil {
+		hashed, err := bcrypt.GenerateFromPassword([]byte(*req.Password), bcrypt.DefaultCost)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al procesar contraseña", err))
+			return
+		}
+		passwordHash = string(hashed)
+	}
+
+	user, err := h.repo.Update(c.Request.Context(), sqlc.UpdateUserParams{
+		ID:          id,
+		Ic:          req.Ic,
+		UserName:    req.UserName,
+		FirstName:   req.FirstName,
+		LastName:    req.LastName,
+		Email:       req.Email,
+		Password:    passwordHash,
+		PhoneNumber: req.PhoneNumber,
+		RoleID:      roleID,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar usuario", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Usuario actualizado", &user))
 }
