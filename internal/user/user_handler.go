@@ -191,6 +191,26 @@ func (h *UserHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Success("Usuario actualizado", &user))
 }
 
+func (h *UserHandler) Delete(c *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	rows, err := h.repo.Delete(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error al eliminar usuario"))
+		return
+	}
+	if rows == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado"))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success[any]("Usuario eliminado", nil))
+}
+
 func (h *UserHandler) SoftDelete(c *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(c.Param("id")); err != nil {
