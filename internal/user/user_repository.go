@@ -30,3 +30,7 @@ func (r *UserRepository) Update(ctx context.Context, arg sqlc.UpdateUserParams) 
 func (r *UserRepository) SoftDelete(ctx context.Context, id pgtype.UUID) (int64, error) {
 	return r.q.SoftDeleteUser(ctx, id)
 }
+
+func (r *UserRepository) Restore(ctx context.Context, id pgtype.UUID) (int64, error) {
+	return r.q.RestoreUser(ctx, id)
+}
