@@ -43,14 +43,14 @@ func (r *PermissionRepository) Update(ctx context.Context, arg sqlc.UpdatePermis
 	return r.q.UpdatePermission(ctx, arg)
 }
 
-func (r *PermissionRepository) Delete(ctx context.Context, id pgtype.UUID) (int64, error) {
+func (r *PermissionRepository) Delete(ctx context.Context, id pgtype.UUID) error {
 	return r.q.DeletePermission(ctx, id)
 }
 
-func (r *PermissionRepository) SoftDelete(ctx context.Context, id pgtype.UUID) (sqlc.Permission, error) {
+func (r *PermissionRepository) SoftDelete(ctx context.Context, id pgtype.UUID) (int64, error) {
 	return r.q.SoftDeletePermission(ctx, id)
 }
 
-func (r *PermissionRepository) Restore(ctx context.Context, id pgtype.UUID) (sqlc.Permission, error) {
+func (r *PermissionRepository) Restore(ctx context.Context, id pgtype.UUID) (int64, error) {
 	return r.q.RestorePermission(ctx, id)
 }
