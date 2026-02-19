@@ -23,6 +23,10 @@ func (r *UserRepository) GetAll(ctx context.Context) ([]sqlc.User, error) {
 	return r.q.GetUsers(ctx)
 }
 
+func (r *UserRepository) GetAllWithSoftDeleted(ctx context.Context) ([]sqlc.User, error) {
+	return r.q.GetUsersWithSoftDeleted(ctx)
+}
+
 func (r *UserRepository) GetByID(ctx context.Context, id pgtype.UUID) (sqlc.User, error) {
 	return r.q.GetUserByID(ctx, id)
 }
