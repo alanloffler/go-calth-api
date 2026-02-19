@@ -154,6 +154,21 @@ func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 	return i, err
 }
 
+const softDeleteUser = `-- name: SoftDeleteUser :execrows
+UPDATE users
+SET deleted_at = now()
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
+`
+
+func (q *Queries) SoftDeleteUser(ctx context.Context, id pgtype.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, softDeleteUser, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const updateRefreshToken = `-- name: UpdateRefreshToken :one
 UPDATE users
 SET refresh_token = $2, updated_at = now()
