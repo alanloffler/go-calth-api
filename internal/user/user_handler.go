@@ -174,3 +174,23 @@ func (h *UserHandler) SoftDelete(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.Success[any]("Usuario eliminado", nil))
 }
+
+func (h *UserHandler) Restore(c *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	rows, err := h.repo.Restore(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error al restaurar usuario"))
+		return
+	}
+	if rows == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado"))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success[any]("Usuario restaurado", nil))
+}
