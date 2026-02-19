@@ -53,7 +53,7 @@ UPDATE roles SET
 WHERE id = $1 AND deleted_at IS NULL
 RETURNING *;
 
--- name: DeleteRole :execrows
+-- name: DeleteRole :exec
 DELETE FROM roles
 WHERE id = $1 AND deleted_at IS NULL;
 
