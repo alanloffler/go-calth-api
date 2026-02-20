@@ -15,6 +15,10 @@ func NewAuthRepository(q *sqlc.Queries) *AuthRepository {
 	return &AuthRepository{q: q}
 }
 
+func (r *AuthRepository) GetBusinessBySlug(ctx context.Context, slug string) (sqlc.Business, error) {
+	return r.q.GetBusinessBySlug(ctx, slug)
+}
+
 func (r *AuthRepository) GetUserByEmail(ctx context.Context, arg sqlc.GetUserByEmailParams) (sqlc.User, error) {
 	return r.q.GetUserByEmail(ctx, arg)
 }
