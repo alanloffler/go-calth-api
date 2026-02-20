@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"strings"
 
 	"github.com/alanloffler/go-calth-api/internal/auth"
 	"github.com/alanloffler/go-calth-api/internal/business"
@@ -13,6 +14,7 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/permission"
 	"github.com/alanloffler/go-calth-api/internal/role"
 	"github.com/alanloffler/go-calth-api/internal/user"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -43,6 +45,14 @@ func main() {
 	// Gin router
 	var router *gin.Engine = gin.Default()
 	router.SetTrustedProxies(nil)
+	router.Use(cors.New(cors.Config{
+		AllowOriginFunc: func(origin string) bool {
+			return strings.HasSuffix(origin, cfg.CorsOrigin)
+		},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowCredentials: true,
+	}))
 
 	var authService *auth.AuthService = auth.NewAuthService(cfg)
 
