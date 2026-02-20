@@ -118,6 +118,37 @@ func (q *Queries) GetBusiness(ctx context.Context, id pgtype.UUID) (Business, er
 	return i, err
 }
 
+const getBusinessBySlug = `-- name: GetBusinessBySlug :one
+SELECT id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at FROM businesses
+WHERE slug = $1
+`
+
+func (q *Queries) GetBusinessBySlug(ctx context.Context, slug string) (Business, error) {
+	row := q.db.QueryRow(ctx, getBusinessBySlug, slug)
+	var i Business
+	err := row.Scan(
+		&i.ID,
+		&i.Slug,
+		&i.TaxID,
+		&i.CompanyName,
+		&i.TradeName,
+		&i.Description,
+		&i.Street,
+		&i.City,
+		&i.Province,
+		&i.Country,
+		&i.ZipCode,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.WhatsappNumber,
+		&i.Website,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const getBusinesses = `-- name: GetBusinesses :many
 SELECT id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at FROM businesses
 `
