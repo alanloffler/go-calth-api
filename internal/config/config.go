@@ -16,6 +16,7 @@ type Config struct {
 	JwtRefreshExpiry string
 	CookieDomain     string
 	CookieSecure     bool
+	CorsOrigin       string
 }
 
 func Load() (*Config, error) {
@@ -34,6 +35,7 @@ func Load() (*Config, error) {
 		JwtRefreshExpiry: os.Getenv("JWT_REFRESH_EXPIRY"),
 		CookieDomain:     os.Getenv("COOKIE_DOMAIN"),
 		CookieSecure:     os.Getenv("COOKIE_SECURE") == "true",
+		CorsOrigin:       os.Getenv("CORS_ORIGIN"),
 	}
 
 	return config, nil
