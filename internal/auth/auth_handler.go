@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/alanloffler/go-calth-api/internal/common/response"
@@ -25,9 +26,8 @@ func NewAuthHandler(cfg *config.Config, repo *AuthRepository, service *AuthServi
 }
 
 type LoginRequest struct {
-	BusinessID string `json:"businessID" binding:"required,uuid"`
-	Email      string `json:"email" binding:"required,email"`
-	Password   string `json:"password" binding:"required"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
@@ -37,14 +37,30 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	var businessID pgtype.UUID
-	if err := businessID.Scan(req.BusinessID); err != nil {
-		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+	origin := c.GetHeader("Origin")
+	if origin == "" {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Origen requerido"))
+		return
+	}
+
+	slug, err := extractSubdomain(origin)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Subdominio inválido", err))
+		return
+	}
+
+	business, err := h.repo.GetBusinessBySlug(c.Request.Context(), slug)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Negocio no encontrado"))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al buscar negocio", err))
 		return
 	}
 
 	user, err := h.repo.GetUserByEmail(c.Request.Context(), sqlc.GetUserByEmailParams{
-		BusinessID: businessID,
+		BusinessID: business.ID,
 		Email:      req.Email,
 	})
 	if err != nil {
@@ -175,6 +191,24 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 }
 
 // Helpers
+func extractSubdomain(origin string) (string, error) {
+	host := origin
+	if _, after, ok := strings.Cut(origin, "://"); ok {
+		host = after
+	}
+
+	if idx := strings.LastIndex(host, ":"); idx != -1 {
+		host = host[:idx]
+	}
+
+	parts := strings.Split(host, ".")
+	if len(parts) < 2 {
+		return "", errors.New("Subdominio no encontrado")
+	}
+
+	return parts[0], nil
+}
+
 func parseDurationToSeconds(expiry string) int {
 	d, err := time.ParseDuration(expiry)
 	if err != nil {
