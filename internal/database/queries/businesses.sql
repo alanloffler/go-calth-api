@@ -12,6 +12,10 @@ SELECT * FROM businesses;
 -- name: GetBusiness :one
 SELECT * FROM businesses WHERE id = $1;
 
+-- name: GetBusinessBySlug :one
+SELECT * FROM businesses
+WHERE slug = $1;
+
 -- name: UpdateBusiness :one
 UPDATE businesses SET
   slug = COALESCE(sqlc.narg('slug'), slug),
