@@ -98,7 +98,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	c.SetCookie("access_token", tokenPair.AccessToken, accessMaxAge, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
 	c.SetCookie("refresh_token", tokenPair.RefreshToken, refreshMaxAge, "/auth", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
 
-	c.JSON(http.StatusOK, response.Success[any]("Inicio de sesión exitoso", nil))
+	c.JSON(http.StatusOK, response.Created[any]("Inicio de sesión exitoso", nil))
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
