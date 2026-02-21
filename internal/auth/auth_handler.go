@@ -228,21 +228,15 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 }
 
 func (h *AuthHandler) GetMe(c *gin.Context) {
-	userIDStr, exists := c.Get("userID")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
-		return
-	}
-
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
 		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
 		return
 	}
 
-	var userID pgtype.UUID
-	if err := userID.Scan(userIDStr.(string)); err != nil {
-		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "ID de usuario inválido"))
+	userID, ok := ctxkeys.UserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
 		return
 	}
 
