@@ -104,6 +104,110 @@ func (q *Queries) DeleteUser(ctx context.Context, id pgtype.UUID) error {
 	return err
 }
 
+const getMe = `-- name: GetMe :many
+SELECT
+    "user"."id",
+    "user"."ic",
+    "user"."user_name",
+    "user"."first_name",
+    "user"."last_name",
+    "user"."email",
+    "user"."password",
+    "user"."phone_number",
+    "user"."role_id",
+    "user"."business_id",
+    "user"."refresh_token",
+    "user"."created_at",
+    "user"."updated_at",
+    "user"."deleted_at",
+    "role"."id"          AS "role_id",
+    "role"."name"        AS "role_name",
+    "role"."value"       AS "role_value",
+    "rp"."role_id"       AS "rp_role_id",
+    "rp"."permission_id" AS "rp_permission_id",
+    "p"."id"             AS "permission_id",
+    "p"."action_key"     AS "permission_action_key"
+FROM users "user"
+LEFT JOIN roles "role"
+    ON "role"."id" = "user"."role_id"
+LEFT JOIN role_permissions "rp"
+    ON "rp"."role_id" = "role"."id"
+LEFT JOIN permissions "p"
+    ON "p"."id" = "rp"."permission_id"
+WHERE "user"."business_id" = $1 AND "user"."id" = $2
+`
+
+type GetMeParams struct {
+	BusinessID pgtype.UUID `json:"businessId"`
+	ID         pgtype.UUID `json:"id"`
+}
+
+type GetMeRow struct {
+	ID                  pgtype.UUID        `json:"id"`
+	Ic                  string             `json:"ic"`
+	UserName            string             `json:"userName"`
+	FirstName           string             `json:"firstName"`
+	LastName            string             `json:"lastName"`
+	Email               string             `json:"email"`
+	Password            string             `json:"password"`
+	PhoneNumber         string             `json:"phoneNumber"`
+	RoleID              pgtype.UUID        `json:"roleId"`
+	BusinessID          pgtype.UUID        `json:"businessId"`
+	RefreshToken        pgtype.Text        `json:"refreshToken"`
+	CreatedAt           pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt           pgtype.Timestamptz `json:"updatedAt"`
+	DeletedAt           pgtype.Timestamptz `json:"deletedAt"`
+	RoleID_2            pgtype.UUID        `json:"roleId2"`
+	RoleName            pgtype.Text        `json:"roleName"`
+	RoleValue           pgtype.Text        `json:"roleValue"`
+	RpRoleID            pgtype.UUID        `json:"rpRoleId"`
+	RpPermissionID      pgtype.UUID        `json:"rpPermissionId"`
+	PermissionID        pgtype.UUID        `json:"permissionId"`
+	PermissionActionKey pgtype.Text        `json:"permissionActionKey"`
+}
+
+func (q *Queries) GetMe(ctx context.Context, arg GetMeParams) ([]GetMeRow, error) {
+	rows, err := q.db.Query(ctx, getMe, arg.BusinessID, arg.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetMeRow
+	for rows.Next() {
+		var i GetMeRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Ic,
+			&i.UserName,
+			&i.FirstName,
+			&i.LastName,
+			&i.Email,
+			&i.Password,
+			&i.PhoneNumber,
+			&i.RoleID,
+			&i.BusinessID,
+			&i.RefreshToken,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+			&i.RoleID_2,
+			&i.RoleName,
+			&i.RoleValue,
+			&i.RpRoleID,
+			&i.RpPermissionID,
+			&i.PermissionID,
+			&i.PermissionActionKey,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
 SELECT id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at FROM users
 WHERE business_id = $1 AND email = $2 AND deleted_at IS NULL
