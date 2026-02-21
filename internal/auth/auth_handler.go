@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alanloffler/go-calth-api/internal/common/ctxkeys"
 	"github.com/alanloffler/go-calth-api/internal/common/response"
 	"github.com/alanloffler/go-calth-api/internal/config"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
@@ -21,9 +22,9 @@ type getMePermission struct {
 }
 
 type getMeRolePermission struct {
-	RoleID       pgtype.UUID       `json:"roleId"`
-	PermissionID pgtype.UUID       `json:"permissionId"`
-	Permission   getMePermission   `json:"permission"`
+	RoleID       pgtype.UUID     `json:"roleId"`
+	PermissionID pgtype.UUID     `json:"permissionId"`
+	Permission   getMePermission `json:"permission"`
 }
 
 type getMeRole struct {
@@ -233,8 +234,8 @@ func (h *AuthHandler) GetMe(c *gin.Context) {
 		return
 	}
 
-	businessIDStr, exists := c.Get("businessID")
-	if !exists {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
 		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
 		return
 	}
@@ -242,12 +243,6 @@ func (h *AuthHandler) GetMe(c *gin.Context) {
 	var userID pgtype.UUID
 	if err := userID.Scan(userIDStr.(string)); err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "ID de usuario inválido"))
-		return
-	}
-
-	var businessID pgtype.UUID
-	if err := businessID.Scan(businessIDStr.(string)); err != nil {
-		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "ID de negocio inválido"))
 		return
 	}
 
