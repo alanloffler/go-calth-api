@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterRoutes(router *gin.Engine, q *sqlc.Queries) {
+func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries) {
 	var repo *UserRepository = NewUserRepository(q)
 	var handler *UserHandler = NewUserHandler(repo)
 	var users *gin.RouterGroup = router.Group("/users")
@@ -13,6 +13,7 @@ func RegisterRoutes(router *gin.Engine, q *sqlc.Queries) {
 	users.POST("", handler.Create)
 	users.GET("", handler.GetAll)
 	users.GET("/soft", handler.GetAllWithSoftDeleted)
+	users.GET("/role/:role/soft", handler.GetAllByRoleWithSoftDeleted)
 	users.GET("/:id", handler.GetByID)
 	users.GET("/:id/soft", handler.GetByIDWithSoftDeleted)
 	users.PATCH("/:id", handler.Update)
