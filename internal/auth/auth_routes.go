@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterRoutes(router *gin.Engine, q *sqlc.Queries, cfg *config.Config) {
+func RegisterRoutes(router *gin.Engine, q *sqlc.Queries, cfg *config.Config) *AuthHandler {
 	var service *AuthService = NewAuthService(cfg)
 	var repo *AuthRepository = NewAuthRepository(q)
 	var handler *AuthHandler = NewAuthHandler(cfg, repo, service)
@@ -15,4 +15,6 @@ func RegisterRoutes(router *gin.Engine, q *sqlc.Queries, cfg *config.Config) {
 	auth.POST("/login", handler.Login)
 	auth.POST("/logout", handler.Logout)
 	auth.POST("/refresh", handler.Refresh)
+
+	return handler
 }
