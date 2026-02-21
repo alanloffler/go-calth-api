@@ -95,10 +95,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	accessMaxAge := parseDurationToSeconds(h.cfg.JwtAccessExpiry)
 	refreshMaxAge := parseDurationToSeconds(h.cfg.JwtRefreshExpiry)
 
+	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("access_token", tokenPair.AccessToken, accessMaxAge, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
-	c.SetCookie("refresh_token", tokenPair.RefreshToken, refreshMaxAge, "/auth", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
+	c.SetCookie("refresh_token", tokenPair.RefreshToken, refreshMaxAge, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
 
-	c.JSON(http.StatusOK, response.Created[any]("Inicio de sesión exitoso", nil))
+	c.JSON(http.StatusOK, response.Success[any]("Inicio de sesión exitoso", nil))
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
@@ -126,8 +127,9 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		return
 	}
 
+	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("access_token", "", -1, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
-	c.SetCookie("refresh_token", "", -1, "/auth", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
+	c.SetCookie("refresh_token", "", -1, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
 
 	c.JSON(http.StatusOK, response.Success[any]("Sesión cerrada exitosamente", nil))
 }
@@ -184,10 +186,35 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	accessMaxAge := parseDurationToSeconds(h.cfg.JwtAccessExpiry)
 	refreshMaxAge := parseDurationToSeconds(h.cfg.JwtRefreshExpiry)
 
+	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("access_token", tokenPair.AccessToken, accessMaxAge, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
-	c.SetCookie("refresh_token", tokenPair.RefreshToken, refreshMaxAge, "/auth", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
+	c.SetCookie("refresh_token", tokenPair.RefreshToken, refreshMaxAge, "/", h.cfg.CookieDomain, h.cfg.CookieSecure, true)
 
 	c.JSON(http.StatusOK, response.Success[any]("Token refrescado exitosamente", nil))
+}
+
+func (h *AuthHandler) GetMe(c *gin.Context) {
+	userIDStr, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	var userID pgtype.UUID
+	if err := userID.Scan(userIDStr.(string)); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "ID de usuario inválido"))
+		return
+	}
+
+	user, err := h.repo.GetUserByID(c.Request.Context(), userID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado"))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, response.Success("Usuario encontrado", &user))
 }
 
 // Helpers
