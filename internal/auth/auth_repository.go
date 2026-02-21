@@ -27,6 +27,10 @@ func (r *AuthRepository) GetUserByID(ctx context.Context, id pgtype.UUID) (sqlc.
 	return r.q.GetUserByID(ctx, id)
 }
 
+func (r *AuthRepository) GetMe(ctx context.Context, arg sqlc.GetMeParams) ([]sqlc.GetMeRow, error) {
+	return r.q.GetMe(ctx, arg)
+}
+
 func (r *AuthRepository) UpdateRefreshToken(ctx context.Context, arg sqlc.UpdateRefreshTokenParams) (sqlc.User, error) {
 	return r.q.UpdateRefreshToken(ctx, arg)
 }
