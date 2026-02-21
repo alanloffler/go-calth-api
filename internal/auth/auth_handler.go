@@ -15,6 +15,39 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type getMePermission struct {
+	ID        pgtype.UUID `json:"id"`
+	ActionKey string      `json:"actionKey"`
+}
+
+type getMeRolePermission struct {
+	RoleID       pgtype.UUID       `json:"roleId"`
+	PermissionID pgtype.UUID       `json:"permissionId"`
+	Permission   getMePermission   `json:"permission"`
+}
+
+type getMeRole struct {
+	ID              pgtype.UUID           `json:"id"`
+	Name            string                `json:"name"`
+	Value           string                `json:"value"`
+	RolePermissions []getMeRolePermission `json:"rolePermissions"`
+}
+
+type getMeResponse struct {
+	ID          pgtype.UUID        `json:"id"`
+	Ic          string             `json:"ic"`
+	UserName    string             `json:"userName"`
+	FirstName   string             `json:"firstName"`
+	LastName    string             `json:"lastName"`
+	Email       string             `json:"email"`
+	PhoneNumber string             `json:"phoneNumber"`
+	RoleID      pgtype.UUID        `json:"roleId"`
+	BusinessID  pgtype.UUID        `json:"businessId"`
+	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt   pgtype.Timestamptz `json:"updatedAt"`
+	Role        *getMeRole         `json:"role"`
+}
+
 type AuthHandler struct {
 	cfg     *config.Config
 	repo    *AuthRepository
@@ -200,21 +233,76 @@ func (h *AuthHandler) GetMe(c *gin.Context) {
 		return
 	}
 
+	businessIDStr, exists := c.Get("businessID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
 	var userID pgtype.UUID
 	if err := userID.Scan(userIDStr.(string)); err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "ID de usuario inválido"))
 		return
 	}
 
-	user, err := h.repo.GetUserByID(c.Request.Context(), userID)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado"))
-			return
-		}
+	var businessID pgtype.UUID
+	if err := businessID.Scan(businessIDStr.(string)); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "ID de negocio inválido"))
+		return
 	}
 
-	c.JSON(http.StatusOK, response.Success("Usuario encontrado", &user))
+	rows, err := h.repo.GetMe(c.Request.Context(), sqlc.GetMeParams{
+		ID:         userID,
+		BusinessID: businessID,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al buscar usuario", err))
+		return
+	}
+	if len(rows) == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado"))
+		return
+	}
+
+	first := rows[0]
+	result := getMeResponse{
+		ID:          first.ID,
+		Ic:          first.Ic,
+		UserName:    first.UserName,
+		FirstName:   first.FirstName,
+		LastName:    first.LastName,
+		Email:       first.Email,
+		PhoneNumber: first.PhoneNumber,
+		RoleID:      first.RoleID,
+		BusinessID:  first.BusinessID,
+		CreatedAt:   first.CreatedAt,
+		UpdatedAt:   first.UpdatedAt,
+	}
+
+	if first.RoleID_2.Valid {
+		role := getMeRole{
+			ID:              first.RoleID_2,
+			Name:            first.RoleName.String,
+			Value:           first.RoleValue.String,
+			RolePermissions: []getMeRolePermission{},
+		}
+		for _, row := range rows {
+			if !row.RpPermissionID.Valid {
+				continue
+			}
+			role.RolePermissions = append(role.RolePermissions, getMeRolePermission{
+				RoleID:       row.RpRoleID,
+				PermissionID: row.RpPermissionID,
+				Permission: getMePermission{
+					ID:        row.PermissionID,
+					ActionKey: row.PermissionActionKey.String,
+				},
+			})
+		}
+		result.Role = &role
+	}
+
+	c.JSON(http.StatusOK, response.Success("Usuario encontrado", &result))
 }
 
 // Helpers
