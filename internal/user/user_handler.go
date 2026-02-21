@@ -128,6 +128,52 @@ func (h *UserHandler) GetAllWithSoftDeleted(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Success("Usuarios encontrados", &users))
 }
 
+func (h *UserHandler) GetAllByRole(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	role := c.Param("role")
+
+	rows, err := h.repo.GetAllByRole(c.Request.Context(), sqlc.GetUsersByRoleParams{
+		BusinessID: businessID,
+		Value:      role,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Usuarios no encontrados", err))
+		return
+	}
+
+	users := make([]userByRoleResponse, len(rows))
+	for i, row := range rows {
+		users[i] = userByRoleResponse{
+			ID:          row.ID,
+			Ic:          row.Ic,
+			UserName:    row.UserName,
+			FirstName:   row.FirstName,
+			LastName:    row.LastName,
+			Email:       row.Email,
+			PhoneNumber: row.PhoneNumber,
+			BusinessID:  row.BusinessID,
+			CreatedAt:   row.CreatedAt,
+			UpdatedAt:   row.UpdatedAt,
+			DeletedAt:   row.DeletedAt,
+		}
+		if row.RoleID.Valid {
+			users[i].Role = &userRole{
+				ID:          row.RoleID,
+				Name:        row.RoleName.String,
+				Value:       row.RoleValue.String,
+				Description: row.RoleDescription.String,
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, response.Success("Usuarios encontrados", &users))
+}
+
 func (h *UserHandler) GetAllByRoleWithSoftDeleted(c *gin.Context) {
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
