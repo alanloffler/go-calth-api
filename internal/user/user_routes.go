@@ -13,6 +13,7 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries) {
 	users.POST("", handler.Create)
 	users.GET("", handler.GetAll)
 	users.GET("/soft", handler.GetAllWithSoftDeleted)
+	users.GET("/role/:role", handler.GetAllByRole)
 	users.GET("/role/:role/soft", handler.GetAllByRoleWithSoftDeleted)
 	users.GET("/:id", handler.GetByID)
 	users.GET("/:id/soft", handler.GetByIDWithSoftDeleted)
