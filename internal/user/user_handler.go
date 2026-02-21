@@ -3,6 +3,7 @@ package user
 import (
 	"net/http"
 
+	"github.com/alanloffler/go-calth-api/internal/common/ctxkeys"
 	"github.com/alanloffler/go-calth-api/internal/common/response"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/gin-gonic/gin"
@@ -39,6 +40,28 @@ type UpdateUserRequest struct {
 	Password    *string `json:"password" binding:"omitempty,min=8,max=100"`
 	PhoneNumber string  `json:"phoneNumber" binding:"required,len=10,numeric"`
 	RoleID      string  `json:"roleId" binding:"required,uuid"`
+}
+
+type userRole struct {
+	ID          pgtype.UUID `json:"id"`
+	Name        string      `json:"name"`
+	Value       string      `json:"value"`
+	Description string      `json:"description"`
+}
+
+type userByRoleResponse struct {
+	ID          pgtype.UUID        `json:"id"`
+	Ic          string             `json:"ic"`
+	UserName    string             `json:"userName"`
+	FirstName   string             `json:"firstName"`
+	LastName    string             `json:"lastName"`
+	Email       string             `json:"email"`
+	PhoneNumber string             `json:"phoneNumber"`
+	Role        *userRole          `json:"role"`
+	BusinessID  pgtype.UUID        `json:"businessID"`
+	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt   pgtype.Timestamptz `json:"updatedAt"`
+	DeletedAt   pgtype.Timestamptz `json:"deletedAt"`
 }
 
 func (h *UserHandler) Create(c *gin.Context) {
@@ -100,6 +123,52 @@ func (h *UserHandler) GetAllWithSoftDeleted(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuarios no encontrados", err))
 		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Usuarios encontrados", &users))
+}
+
+func (h *UserHandler) GetAllByRoleWithSoftDeleted(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	role := c.Param("role")
+
+	rows, err := h.repo.GetAllByRoleWithSoftDeleted(c.Request.Context(), sqlc.GetUsersByRoleWithSoftDeletedParams{
+		BusinessID: businessID,
+		Value:      role,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Usuarios no encontrados", err))
+		return
+	}
+
+	users := make([]userByRoleResponse, len(rows))
+	for i, row := range rows {
+		users[i] = userByRoleResponse{
+			ID:          row.ID,
+			Ic:          row.Ic,
+			UserName:    row.UserName,
+			FirstName:   row.FirstName,
+			LastName:    row.LastName,
+			Email:       row.Email,
+			PhoneNumber: row.PhoneNumber,
+			BusinessID:  row.BusinessID,
+			CreatedAt:   row.CreatedAt,
+			UpdatedAt:   row.UpdatedAt,
+			DeletedAt:   row.DeletedAt,
+		}
+		if row.RoleID.Valid {
+			users[i].Role = &userRole{
+				ID:          row.RoleID,
+				Name:        row.RoleName.String,
+				Value:       row.RoleValue.String,
+				Description: row.RoleDescription.String,
+			}
+		}
 	}
 
 	c.JSON(http.StatusOK, response.Success("Usuarios encontrados", &users))
