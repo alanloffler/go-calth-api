@@ -27,6 +27,10 @@ func (r *UserRepository) GetAllWithSoftDeleted(ctx context.Context) ([]sqlc.User
 	return r.q.GetUsersWithSoftDeleted(ctx)
 }
 
+func (r *UserRepository) GetAllByRole(ctx context.Context, arg sqlc.GetUsersByRoleParams) ([]sqlc.GetUsersByRoleRow, error) {
+	return r.q.GetUsersByRole(ctx, arg)
+}
+
 func (r *UserRepository) GetAllByRoleWithSoftDeleted(ctx context.Context, arg sqlc.GetUsersByRoleWithSoftDeletedParams) ([]sqlc.GetUsersByRoleWithSoftDeletedRow, error) {
 	return r.q.GetUsersByRoleWithSoftDeleted(ctx, arg)
 }
