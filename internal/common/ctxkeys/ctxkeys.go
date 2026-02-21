@@ -9,6 +9,10 @@ func BusinessID(c *gin.Context) (pgtype.UUID, bool) {
 	return scanUUID(c, "businessID")
 }
 
+func UserID(c *gin.Context) (pgtype.UUID, bool) {
+	return scanUUID(c, "userID")
+}
+
 func scanUUID(c *gin.Context, key string) (pgtype.UUID, bool) {
 	val, exists := c.Get(key)
 	if !exists {
