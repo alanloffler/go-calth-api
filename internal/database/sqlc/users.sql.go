@@ -333,6 +333,88 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 	return items, nil
 }
 
+const getUsersByRole = `-- name: GetUsersByRole :many
+SELECT
+    "user"."id",
+    "user"."ic",
+    "user"."user_name",
+    "user"."first_name",
+    "user"."last_name",
+    "user"."email",
+    "user"."phone_number",
+    "user"."business_id",
+    "user"."created_at",
+    "user"."updated_at",
+    "user"."deleted_at",
+    "role"."id"          AS "role_id",
+    "role"."name"        AS "role_name",
+    "role"."value"       AS "role_value",
+    "role"."description" AS "role_description"
+FROM users "user"
+LEFT JOIN roles "role"
+    ON "role"."id" = "user"."role_id"
+WHERE "user"."business_id" = $1 AND "role"."value" = $2 AND "user"."deleted_at" IS NULL
+`
+
+type GetUsersByRoleParams struct {
+	BusinessID pgtype.UUID `json:"businessId"`
+	Value      string      `json:"value"`
+}
+
+type GetUsersByRoleRow struct {
+	ID              pgtype.UUID        `json:"id"`
+	Ic              string             `json:"ic"`
+	UserName        string             `json:"userName"`
+	FirstName       string             `json:"firstName"`
+	LastName        string             `json:"lastName"`
+	Email           string             `json:"email"`
+	PhoneNumber     string             `json:"phoneNumber"`
+	BusinessID      pgtype.UUID        `json:"businessId"`
+	CreatedAt       pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt       pgtype.Timestamptz `json:"updatedAt"`
+	DeletedAt       pgtype.Timestamptz `json:"deletedAt"`
+	RoleID          pgtype.UUID        `json:"roleId"`
+	RoleName        pgtype.Text        `json:"roleName"`
+	RoleValue       pgtype.Text        `json:"roleValue"`
+	RoleDescription pgtype.Text        `json:"roleDescription"`
+}
+
+func (q *Queries) GetUsersByRole(ctx context.Context, arg GetUsersByRoleParams) ([]GetUsersByRoleRow, error) {
+	rows, err := q.db.Query(ctx, getUsersByRole, arg.BusinessID, arg.Value)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetUsersByRoleRow
+	for rows.Next() {
+		var i GetUsersByRoleRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Ic,
+			&i.UserName,
+			&i.FirstName,
+			&i.LastName,
+			&i.Email,
+			&i.PhoneNumber,
+			&i.BusinessID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+			&i.RoleID,
+			&i.RoleName,
+			&i.RoleValue,
+			&i.RoleDescription,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUsersByRoleWithSoftDeleted = `-- name: GetUsersByRoleWithSoftDeleted :many
 SELECT
     "user"."id",
