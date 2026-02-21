@@ -56,9 +56,10 @@ func main() {
 
 	var authService *auth.AuthService = auth.NewAuthService(cfg)
 
+	authHandler := auth.RegisterRoutes(router, queries, cfg)
+
 	// Public routes
 	health.RegisterRoutes(router, pool)
-	auth.RegisterRoutes(router, queries, cfg)
 	user.RegisterRoutes(router, queries)
 	role.RegisterRoutes(router, queries, pool)
 	permission.RegisterRoutes(router, queries)
@@ -66,6 +67,7 @@ func main() {
 	// Protected routes
 	protected := router.Group("/")
 	protected.Use(middleware.AuthMiddleware(authService))
+	protected.GET("/auth/me", authHandler.GetMe)
 
 	business.RegisterRoutes(protected, queries)
 
