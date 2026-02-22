@@ -52,6 +52,26 @@ func (q *Queries) DeleteRole(ctx context.Context, id pgtype.UUID) error {
 	return err
 }
 
+const getRoleByID = `-- name: GetRoleByID :one
+SELECT id, name, value, description, created_at, updated_at, deleted_at FROM roles
+WHERE id = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) GetRoleByID(ctx context.Context, id pgtype.UUID) (Role, error) {
+	row := q.db.QueryRow(ctx, getRoleByID, id)
+	var i Role
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Value,
+		&i.Description,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const getRoleByValue = `-- name: GetRoleByValue :one
 SELECT id, name, value, description, created_at, updated_at, deleted_at FROM roles
 WHERE value = $1
