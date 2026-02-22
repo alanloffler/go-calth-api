@@ -157,3 +157,9 @@ UPDATE users
 SET refresh_token = NULL, updated_at = now()
 WHERE id = $1
 RETURNING *;
+
+-- name: CheckIcAvailability :one
+SELECT EXISTS (
+  SELECT 1 FROM users "user"
+  WHERE business_id = $1 AND "user"."ic" = $2
+) AS ic_available;
