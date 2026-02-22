@@ -29,6 +29,22 @@ type Business struct {
 	DeletedAt      pgtype.Timestamptz `json:"deletedAt"`
 }
 
+type PatientProfile struct {
+	ID                    pgtype.UUID        `json:"id"`
+	BusinessID            pgtype.UUID        `json:"businessId"`
+	UserID                pgtype.UUID        `json:"userId"`
+	Gender                string             `json:"gender"`
+	BirthDay              pgtype.Date        `json:"birthDay"`
+	BloodType             string             `json:"bloodType"`
+	Weight                pgtype.Numeric     `json:"weight"`
+	Height                pgtype.Numeric     `json:"height"`
+	EmergencyContactName  string             `json:"emergencyContactName"`
+	EmergencyContactPhone string             `json:"emergencyContactPhone"`
+	CreatedAt             pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt             pgtype.Timestamptz `json:"updatedAt"`
+	DeletedAt             pgtype.Timestamptz `json:"deletedAt"`
+}
+
 type Permission struct {
 	ID          pgtype.UUID        `json:"id"`
 	Name        string             `json:"name"`
