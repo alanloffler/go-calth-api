@@ -266,13 +266,54 @@ func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 }
 
 const getUserByIDWithSoftDeleted = `-- name: GetUserByIDWithSoftDeleted :one
-SELECT id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at FROM users
-WHERE id = $1 AND deleted_at IS NOT NULL
+SELECT
+    "user"."id",
+    "user"."ic",
+    "user"."user_name",
+    "user"."first_name",
+    "user"."last_name",
+    "user"."email",
+    "user"."phone_number",
+    "user"."business_id",
+    "user"."created_at",
+    "user"."updated_at",
+    "user"."deleted_at",
+    "role"."id"          AS "role_id",
+    "role"."name"        AS "role_name",
+    "role"."value"       AS "role_value",
+    "role"."description" AS "role_description"
+FROM users "user"
+LEFT JOIN roles "role"
+    ON "role"."id" = "user"."role_id"
+WHERE "user"."business_id" = $1 AND "user"."id" = $2
 `
 
-func (q *Queries) GetUserByIDWithSoftDeleted(ctx context.Context, id pgtype.UUID) (User, error) {
-	row := q.db.QueryRow(ctx, getUserByIDWithSoftDeleted, id)
-	var i User
+type GetUserByIDWithSoftDeletedParams struct {
+	BusinessID pgtype.UUID `json:"businessId"`
+	ID         pgtype.UUID `json:"id"`
+}
+
+type GetUserByIDWithSoftDeletedRow struct {
+	ID              pgtype.UUID        `json:"id"`
+	Ic              string             `json:"ic"`
+	UserName        string             `json:"userName"`
+	FirstName       string             `json:"firstName"`
+	LastName        string             `json:"lastName"`
+	Email           string             `json:"email"`
+	PhoneNumber     string             `json:"phoneNumber"`
+	BusinessID      pgtype.UUID        `json:"businessId"`
+	CreatedAt       pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt       pgtype.Timestamptz `json:"updatedAt"`
+	DeletedAt       pgtype.Timestamptz `json:"deletedAt"`
+	RoleID          pgtype.UUID        `json:"roleId"`
+	RoleName        pgtype.Text        `json:"roleName"`
+	RoleValue       pgtype.Text        `json:"roleValue"`
+	RoleDescription pgtype.Text        `json:"roleDescription"`
+}
+
+func (q *Queries) GetUserByIDWithSoftDeleted(ctx context.Context, arg GetUserByIDWithSoftDeletedParams) (GetUserByIDWithSoftDeletedRow, error) {
+	row := q.db.QueryRow(ctx, getUserByIDWithSoftDeleted, arg.BusinessID, arg.ID)
+	var i GetUserByIDWithSoftDeletedRow
 	err := row.Scan(
 		&i.ID,
 		&i.Ic,
@@ -280,14 +321,15 @@ func (q *Queries) GetUserByIDWithSoftDeleted(ctx context.Context, id pgtype.UUID
 		&i.FirstName,
 		&i.LastName,
 		&i.Email,
-		&i.Password,
 		&i.PhoneNumber,
-		&i.RoleID,
 		&i.BusinessID,
-		&i.RefreshToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.RoleID,
+		&i.RoleName,
+		&i.RoleValue,
+		&i.RoleDescription,
 	)
 	return i, err
 }
