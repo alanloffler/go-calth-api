@@ -6,7 +6,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func RegisterRoutes(router *gin.Engine, q *sqlc.Queries, pool *pgxpool.Pool) {
+func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool) {
 	var repo *RoleRepository = NewRoleRepository(q)
 	var handler *RoleHandler = NewRoleHandler(repo, pool)
 	var roles *gin.RouterGroup = router.Group("/roles")
