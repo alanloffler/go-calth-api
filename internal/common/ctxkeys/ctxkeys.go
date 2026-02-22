@@ -9,6 +9,10 @@ func BusinessID(c *gin.Context) (pgtype.UUID, bool) {
 	return scanUUID(c, "businessID")
 }
 
+func RoleID(c *gin.Context) (pgtype.UUID, bool) {
+	return scanUUID(c, "roleID")
+}
+
 func UserID(c *gin.Context) (pgtype.UUID, bool) {
 	return scanUUID(c, "userID")
 }
