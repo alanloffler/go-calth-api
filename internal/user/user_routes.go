@@ -3,11 +3,12 @@ package user
 import (
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries) {
+func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool) {
 	var repo *UserRepository = NewUserRepository(q)
-	var handler *UserHandler = NewUserHandler(repo)
+	var handler *UserHandler = NewUserHandler(repo, pool)
 	var users *gin.RouterGroup = router.Group("/users")
 
 	users.POST("", handler.Create)
@@ -21,4 +22,6 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries) {
 	users.PATCH("/:id/restore", handler.Restore)
 	users.DELETE("/:id", handler.Delete)
 	users.DELETE("/:id/soft", handler.SoftDelete)
+	// Checks
+	users.GET("/check/ic/:ic", handler.CheckIcAvailability)
 }
