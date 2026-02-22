@@ -482,3 +482,28 @@ func (h *UserHandler) Restore(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.Success[any]("Usuario restaurado", nil))
 }
+
+// Checks
+func (h *UserHandler) CheckIcAvailability(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID de negocio inválido"))
+		return
+	}
+
+	ic := c.Param("ic")
+	if ic == "" || len(ic) < 7 || len(ic) > 8 {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de IC inválido"))
+		return
+	}
+
+	available, err := h.repo.CheckIcAvailability(c.Request.Context(), sqlc.CheckIcAvailabilityParams{BusinessID: businessID, Ic: ic})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al verificar disponibilidad de IC", err))
+		return
+	}
+
+	available = !available
+
+	c.JSON(http.StatusOK, response.Success("Disponibilidad de IC", &available))
+}
