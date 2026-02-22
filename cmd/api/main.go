@@ -62,7 +62,7 @@ func main() {
 	business.RegisterRoutes(protected, queries)
 	permission.RegisterRoutes(protected, queries)
 	role.RegisterRoutes(protected, queries, pool)
-	user.RegisterRoutes(protected, queries)
+	user.RegisterRoutes(protected, queries, pool)
 
 	// Mixed routes (public/protected)
 	auth.RegisterRoutes(router, protected, queries, cfg)
