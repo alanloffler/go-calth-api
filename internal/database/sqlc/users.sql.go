@@ -11,6 +11,25 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const checkIcAvailability = `-- name: CheckIcAvailability :one
+SELECT EXISTS (
+  SELECT 1 FROM users "user"
+  WHERE business_id = $1 AND "user"."ic" = $2
+) AS ic_available
+`
+
+type CheckIcAvailabilityParams struct {
+	BusinessID pgtype.UUID `json:"businessId"`
+	Ic         string      `json:"ic"`
+}
+
+func (q *Queries) CheckIcAvailability(ctx context.Context, arg CheckIcAvailabilityParams) (bool, error) {
+	row := q.db.QueryRow(ctx, checkIcAvailability, arg.BusinessID, arg.Ic)
+	var ic_available bool
+	err := row.Scan(&ic_available)
+	return ic_available, err
+}
+
 const clearRefreshToken = `-- name: ClearRefreshToken :one
 UPDATE users
 SET refresh_token = NULL, updated_at = now()
