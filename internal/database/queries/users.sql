@@ -21,8 +21,26 @@ SELECT * FROM users
 WHERE id = $1 AND deleted_at IS NULL;
 
 -- name: GetUserByIDWithSoftDeleted :one
-SELECT * FROM users
-WHERE id = $1 AND deleted_at IS NOT NULL;
+SELECT
+    "user"."id",
+    "user"."ic",
+    "user"."user_name",
+    "user"."first_name",
+    "user"."last_name",
+    "user"."email",
+    "user"."phone_number",
+    "user"."business_id",
+    "user"."created_at",
+    "user"."updated_at",
+    "user"."deleted_at",
+    "role"."id"          AS "role_id",
+    "role"."name"        AS "role_name",
+    "role"."value"       AS "role_value",
+    "role"."description" AS "role_description"
+FROM users "user"
+LEFT JOIN roles "role"
+    ON "role"."id" = "user"."role_id"
+WHERE "user"."business_id" = $1 AND "user"."id" = $2;
 
 -- name: GetUsersByRole :many
 SELECT
