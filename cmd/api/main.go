@@ -64,8 +64,10 @@ func main() {
 	role.RegisterRoutes(protected, queries, pool)
 	user.RegisterRoutes(protected, queries)
 
-	// Public routes
+	// Mixed routes (public/protected)
 	auth.RegisterRoutes(router, protected, queries, cfg)
+
+	// Public routes
 	health.RegisterRoutes(router, pool)
 
 	router.Run(":" + cfg.Port)
