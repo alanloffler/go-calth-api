@@ -58,3 +58,8 @@ func (r *UserRepository) SoftDelete(ctx context.Context, id pgtype.UUID) (int64,
 func (r *UserRepository) Restore(ctx context.Context, id pgtype.UUID) (int64, error) {
 	return r.q.RestoreUser(ctx, id)
 }
+
+// Checks
+func (r *UserRepository) CheckIcAvailability(ctx context.Context, arg sqlc.CheckIcAvailabilityParams) (bool, error) {
+	return r.q.CheckIcAvailability(ctx, arg)
+}
