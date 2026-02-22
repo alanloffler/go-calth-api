@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterRoutes(router *gin.Engine, q *sqlc.Queries) {
+func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries) {
 	var repo *PermissionRepository = NewPermissionRepository(q)
 	var handler *PermissionHandler = NewPermissionHandler(repo)
 	var permissions *gin.RouterGroup = router.Group("/permissions")
