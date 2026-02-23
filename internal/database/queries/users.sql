@@ -160,6 +160,12 @@ RETURNING *;
 
 -- name: CheckIcAvailability :one
 SELECT EXISTS (
-  SELECT 1 FROM users "user"
-  WHERE business_id = $1 AND "user"."ic" = $2
+    SELECT 1 FROM users "user"
+    WHERE business_id = $1 AND "user"."ic" = $2
 ) AS ic_available;
+
+-- name: CheckEmailAvailability :one
+SELECT EXISTS (
+    SELECT 1 FROM users "user"
+    WHERE business_id = $1 AND "user"."email" = $2
+) AS email_available;
