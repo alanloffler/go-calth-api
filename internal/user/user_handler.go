@@ -26,16 +26,30 @@ func NewUserHandler(repo *UserRepository, pool *pgxpool.Pool) *UserHandler {
 }
 
 type CreateUserRequest struct {
-	Ic             string                       `json:"ic" binding:"required,len=8"`
-	UserName       string                       `json:"userName" binding:"required,min=3,max=100"`
-	FirstName      string                       `json:"firstName" binding:"required,min=3,max=100"`
-	LastName       string                       `json:"lastName" binding:"required,min=3,max=100"`
-	Email          string                       `json:"email" binding:"required,email,max=100"`
-	Password       string                       `json:"password" binding:"required,min=8,max=100"`
-	PhoneNumber    string                       `json:"phoneNumber" binding:"required,len=10,numeric"`
-	RoleID         string                       `json:"roleId" binding:"required,uuid"`
-	BusinessID     string                       `json:"businessId" binding:"required,uuid"`
-	PatientProfile *CreatePatientProfileRequest `json:"patientProfile"`
+	Ic          string `json:"ic" binding:"required,len=8"`
+	UserName    string `json:"userName" binding:"required,min=3,max=100"`
+	FirstName   string `json:"firstName" binding:"required,min=3,max=100"`
+	LastName    string `json:"lastName" binding:"required,min=3,max=100"`
+	Email       string `json:"email" binding:"required,email,max=100"`
+	Password    string `json:"password" binding:"required,min=8,max=100"`
+	PhoneNumber string `json:"phoneNumber" binding:"required,len=10,numeric"`
+	RoleID      string `json:"roleId" binding:"required,uuid"`
+	BusinessID  string `json:"businessId" binding:"required,uuid"`
+}
+
+type CreatePatientRequest struct {
+	User    CreateUserData           `json:"user" bindin:"required"`
+	Profile CreatePatientProfileData `json:"profile" binding:"required"`
+}
+
+type CreateUserData struct {
+	Ic          string `json:"ic" binding:"required,len=8"`
+	UserName    string `json:"userName" binding:"required,min=3,max=100"`
+	FirstName   string `json:"firstName" binding:"required,min=3,max=100"`
+	LastName    string `json:"lastName" binding:"required,min=3,max=100"`
+	Email       string `json:"email" binding:"required,email,max=100"`
+	Password    string `json:"password" binding:"required,min=8,max=100"`
+	PhoneNumber string `json:"phoneNumber" binding:"required,len=10,numeric"`
 }
 
 type UpdateUserRequest struct {
@@ -49,7 +63,7 @@ type UpdateUserRequest struct {
 	RoleID      string  `json:"roleId" binding:"required,uuid"`
 }
 
-type CreatePatientProfileRequest struct {
+type CreatePatientProfileData struct {
 	Gender                string  `json:"gender" binding:"required"`
 	BirthDay              string  `json:"birthDay" binding:"required"`
 	BloodType             string  `json:"bloodType" binding:"required"`
@@ -81,26 +95,20 @@ type userByRoleResponse struct {
 	DeletedAt   pgtype.Timestamptz `json:"deletedAt"`
 }
 
-func (h *UserHandler) Create(c *gin.Context) {
-	var req CreateUserRequest
+func (h *UserHandler) CreatePatient(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	var req CreatePatientRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error al crear usuario", err))
 		return
 	}
 
-	var roleID pgtype.UUID
-	if err := roleID.Scan(req.RoleID); err != nil {
-		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
-		return
-	}
-
-	var businessID pgtype.UUID
-	if err := businessID.Scan(req.BusinessID); err != nil {
-		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
-		return
-	}
-
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.User.Password), bcrypt.DefaultCost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al procesar contraseña", err))
 		return
@@ -108,39 +116,13 @@ func (h *UserHandler) Create(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	role, err := h.repo.q.GetRoleByID(ctx, roleID)
+	role, err := h.repo.q.GetRoleByValue(ctx, "patient")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Rol no encontrado", err))
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Rol de paciente no encontrado", err))
 		return
 	}
 
-	userArg := sqlc.CreateUserParams{
-		Ic:          req.Ic,
-		UserName:    req.UserName,
-		FirstName:   req.FirstName,
-		LastName:    req.LastName,
-		Email:       req.Email,
-		Password:    string(hashedPassword),
-		PhoneNumber: req.PhoneNumber,
-		RoleID:      roleID,
-		BusinessID:  businessID,
-	}
-
-	if role.Value != "patient" {
-		user, err := h.repo.Create(ctx, userArg)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al crear usuario", err))
-			return
-		}
-		c.JSON(http.StatusCreated, response.Created("Usuario creado", &user))
-	}
-
-	if req.PatientProfile == nil {
-		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Perfil de paciente requerido"))
-		return
-	}
-
-	birthDay, err := time.Parse("2006-01-02", req.PatientProfile.BirthDay)
+	birthDay, err := time.Parse("2006-01-02", req.Profile.BirthDay)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de fecha inválido", err))
 		return
@@ -153,13 +135,13 @@ func (h *UserHandler) Create(c *gin.Context) {
 	}
 
 	var weight pgtype.Numeric
-	if err := weight.Scan(fmt.Sprintf("%g", req.PatientProfile.Weight)); err != nil {
+	if err := weight.Scan(fmt.Sprintf("%g", req.Profile.Weight)); err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de peso inválido", err))
 		return
 	}
 
 	var height pgtype.Numeric
-	if err := height.Scan(fmt.Sprintf("%g", req.PatientProfile.Height)); err != nil {
+	if err := height.Scan(fmt.Sprintf("%g", req.Profile.Height)); err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de altura inválido", err))
 		return
 	}
@@ -173,7 +155,17 @@ func (h *UserHandler) Create(c *gin.Context) {
 
 	qtx := sqlc.New(tx)
 
-	user, err := qtx.CreateUser(ctx, userArg)
+	user, err := qtx.CreateUser(ctx, sqlc.CreateUserParams{
+		Ic:          req.User.Ic,
+		UserName:    req.User.UserName,
+		FirstName:   req.User.FirstName,
+		LastName:    req.User.LastName,
+		Email:       req.User.Email,
+		Password:    string(hashedPassword),
+		PhoneNumber: req.User.PhoneNumber,
+		RoleID:      role.ID,
+		BusinessID:  businessID,
+	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al crear usuario", err))
 		return
@@ -182,13 +174,13 @@ func (h *UserHandler) Create(c *gin.Context) {
 	_, err = qtx.CreatePatientProfile(ctx, sqlc.CreatePatientProfileParams{
 		BusinessID:            businessID,
 		UserID:                user.ID,
-		Gender:                req.PatientProfile.Gender,
+		Gender:                req.Profile.Gender,
 		BirthDay:              pgBirthDay,
-		BloodType:             req.PatientProfile.BloodType,
+		BloodType:             req.Profile.BloodType,
 		Weight:                weight,
 		Height:                height,
-		EmergencyContactName:  req.PatientProfile.EmergencyContactName,
-		EmergencyContactPhone: req.PatientProfile.EmergencyContactPhone,
+		EmergencyContactName:  req.Profile.EmergencyContactName,
+		EmergencyContactPhone: req.Profile.EmergencyContactPhone,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al crear perfil de paciente", err))
