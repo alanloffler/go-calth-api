@@ -38,8 +38,7 @@ SELECT
 FROM
   permissions
 WHERE
-  id = $1
-  AND deleted_at IS NULL;
+  id = $1;
 
 -- name: GetPermissionWithSoftDeleted :one
 SELECT
