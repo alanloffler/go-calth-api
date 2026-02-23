@@ -12,12 +12,42 @@ import (
 )
 
 const createBusiness = `-- name: CreateBusiness :one
-INSERT INTO businesses (
-   slug, tax_id, company_name, trade_name, description, street, city, province,
-   country, zip_code, email, phone_number, whatsapp_number, website
-) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
-) RETURNING id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at
+INSERT INTO
+  businesses (
+    slug,
+    tax_id,
+    company_name,
+    trade_name,
+    description,
+    street,
+    city,
+    province,
+    country,
+    zip_code,
+    email,
+    phone_number,
+    whatsapp_number,
+    website
+  )
+VALUES
+  (
+    $1,
+    $2,
+    $3,
+    $4,
+    $5,
+    $6,
+    $7,
+    $8,
+    $9,
+    $10,
+    $11,
+    $12,
+    $13,
+    $14
+  )
+RETURNING
+  id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at
 `
 
 type CreateBusinessParams struct {
@@ -80,7 +110,8 @@ func (q *Queries) CreateBusiness(ctx context.Context, arg CreateBusinessParams) 
 
 const deleteBusiness = `-- name: DeleteBusiness :exec
 DELETE FROM businesses
-WHERE id = $1
+WHERE
+  id = $1
 `
 
 func (q *Queries) DeleteBusiness(ctx context.Context, id pgtype.UUID) error {
@@ -89,7 +120,12 @@ func (q *Queries) DeleteBusiness(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getBusiness = `-- name: GetBusiness :one
-SELECT id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at FROM businesses WHERE id = $1
+SELECT
+  id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at
+FROM
+  businesses
+WHERE
+  id = $1
 `
 
 func (q *Queries) GetBusiness(ctx context.Context, id pgtype.UUID) (Business, error) {
@@ -119,8 +155,12 @@ func (q *Queries) GetBusiness(ctx context.Context, id pgtype.UUID) (Business, er
 }
 
 const getBusinessBySlug = `-- name: GetBusinessBySlug :one
-SELECT id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at FROM businesses
-WHERE slug = $1
+SELECT
+  id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at
+FROM
+  businesses
+WHERE
+  slug = $1
 `
 
 func (q *Queries) GetBusinessBySlug(ctx context.Context, slug string) (Business, error) {
@@ -150,7 +190,10 @@ func (q *Queries) GetBusinessBySlug(ctx context.Context, slug string) (Business,
 }
 
 const getBusinesses = `-- name: GetBusinesses :many
-SELECT id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at FROM businesses
+SELECT
+  id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at
+FROM
+  businesses
 `
 
 func (q *Queries) GetBusinesses(ctx context.Context) ([]Business, error) {
@@ -193,7 +236,8 @@ func (q *Queries) GetBusinesses(ctx context.Context) ([]Business, error) {
 }
 
 const updateBusiness = `-- name: UpdateBusiness :one
-UPDATE businesses SET
+UPDATE businesses
+SET
   slug = COALESCE($2, slug),
   tax_id = COALESCE($3, tax_id),
   company_name = COALESCE($4, company_name),
@@ -208,8 +252,10 @@ UPDATE businesses SET
   phone_number = COALESCE($13, phone_number),
   whatsapp_number = COALESCE($14, whatsapp_number),
   website = COALESCE($15, website)
-WHERE id = $1
-RETURNING id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at
+WHERE
+  id = $1
+RETURNING
+  id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at
 `
 
 type UpdateBusinessParams struct {
