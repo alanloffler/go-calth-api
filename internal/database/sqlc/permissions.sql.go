@@ -12,11 +12,12 @@ import (
 )
 
 const createPermission = `-- name: CreatePermission :one
-INSERT INTO permissions (
-    name, category, action_key, description
-) VALUES (
-    $1, $2, $3, $4
-) RETURNING id, name, category, action_key, description, created_at, updated_at, deleted_at
+INSERT INTO
+  permissions (name, category, action_key, description)
+VALUES
+  ($1, $2, $3, $4)
+RETURNING
+  id, name, category, action_key, description, created_at, updated_at, deleted_at
 `
 
 type CreatePermissionParams struct {
@@ -49,7 +50,9 @@ func (q *Queries) CreatePermission(ctx context.Context, arg CreatePermissionPara
 
 const deletePermission = `-- name: DeletePermission :exec
 DELETE FROM permissions
-WHERE id = $1 AND deleted_at IS NULL
+WHERE
+  id = $1
+  AND deleted_at IS NULL
 `
 
 func (q *Queries) DeletePermission(ctx context.Context, id pgtype.UUID) error {
@@ -58,8 +61,13 @@ func (q *Queries) DeletePermission(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getPermission = `-- name: GetPermission :one
-SELECT id, name, category, action_key, description, created_at, updated_at, deleted_at FROM permissions
-WHERE id = $1 AND deleted_at IS NULL
+SELECT
+  id, name, category, action_key, description, created_at, updated_at, deleted_at
+FROM
+  permissions
+WHERE
+  id = $1
+  AND deleted_at IS NULL
 `
 
 func (q *Queries) GetPermission(ctx context.Context, id pgtype.UUID) (Permission, error) {
@@ -79,8 +87,12 @@ func (q *Queries) GetPermission(ctx context.Context, id pgtype.UUID) (Permission
 }
 
 const getPermissionWithSoftDeleted = `-- name: GetPermissionWithSoftDeleted :one
-SELECT id, name, category, action_key, description, created_at, updated_at, deleted_at FROM permissions
-WHERE id = $1
+SELECT
+  id, name, category, action_key, description, created_at, updated_at, deleted_at
+FROM
+  permissions
+WHERE
+  id = $1
 `
 
 func (q *Queries) GetPermissionWithSoftDeleted(ctx context.Context, id pgtype.UUID) (Permission, error) {
@@ -100,9 +112,12 @@ func (q *Queries) GetPermissionWithSoftDeleted(ctx context.Context, id pgtype.UU
 }
 
 const getPermissions = `-- name: GetPermissions :many
-SELECT id, name, category, action_key, description, created_at, updated_at, deleted_at FROM permissions
-WHERE deleted_at IS NULL
-ORDER BY action_key ASC
+SELECT
+  id, name, category, action_key, description, created_at, updated_at, deleted_at
+FROM
+  permissions
+ORDER BY
+  action_key ASC
 `
 
 func (q *Queries) GetPermissions(ctx context.Context) ([]Permission, error) {
@@ -135,9 +150,14 @@ func (q *Queries) GetPermissions(ctx context.Context) ([]Permission, error) {
 }
 
 const getPermissionsByCategory = `-- name: GetPermissionsByCategory :many
-SELECT id, name, category, action_key, description, created_at, updated_at, deleted_at FROM permissions
-WHERE category = $1
-ORDER BY action_key ASC
+SELECT
+  id, name, category, action_key, description, created_at, updated_at, deleted_at
+FROM
+  permissions
+WHERE
+  category = $1
+ORDER BY
+  action_key ASC
 `
 
 func (q *Queries) GetPermissionsByCategory(ctx context.Context, category string) ([]Permission, error) {
@@ -170,8 +190,12 @@ func (q *Queries) GetPermissionsByCategory(ctx context.Context, category string)
 }
 
 const getPermissionsWithSoftDeleted = `-- name: GetPermissionsWithSoftDeleted :many
-SELECT id, name, category, action_key, description, created_at, updated_at, deleted_at FROM permissions
-ORDER BY action_key ASC
+SELECT
+  id, name, category, action_key, description, created_at, updated_at, deleted_at
+FROM
+  permissions
+ORDER BY
+  action_key ASC
 `
 
 func (q *Queries) GetPermissionsWithSoftDeleted(ctx context.Context) ([]Permission, error) {
@@ -204,9 +228,14 @@ func (q *Queries) GetPermissionsWithSoftDeleted(ctx context.Context) ([]Permissi
 }
 
 const restorePermission = `-- name: RestorePermission :execrows
-UPDATE permissions SET deleted_at = NULL
-WHERE id = $1 AND deleted_at IS NOT NULL
-RETURNING id, name, category, action_key, description, created_at, updated_at, deleted_at
+UPDATE permissions
+SET
+  deleted_at = NULL
+WHERE
+  id = $1
+  AND deleted_at IS NOT NULL
+RETURNING
+  id, name, category, action_key, description, created_at, updated_at, deleted_at
 `
 
 func (q *Queries) RestorePermission(ctx context.Context, id pgtype.UUID) (int64, error) {
@@ -218,9 +247,14 @@ func (q *Queries) RestorePermission(ctx context.Context, id pgtype.UUID) (int64,
 }
 
 const softDeletePermission = `-- name: SoftDeletePermission :execrows
-UPDATE permissions SET deleted_at = now()
-WHERE id = $1 AND deleted_at IS NULL
-RETURNING id, name, category, action_key, description, created_at, updated_at, deleted_at
+UPDATE permissions
+SET
+  deleted_at = now()
+WHERE
+  id = $1
+  AND deleted_at IS NULL
+RETURNING
+  id, name, category, action_key, description, created_at, updated_at, deleted_at
 `
 
 func (q *Queries) SoftDeletePermission(ctx context.Context, id pgtype.UUID) (int64, error) {
@@ -232,14 +266,18 @@ func (q *Queries) SoftDeletePermission(ctx context.Context, id pgtype.UUID) (int
 }
 
 const updatePermission = `-- name: UpdatePermission :one
-UPDATE permissions SET
+UPDATE permissions
+SET
   name = COALESCE($2, name),
   category = COALESCE($3, category),
   action_key = COALESCE($4, action_key),
   description = COALESCE($5, description),
   updated_at = now()
-WHERE id = $1 AND deleted_at IS NULL
-RETURNING id, name, category, action_key, description, created_at, updated_at, deleted_at
+WHERE
+  id = $1
+  AND deleted_at IS NULL
+RETURNING
+  id, name, category, action_key, description, created_at, updated_at, deleted_at
 `
 
 type UpdatePermissionParams struct {
