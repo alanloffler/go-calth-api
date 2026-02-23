@@ -23,20 +23,12 @@ func (r *PermissionRepository) GetAll(ctx context.Context) ([]sqlc.Permission, e
 	return r.q.GetPermissions(ctx)
 }
 
-func (r *PermissionRepository) GetAllWithSoftDeleted(ctx context.Context) ([]sqlc.Permission, error) {
-	return r.q.GetPermissionsWithSoftDeleted(ctx)
-}
-
 func (r *PermissionRepository) GetAllByCategory(ctx context.Context, category string) ([]sqlc.Permission, error) {
 	return r.q.GetPermissionsByCategory(ctx, category)
 }
 
 func (r *PermissionRepository) GetOneByID(ctx context.Context, id pgtype.UUID) (sqlc.Permission, error) {
 	return r.q.GetPermission(ctx, id)
-}
-
-func (r *PermissionRepository) GetOneByIDWithSoftDeleted(ctx context.Context, id pgtype.UUID) (sqlc.Permission, error) {
-	return r.q.GetPermissionWithSoftDeleted(ctx, id)
 }
 
 func (r *PermissionRepository) Update(ctx context.Context, arg sqlc.UpdatePermissionParams) (sqlc.Permission, error) {
