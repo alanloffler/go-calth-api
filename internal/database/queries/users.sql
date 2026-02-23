@@ -169,3 +169,9 @@ SELECT EXISTS (
     SELECT 1 FROM users "user"
     WHERE business_id = $1 AND "user"."email" = $2
 ) AS email_available;
+
+-- name: CheckUsernameAvailability :one
+SELECT EXISTS (
+    SELECT 1 FROM users "user"
+    WHERE business_id = $1 AND "user"."user_name" = $2
+) AS username_available;
