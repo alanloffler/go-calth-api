@@ -81,16 +81,6 @@ func (h *PermissionHandler) GetAll(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Success("Permisos encontrados", &permissions))
 }
 
-func (h *PermissionHandler) GetAllWithSoftDeleted(c *gin.Context) {
-	permissions, err := h.repo.GetAllWithSoftDeleted(c.Request.Context())
-	if err != nil {
-		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Permisos no encontrados", err))
-		return
-	}
-
-	c.JSON(http.StatusOK, response.Success("Permisos encontrados", &permissions))
-}
-
 func (h *PermissionHandler) GetAllByCategory(c *gin.Context) {
 	var category string = c.Param("category")
 
@@ -104,7 +94,7 @@ func (h *PermissionHandler) GetAllByCategory(c *gin.Context) {
 }
 
 func (h *PermissionHandler) GetAllGrouped(c *gin.Context) {
-	permissions, err := h.repo.GetAllWithSoftDeleted(c.Request.Context())
+	permissions, err := h.repo.GetAll(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Permisos no encontrados", err))
 		return
@@ -170,22 +160,6 @@ func (h *PermissionHandler) GetOneByID(c *gin.Context) {
 	}
 
 	permission, err := h.repo.GetOneByID(c.Request.Context(), id)
-	if err != nil {
-		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Permiso no encontrado", err))
-		return
-	}
-
-	c.JSON(http.StatusOK, response.Success("Permiso encontrado", &permission))
-}
-
-func (h *PermissionHandler) GetOneByIDWithSoftDeleted(c *gin.Context) {
-	var id pgtype.UUID
-	if err := id.Scan(c.Param("id")); err != nil {
-		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
-		return
-	}
-
-	permission, err := h.repo.GetOneByIDWithSoftDeleted(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Permiso no encontrado", err))
 		return
