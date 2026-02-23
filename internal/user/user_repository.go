@@ -63,3 +63,7 @@ func (r *UserRepository) Restore(ctx context.Context, id pgtype.UUID) (int64, er
 func (r *UserRepository) CheckIcAvailability(ctx context.Context, arg sqlc.CheckIcAvailabilityParams) (bool, error) {
 	return r.q.CheckIcAvailability(ctx, arg)
 }
+
+func (r *UserRepository) CheckEmailAvailability(ctx context.Context, arg sqlc.CheckEmailAvailabilityParams) (bool, error) {
+	return r.q.CheckEmailAvailability(ctx, arg)
+}
