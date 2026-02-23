@@ -14,14 +14,6 @@ FROM
 ORDER BY
   action_key ASC;
 
--- name: GetPermissionsWithSoftDeleted :many
-SELECT
-  *
-FROM
-  permissions
-ORDER BY
-  action_key ASC;
-
 -- name: GetPermissionsByCategory :many
 SELECT
   *
@@ -33,14 +25,6 @@ ORDER BY
   action_key ASC;
 
 -- name: GetPermission :one
-SELECT
-  *
-FROM
-  permissions
-WHERE
-  id = $1;
-
--- name: GetPermissionWithSoftDeleted :one
 SELECT
   *
 FROM
