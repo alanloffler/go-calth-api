@@ -12,10 +12,16 @@ import (
 )
 
 const checkEmailAvailability = `-- name: CheckEmailAvailability :one
-SELECT EXISTS (
-    SELECT 1 FROM users "user"
-    WHERE business_id = $1 AND "user"."email" = $2
-) AS email_available
+SELECT
+  EXISTS (
+    SELECT
+      1
+    FROM
+      users "user"
+    WHERE
+      business_id = $1
+      AND "user"."email" = $2
+  ) AS email_available
 `
 
 type CheckEmailAvailabilityParams struct {
@@ -31,10 +37,16 @@ func (q *Queries) CheckEmailAvailability(ctx context.Context, arg CheckEmailAvai
 }
 
 const checkIcAvailability = `-- name: CheckIcAvailability :one
-SELECT EXISTS (
-    SELECT 1 FROM users "user"
-    WHERE business_id = $1 AND "user"."ic" = $2
-) AS ic_available
+SELECT
+  EXISTS (
+    SELECT
+      1
+    FROM
+      users "user"
+    WHERE
+      business_id = $1
+      AND "user"."ic" = $2
+  ) AS ic_available
 `
 
 type CheckIcAvailabilityParams struct {
@@ -50,10 +62,16 @@ func (q *Queries) CheckIcAvailability(ctx context.Context, arg CheckIcAvailabili
 }
 
 const checkUsernameAvailability = `-- name: CheckUsernameAvailability :one
-SELECT EXISTS (
-    SELECT 1 FROM users "user"
-    WHERE business_id = $1 AND "user"."user_name" = $2
-) AS username_available
+SELECT
+  EXISTS (
+    SELECT
+      1
+    FROM
+      users "user"
+    WHERE
+      business_id = $1
+      AND "user"."user_name" = $2
+  ) AS username_available
 `
 
 type CheckUsernameAvailabilityParams struct {
@@ -70,9 +88,13 @@ func (q *Queries) CheckUsernameAvailability(ctx context.Context, arg CheckUserna
 
 const clearRefreshToken = `-- name: ClearRefreshToken :one
 UPDATE users
-SET refresh_token = NULL, updated_at = now()
-WHERE id = $1
-RETURNING id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
+SET
+  refresh_token = NULL,
+  updated_at = now()
+WHERE
+  id = $1
+RETURNING
+  id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
 `
 
 func (q *Queries) ClearRefreshToken(ctx context.Context, id pgtype.UUID) (User, error) {
@@ -98,13 +120,22 @@ func (q *Queries) ClearRefreshToken(ctx context.Context, id pgtype.UUID) (User, 
 }
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (
-    ic, user_name, first_name, last_name,
-    email, password, phone_number,
-    role_id, business_id
-) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9
-) RETURNING id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
+INSERT INTO
+  users (
+    ic,
+    user_name,
+    first_name,
+    last_name,
+    email,
+    password,
+    phone_number,
+    role_id,
+    business_id
+  )
+VALUES
+  ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+RETURNING
+  id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
 `
 
 type CreateUserParams struct {
@@ -153,7 +184,9 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 
 const deleteUser = `-- name: DeleteUser :exec
 DELETE FROM users
-WHERE id = $1 AND deleted_at IS NULL
+WHERE
+  id = $1
+  AND deleted_at IS NULL
 `
 
 func (q *Queries) DeleteUser(ctx context.Context, id pgtype.UUID) error {
@@ -163,34 +196,34 @@ func (q *Queries) DeleteUser(ctx context.Context, id pgtype.UUID) error {
 
 const getMe = `-- name: GetMe :many
 SELECT
-    "user"."id",
-    "user"."ic",
-    "user"."user_name",
-    "user"."first_name",
-    "user"."last_name",
-    "user"."email",
-    "user"."phone_number",
-    "user"."role_id",
-    "user"."business_id",
-    "user"."refresh_token",
-    "user"."created_at",
-    "user"."updated_at",
-    "user"."deleted_at",
-    "role"."id"          AS "role_id",
-    "role"."name"        AS "role_name",
-    "role"."value"       AS "role_value",
-    "rp"."role_id"       AS "rp_role_id",
-    "rp"."permission_id" AS "rp_permission_id",
-    "p"."id"             AS "permission_id",
-    "p"."action_key"     AS "permission_action_key"
-FROM users "user"
-LEFT JOIN roles "role"
-    ON "role"."id" = "user"."role_id"
-LEFT JOIN role_permissions "rp"
-    ON "rp"."role_id" = "role"."id"
-LEFT JOIN permissions "p"
-    ON "p"."id" = "rp"."permission_id"
-WHERE "user"."business_id" = $1 AND "user"."id" = $2
+  "user"."id",
+  "user"."ic",
+  "user"."user_name",
+  "user"."first_name",
+  "user"."last_name",
+  "user"."email",
+  "user"."phone_number",
+  "user"."role_id",
+  "user"."business_id",
+  "user"."refresh_token",
+  "user"."created_at",
+  "user"."updated_at",
+  "user"."deleted_at",
+  "role"."id" AS "role_id",
+  "role"."name" AS "role_name",
+  "role"."value" AS "role_value",
+  "rp"."role_id" AS "rp_role_id",
+  "rp"."permission_id" AS "rp_permission_id",
+  "p"."id" AS "permission_id",
+  "p"."action_key" AS "permission_action_key"
+FROM
+  users "user"
+  LEFT JOIN roles "role" ON "role"."id" = "user"."role_id"
+  LEFT JOIN role_permissions "rp" ON "rp"."role_id" = "role"."id"
+  LEFT JOIN permissions "p" ON "p"."id" = "rp"."permission_id"
+WHERE
+  "user"."business_id" = $1
+  AND "user"."id" = $2
 `
 
 type GetMeParams struct {
@@ -263,8 +296,14 @@ func (q *Queries) GetMe(ctx context.Context, arg GetMeParams) ([]GetMeRow, error
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at FROM users
-WHERE business_id = $1 AND email = $2 AND deleted_at IS NULL
+SELECT
+  id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
+FROM
+  users
+WHERE
+  business_id = $1
+  AND email = $2
+  AND deleted_at IS NULL
 `
 
 type GetUserByEmailParams struct {
@@ -296,8 +335,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, arg GetUserByEmailParams) 
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at FROM users
-WHERE id = $1 AND deleted_at IS NULL
+SELECT
+  id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
+FROM
+  users
+WHERE
+  id = $1
+  AND deleted_at IS NULL
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error) {
@@ -324,25 +368,27 @@ func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 
 const getUserByIDWithSoftDeleted = `-- name: GetUserByIDWithSoftDeleted :one
 SELECT
-    "user"."id",
-    "user"."ic",
-    "user"."user_name",
-    "user"."first_name",
-    "user"."last_name",
-    "user"."email",
-    "user"."phone_number",
-    "user"."business_id",
-    "user"."created_at",
-    "user"."updated_at",
-    "user"."deleted_at",
-    "role"."id"          AS "role_id",
-    "role"."name"        AS "role_name",
-    "role"."value"       AS "role_value",
-    "role"."description" AS "role_description"
-FROM users "user"
-LEFT JOIN roles "role"
-    ON "role"."id" = "user"."role_id"
-WHERE "user"."business_id" = $1 AND "user"."id" = $2
+  "user"."id",
+  "user"."ic",
+  "user"."user_name",
+  "user"."first_name",
+  "user"."last_name",
+  "user"."email",
+  "user"."phone_number",
+  "user"."business_id",
+  "user"."created_at",
+  "user"."updated_at",
+  "user"."deleted_at",
+  "role"."id" AS "role_id",
+  "role"."name" AS "role_name",
+  "role"."value" AS "role_value",
+  "role"."description" AS "role_description"
+FROM
+  users "user"
+  LEFT JOIN roles "role" ON "role"."id" = "user"."role_id"
+WHERE
+  "user"."business_id" = $1
+  AND "user"."id" = $2
 `
 
 type GetUserByIDWithSoftDeletedParams struct {
@@ -392,9 +438,14 @@ func (q *Queries) GetUserByIDWithSoftDeleted(ctx context.Context, arg GetUserByI
 }
 
 const getUsers = `-- name: GetUsers :many
-SELECT id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at FROM users
-WHERE deleted_at IS NULL
-ORDER BY last_name ASC
+SELECT
+  id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
+FROM
+  users
+WHERE
+  deleted_at IS NULL
+ORDER BY
+  last_name ASC
 `
 
 func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
@@ -434,25 +485,28 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 
 const getUsersByRole = `-- name: GetUsersByRole :many
 SELECT
-    "user"."id",
-    "user"."ic",
-    "user"."user_name",
-    "user"."first_name",
-    "user"."last_name",
-    "user"."email",
-    "user"."phone_number",
-    "user"."business_id",
-    "user"."created_at",
-    "user"."updated_at",
-    "user"."deleted_at",
-    "role"."id"          AS "role_id",
-    "role"."name"        AS "role_name",
-    "role"."value"       AS "role_value",
-    "role"."description" AS "role_description"
-FROM users "user"
-LEFT JOIN roles "role"
-    ON "role"."id" = "user"."role_id"
-WHERE "user"."business_id" = $1 AND "role"."value" = $2 AND "user"."deleted_at" IS NULL
+  "user"."id",
+  "user"."ic",
+  "user"."user_name",
+  "user"."first_name",
+  "user"."last_name",
+  "user"."email",
+  "user"."phone_number",
+  "user"."business_id",
+  "user"."created_at",
+  "user"."updated_at",
+  "user"."deleted_at",
+  "role"."id" AS "role_id",
+  "role"."name" AS "role_name",
+  "role"."value" AS "role_value",
+  "role"."description" AS "role_description"
+FROM
+  users "user"
+  LEFT JOIN roles "role" ON "role"."id" = "user"."role_id"
+WHERE
+  "user"."business_id" = $1
+  AND "role"."value" = $2
+  AND "user"."deleted_at" IS NULL
 `
 
 type GetUsersByRoleParams struct {
@@ -516,25 +570,27 @@ func (q *Queries) GetUsersByRole(ctx context.Context, arg GetUsersByRoleParams) 
 
 const getUsersByRoleWithSoftDeleted = `-- name: GetUsersByRoleWithSoftDeleted :many
 SELECT
-    "user"."id",
-    "user"."ic",
-    "user"."user_name",
-    "user"."first_name",
-    "user"."last_name",
-    "user"."email",
-    "user"."phone_number",
-    "user"."business_id",
-    "user"."created_at",
-    "user"."updated_at",
-    "user"."deleted_at",
-    "role"."id"          AS "role_id",
-    "role"."name"        AS "role_name",
-    "role"."value"       AS "role_value",
-    "role"."description" AS "role_description"
-FROM users "user"
-LEFT JOIN roles "role"
-    ON "role"."id" = "user"."role_id"
-WHERE "user"."business_id" = $1 AND "role"."value" = $2
+  "user"."id",
+  "user"."ic",
+  "user"."user_name",
+  "user"."first_name",
+  "user"."last_name",
+  "user"."email",
+  "user"."phone_number",
+  "user"."business_id",
+  "user"."created_at",
+  "user"."updated_at",
+  "user"."deleted_at",
+  "role"."id" AS "role_id",
+  "role"."name" AS "role_name",
+  "role"."value" AS "role_value",
+  "role"."description" AS "role_description"
+FROM
+  users "user"
+  LEFT JOIN roles "role" ON "role"."id" = "user"."role_id"
+WHERE
+  "user"."business_id" = $1
+  AND "role"."value" = $2
 `
 
 type GetUsersByRoleWithSoftDeletedParams struct {
@@ -597,8 +653,12 @@ func (q *Queries) GetUsersByRoleWithSoftDeleted(ctx context.Context, arg GetUser
 }
 
 const getUsersWithSoftDeleted = `-- name: GetUsersWithSoftDeleted :many
-SELECT id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at FROM users
-ORDER BY last_name ASC
+SELECT
+  id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
+FROM
+  users
+ORDER BY
+  last_name ASC
 `
 
 func (q *Queries) GetUsersWithSoftDeleted(ctx context.Context) ([]User, error) {
@@ -638,9 +698,13 @@ func (q *Queries) GetUsersWithSoftDeleted(ctx context.Context) ([]User, error) {
 
 const restoreUser = `-- name: RestoreUser :execrows
 UPDATE users
-SET deleted_at = NULL
-WHERE id = $1 AND deleted_at IS NOT NULL
-RETURNING id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
+SET
+  deleted_at = NULL
+WHERE
+  id = $1
+  AND deleted_at IS NOT NULL
+RETURNING
+  id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
 `
 
 func (q *Queries) RestoreUser(ctx context.Context, id pgtype.UUID) (int64, error) {
@@ -653,9 +717,13 @@ func (q *Queries) RestoreUser(ctx context.Context, id pgtype.UUID) (int64, error
 
 const softDeleteUser = `-- name: SoftDeleteUser :execrows
 UPDATE users
-SET deleted_at = now()
-WHERE id = $1 AND deleted_at IS NULL
-RETURNING id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
+SET
+  deleted_at = now()
+WHERE
+  id = $1
+  AND deleted_at IS NULL
+RETURNING
+  id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
 `
 
 func (q *Queries) SoftDeleteUser(ctx context.Context, id pgtype.UUID) (int64, error) {
@@ -668,9 +736,13 @@ func (q *Queries) SoftDeleteUser(ctx context.Context, id pgtype.UUID) (int64, er
 
 const updateRefreshToken = `-- name: UpdateRefreshToken :one
 UPDATE users
-SET refresh_token = $2, updated_at = now()
-WHERE id = $1
-RETURNING id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
+SET
+  refresh_token = $2,
+  updated_at = now()
+WHERE
+  id = $1
+RETURNING
+  id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
 `
 
 type UpdateRefreshTokenParams struct {
@@ -702,11 +774,21 @@ func (q *Queries) UpdateRefreshToken(ctx context.Context, arg UpdateRefreshToken
 
 const updateUser = `-- name: UpdateUser :one
 UPDATE users
-SET ic = $2, user_name = $3, first_name = $4, last_name = $5,
-    email = $6, password = $7, phone_number = $8, role_id = $9,
-    updated_at = now()
-WHERE id = $1 AND deleted_at IS NULL
-RETURNING id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
+SET
+  ic = $2,
+  user_name = $3,
+  first_name = $4,
+  last_name = $5,
+  email = $6,
+  password = $7,
+  phone_number = $8,
+  role_id = $9,
+  updated_at = now()
+WHERE
+  id = $1
+  AND deleted_at IS NULL
+RETURNING
+  id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
 `
 
 type UpdateUserParams struct {
