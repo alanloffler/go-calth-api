@@ -11,10 +11,29 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const checkEmailAvailability = `-- name: CheckEmailAvailability :one
+SELECT EXISTS (
+    SELECT 1 FROM users "user"
+    WHERE business_id = $1 AND "user"."email" = $2
+) AS email_available
+`
+
+type CheckEmailAvailabilityParams struct {
+	BusinessID pgtype.UUID `json:"businessId"`
+	Email      string      `json:"email"`
+}
+
+func (q *Queries) CheckEmailAvailability(ctx context.Context, arg CheckEmailAvailabilityParams) (bool, error) {
+	row := q.db.QueryRow(ctx, checkEmailAvailability, arg.BusinessID, arg.Email)
+	var email_available bool
+	err := row.Scan(&email_available)
+	return email_available, err
+}
+
 const checkIcAvailability = `-- name: CheckIcAvailability :one
 SELECT EXISTS (
-  SELECT 1 FROM users "user"
-  WHERE business_id = $1 AND "user"."ic" = $2
+    SELECT 1 FROM users "user"
+    WHERE business_id = $1 AND "user"."ic" = $2
 ) AS ic_available
 `
 
