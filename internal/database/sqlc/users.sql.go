@@ -49,6 +49,25 @@ func (q *Queries) CheckIcAvailability(ctx context.Context, arg CheckIcAvailabili
 	return ic_available, err
 }
 
+const checkUsernameAvailability = `-- name: CheckUsernameAvailability :one
+SELECT EXISTS (
+    SELECT 1 FROM users "user"
+    WHERE business_id = $1 AND "user"."user_name" = $2
+) AS username_available
+`
+
+type CheckUsernameAvailabilityParams struct {
+	BusinessID pgtype.UUID `json:"businessId"`
+	UserName   string      `json:"userName"`
+}
+
+func (q *Queries) CheckUsernameAvailability(ctx context.Context, arg CheckUsernameAvailabilityParams) (bool, error) {
+	row := q.db.QueryRow(ctx, checkUsernameAvailability, arg.BusinessID, arg.UserName)
+	var username_available bool
+	err := row.Scan(&username_available)
+	return username_available, err
+}
+
 const clearRefreshToken = `-- name: ClearRefreshToken :one
 UPDATE users
 SET refresh_token = NULL, updated_at = now()
