@@ -3,6 +3,7 @@ package user
 import (
 	"fmt"
 	"net/http"
+	"net/mail"
 	"time"
 
 	"github.com/alanloffler/go-calth-api/internal/common/ctxkeys"
@@ -506,4 +507,33 @@ func (h *UserHandler) CheckIcAvailability(c *gin.Context) {
 	available = !available
 
 	c.JSON(http.StatusOK, response.Success("Disponibilidad de IC", &available))
+}
+
+func (h *UserHandler) CheckEmailAvailability(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID de negocio inválido"))
+		return
+	}
+
+	email := c.Param("email")
+	if email == "" {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de email inválido"))
+		return
+	}
+
+	if _, err := mail.ParseAddress(email); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de email inválido"))
+		return
+	}
+
+	available, err := h.repo.CheckEmailAvailability(c.Request.Context(), sqlc.CheckEmailAvailabilityParams{BusinessID: businessID, Email: email})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al verificar disponibilidad de email", err))
+		return
+	}
+
+	available = !available
+
+	c.JSON(http.StatusOK, response.Success("Disponibilidad de email", &available))
 }
