@@ -67,7 +67,6 @@ FROM
   permissions
 WHERE
   id = $1
-  AND deleted_at IS NULL
 `
 
 func (q *Queries) GetPermission(ctx context.Context, id pgtype.UUID) (Permission, error) {
