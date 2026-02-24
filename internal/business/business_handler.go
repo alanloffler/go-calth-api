@@ -6,16 +6,18 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/common/response"
 	"github.com/alanloffler/go-calth-api/internal/common/utils"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
+	"github.com/alanloffler/go-calth-api/internal/user"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type BusinessHandler struct {
-	repo *BusinessRepository
+	repo     *BusinessRepository
+	userRepo *user.UserRepository
 }
 
-func NewBusinessHandler(repo *BusinessRepository) *BusinessHandler {
-	return &BusinessHandler{repo: repo}
+func NewBusinessHandler(repo *BusinessRepository, userRepo *user.UserRepository) *BusinessHandler {
+	return &BusinessHandler{repo: repo, userRepo: userRepo}
 }
 
 type CreateBusinessRequest struct {
@@ -50,6 +52,11 @@ type UpdateBusinessRequest struct {
 	PhoneNumber    *string `json:"phoneNumber" binding:"omitempty,len=10,numeric"`
 	WhatsappNumber *string `json:"whatsappNumber" binding:"omitempty,len=10,numeric"`
 	Website        *string `json:"website" binding:"omitempty,min=6"`
+}
+
+type BusinessWithUsersResponse struct {
+	sqlc.Business
+	Users []sqlc.GetUsersByBusinessIDRow `json:"users"`
 }
 
 func (h *BusinessHandler) Create(c *gin.Context) {
@@ -116,7 +123,19 @@ func (h *BusinessHandler) GetOneByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, response.Success("Negocio encontrado", &business))
+	users, err := h.userRepo.GetByBusinessID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al obtener usuarios", err))
+		return
+	}
+	if users == nil {
+		users = []sqlc.GetUsersByBusinessIDRow{}
+	}
+
+	c.JSON(http.StatusOK, response.Success("Negocio encontrado", &BusinessWithUsersResponse{
+		Business: business,
+		Users:    users,
+	}))
 }
 
 func (h *BusinessHandler) Update(c *gin.Context) {
