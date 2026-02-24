@@ -510,7 +510,7 @@ WHERE
 ORDER BY
   "user"."last_name" ASC
 LIMIT
-  3
+  5
 `
 
 type GetUsersByBusinessIDRow struct {
