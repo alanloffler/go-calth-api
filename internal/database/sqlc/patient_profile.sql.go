@@ -12,13 +12,22 @@ import (
 )
 
 const createPatientProfile = `-- name: CreatePatientProfile :one
-INSERT INTO patient_profile (
-    business_id, user_id, gender, birth_day, blood_type,
-    weight, height, emergency_contact_name, emergency_contact_phone
-) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9
-)
-RETURNING id, business_id, user_id, gender, birth_day, blood_type, weight, height, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at
+INSERT INTO
+  patient_profile (
+    business_id,
+    user_id,
+    gender,
+    birth_day,
+    blood_type,
+    weight,
+    height,
+    emergency_contact_name,
+    emergency_contact_phone
+  )
+VALUES
+  ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+RETURNING
+  id, business_id, user_id, gender, birth_day, blood_type, weight, height, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at
 `
 
 type CreatePatientProfileParams struct {
@@ -45,6 +54,43 @@ func (q *Queries) CreatePatientProfile(ctx context.Context, arg CreatePatientPro
 		arg.EmergencyContactName,
 		arg.EmergencyContactPhone,
 	)
+	var i PatientProfile
+	err := row.Scan(
+		&i.ID,
+		&i.BusinessID,
+		&i.UserID,
+		&i.Gender,
+		&i.BirthDay,
+		&i.BloodType,
+		&i.Weight,
+		&i.Height,
+		&i.EmergencyContactName,
+		&i.EmergencyContactPhone,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const getPatientProfileByUserID = `-- name: GetPatientProfileByUserID :one
+SELECT
+  id, business_id, user_id, gender, birth_day, blood_type, weight, height, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at
+FROM
+  patient_profile
+WHERE
+  business_id = $1
+  AND user_id = $2
+  AND deleted_at IS NULL
+`
+
+type GetPatientProfileByUserIDParams struct {
+	BusinessID pgtype.UUID `json:"businessId"`
+	UserID     pgtype.UUID `json:"userId"`
+}
+
+func (q *Queries) GetPatientProfileByUserID(ctx context.Context, arg GetPatientProfileByUserIDParams) (PatientProfile, error) {
+	row := q.db.QueryRow(ctx, getPatientProfileByUserID, arg.BusinessID, arg.UserID)
 	var i PatientProfile
 	err := row.Scan(
 		&i.ID,
