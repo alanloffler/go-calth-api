@@ -10,6 +10,7 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/common/ctxkeys"
 	"github.com/alanloffler/go-calth-api/internal/common/response"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
+	"github.com/alanloffler/go-calth-api/internal/patient_profile"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -17,12 +18,13 @@ import (
 )
 
 type UserHandler struct {
-	repo *UserRepository
-	pool *pgxpool.Pool
+	repo               *UserRepository
+	pool               *pgxpool.Pool
+	patientProfileRepo *patient_profile.PatientProfileRepository
 }
 
-func NewUserHandler(repo *UserRepository, pool *pgxpool.Pool) *UserHandler {
-	return &UserHandler{repo: repo, pool: pool}
+func NewUserHandler(repo *UserRepository, pool *pgxpool.Pool, patientProfileRepo *patient_profile.PatientProfileRepository) *UserHandler {
+	return &UserHandler{repo: repo, pool: pool, patientProfileRepo: patientProfileRepo}
 }
 
 type CreateUserRequest struct {
@@ -93,6 +95,22 @@ type userByRoleResponse struct {
 	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
 	UpdatedAt   pgtype.Timestamptz `json:"updatedAt"`
 	DeletedAt   pgtype.Timestamptz `json:"deletedAt"`
+}
+
+type userWithProfileResponse struct {
+	ID             pgtype.UUID        `json:"id"`
+	Ic             string             `json:"ic"`
+	UserName       string             `json:"userName"`
+	FirstName      string             `json:"firstName"`
+	LastName       string             `json:"lastName"`
+	Email          string             `json:"email"`
+	PhoneNumber    string             `json:"phoneNumber"`
+	Role           *userRole          `json:"role"`
+	BusinessID     pgtype.UUID        `json:"businessID"`
+	CreatedAt      pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt      pgtype.Timestamptz `json:"updatedAt"`
+	DeletedAt      pgtype.Timestamptz `json:"deletedAt"`
+	PatientProfile any                `json:"patientProfile"`
 }
 
 func (h *UserHandler) CreatePatient(c *gin.Context) {
@@ -362,6 +380,65 @@ func (h *UserHandler) GetByIDWithSoftDeleted(c *gin.Context) {
 			Value:       row.RoleValue.String,
 			Description: row.RoleDescription.String,
 		}
+	}
+
+	c.JSON(http.StatusOK, response.Success("Usuario encontrado", &user))
+}
+
+func (h *UserHandler) GetPatientByID(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Formato de ID inválido", err))
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	row, err := h.repo.GetByIDWithSoftDeleted(ctx, sqlc.GetUserByIDWithSoftDeletedParams{BusinessID: businessID, ID: id})
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado", err))
+		return
+	}
+
+	user := userWithProfileResponse{
+		ID:          row.ID,
+		Ic:          row.Ic,
+		UserName:    row.UserName,
+		FirstName:   row.FirstName,
+		LastName:    row.LastName,
+		Email:       row.Email,
+		PhoneNumber: row.PhoneNumber,
+		BusinessID:  row.BusinessID,
+		CreatedAt:   row.CreatedAt,
+		UpdatedAt:   row.UpdatedAt,
+		DeletedAt:   row.DeletedAt,
+	}
+	if row.RoleID.Valid {
+		user.Role = &userRole{
+			ID:          row.RoleID,
+			Name:        row.RoleName.String,
+			Value:       row.RoleValue.String,
+			Description: row.RoleDescription.String,
+		}
+	}
+
+	switch row.RoleValue.String {
+	case "patient":
+		profile, err := h.patientProfileRepo.GetByUserID(c.Request.Context(), sqlc.GetPatientProfileByUserIDParams{
+			BusinessID: businessID,
+			UserID:     id,
+		})
+		if err != nil {
+			c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Perfil no encontrado", err))
+			return
+		}
+		user.PatientProfile = profile
 	}
 
 	c.JSON(http.StatusOK, response.Success("Usuario encontrado", &user))
