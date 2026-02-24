@@ -36,7 +36,7 @@ vendor/
 
 # AI
 .claude
-Claude Agent
+Claude Agent*
 
 # OS
 .DS_Store
