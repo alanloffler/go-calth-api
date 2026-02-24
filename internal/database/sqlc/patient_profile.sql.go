@@ -109,3 +109,65 @@ func (q *Queries) GetPatientProfileByUserID(ctx context.Context, arg GetPatientP
 	)
 	return i, err
 }
+
+const updatePatientProfile = `-- name: UpdatePatientProfile :one
+UPDATE patient_profile
+SET
+  gender = $3,
+  birth_day = $4,
+  blood_type = $5,
+  weight = $6,
+  height = $7,
+  emergency_contact_name = $8,
+  emergency_contact_phone = $9,
+  updated_at = now()
+WHERE
+  business_id = $1
+  AND user_id = $2
+  AND deleted_at IS NULL
+RETURNING
+  id, business_id, user_id, gender, birth_day, blood_type, weight, height, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at
+`
+
+type UpdatePatientProfileParams struct {
+	BusinessID            pgtype.UUID    `json:"businessId"`
+	UserID                pgtype.UUID    `json:"userId"`
+	Gender                string         `json:"gender"`
+	BirthDay              pgtype.Date    `json:"birthDay"`
+	BloodType             string         `json:"bloodType"`
+	Weight                pgtype.Numeric `json:"weight"`
+	Height                pgtype.Numeric `json:"height"`
+	EmergencyContactName  string         `json:"emergencyContactName"`
+	EmergencyContactPhone string         `json:"emergencyContactPhone"`
+}
+
+func (q *Queries) UpdatePatientProfile(ctx context.Context, arg UpdatePatientProfileParams) (PatientProfile, error) {
+	row := q.db.QueryRow(ctx, updatePatientProfile,
+		arg.BusinessID,
+		arg.UserID,
+		arg.Gender,
+		arg.BirthDay,
+		arg.BloodType,
+		arg.Weight,
+		arg.Height,
+		arg.EmergencyContactName,
+		arg.EmergencyContactPhone,
+	)
+	var i PatientProfile
+	err := row.Scan(
+		&i.ID,
+		&i.BusinessID,
+		&i.UserID,
+		&i.Gender,
+		&i.BirthDay,
+		&i.BloodType,
+		&i.Weight,
+		&i.Height,
+		&i.EmergencyContactName,
+		&i.EmergencyContactPhone,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
