@@ -2,13 +2,15 @@ package user
 
 import (
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
+	"github.com/alanloffler/go-calth-api/internal/patient_profile"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool) {
 	var repo *UserRepository = NewUserRepository(q)
-	var handler *UserHandler = NewUserHandler(repo, pool)
+	var ppRepo *patient_profile.PatientProfileRepository = patient_profile.NewPatientProfileRepository(q)
+	var handler *UserHandler = NewUserHandler(repo, pool, ppRepo)
 	var users *gin.RouterGroup = router.Group("/users")
 
 	users.POST("/patient", handler.CreatePatient)
@@ -18,6 +20,7 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool
 	users.GET("/role/:role/soft", handler.GetAllByRoleWithSoftDeleted)
 	users.GET("/:id", handler.GetByID)
 	users.GET("/:id/soft", handler.GetByIDWithSoftDeleted)
+	users.GET("/:id/patient/profile/soft", handler.GetPatientByID)
 	users.PATCH("/:id", handler.Update)
 	users.PATCH("/:id/restore", handler.Restore)
 	users.DELETE("/:id", handler.Delete)
