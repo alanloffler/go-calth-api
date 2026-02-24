@@ -406,18 +406,28 @@ func (h *UserHandler) GetPatientByID(c *gin.Context) {
 		return
 	}
 
+	profile, err := h.patientProfileRepo.GetByUserID(c.Request.Context(), sqlc.GetPatientProfileByUserIDParams{
+		BusinessID: businessID,
+		UserID:     id,
+	})
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Perfil no encontrado", err))
+		return
+	}
+
 	user := userWithProfileResponse{
-		ID:          row.ID,
-		Ic:          row.Ic,
-		UserName:    row.UserName,
-		FirstName:   row.FirstName,
-		LastName:    row.LastName,
-		Email:       row.Email,
-		PhoneNumber: row.PhoneNumber,
-		BusinessID:  row.BusinessID,
-		CreatedAt:   row.CreatedAt,
-		UpdatedAt:   row.UpdatedAt,
-		DeletedAt:   row.DeletedAt,
+		ID:             row.ID,
+		Ic:             row.Ic,
+		UserName:       row.UserName,
+		FirstName:      row.FirstName,
+		LastName:       row.LastName,
+		Email:          row.Email,
+		PhoneNumber:    row.PhoneNumber,
+		BusinessID:     row.BusinessID,
+		CreatedAt:      row.CreatedAt,
+		UpdatedAt:      row.UpdatedAt,
+		DeletedAt:      row.DeletedAt,
+		PatientProfile: profile,
 	}
 	if row.RoleID.Valid {
 		user.Role = &userRole{
@@ -426,19 +436,6 @@ func (h *UserHandler) GetPatientByID(c *gin.Context) {
 			Value:       row.RoleValue.String,
 			Description: row.RoleDescription.String,
 		}
-	}
-
-	switch row.RoleValue.String {
-	case "patient":
-		profile, err := h.patientProfileRepo.GetByUserID(c.Request.Context(), sqlc.GetPatientProfileByUserIDParams{
-			BusinessID: businessID,
-			UserID:     id,
-		})
-		if err != nil {
-			c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Perfil no encontrado", err))
-			return
-		}
-		user.PatientProfile = profile
 	}
 
 	c.JSON(http.StatusOK, response.Success("Usuario encontrado", &user))
