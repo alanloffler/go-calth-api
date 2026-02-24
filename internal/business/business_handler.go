@@ -56,7 +56,29 @@ type UpdateBusinessRequest struct {
 
 type BusinessWithUsersResponse struct {
 	sqlc.Business
-	Users []sqlc.GetUsersByBusinessIDRow `json:"users"`
+	Users []businessUserResponse `json:"users"`
+}
+
+type businessUserResponse struct {
+	ID          pgtype.UUID        `json:"id"`
+	Ic          string             `json:"ic"`
+	UserName    string             `json:"userName"`
+	FirstName   string             `json:"firstName"`
+	LastName    string             `json:"lastName"`
+	Email       string             `json:"email"`
+	PhoneNumber string             `json:"phoneNumber"`
+	Role        *businessUserRole  `json:"role"`
+	BusinessID  pgtype.UUID        `json:"businessID"`
+	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt   pgtype.Timestamptz `json:"updatedAt"`
+	DeletedAt   pgtype.Timestamptz `json:"deletedAt"`
+}
+
+type businessUserRole struct {
+	ID          pgtype.UUID `json:"id"`
+	Name        string      `json:"name"`
+	Value       string      `json:"value"`
+	Description string      `json:"description"`
 }
 
 func (h *BusinessHandler) Create(c *gin.Context) {
@@ -128,13 +150,35 @@ func (h *BusinessHandler) GetOneByID(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al obtener usuarios", err))
 		return
 	}
-	if users == nil {
-		users = []sqlc.GetUsersByBusinessIDRow{}
+
+	mapped := make([]businessUserResponse, len(users))
+	for i, u := range users {
+		mapped[i] = businessUserResponse{
+			ID:          u.ID,
+			Ic:          u.Ic,
+			UserName:    u.UserName,
+			FirstName:   u.FirstName,
+			LastName:    u.LastName,
+			Email:       u.Email,
+			PhoneNumber: u.PhoneNumber,
+			BusinessID:  business.ID,
+			CreatedAt:   u.CreatedAt,
+			UpdatedAt:   u.UpdatedAt,
+			DeletedAt:   u.DeletedAt,
+		}
+		if u.RoleID.Valid {
+			mapped[i].Role = &businessUserRole{
+				ID:          u.RoleID,
+				Name:        u.RoleName,
+				Value:       u.RoleValue,
+				Description: u.RoleDescription,
+			}
+		}
 	}
 
 	c.JSON(http.StatusOK, response.Success("Negocio encontrado", &BusinessWithUsersResponse{
 		Business: business,
-		Users:    users,
+		Users:    mapped,
 	}))
 }
 
