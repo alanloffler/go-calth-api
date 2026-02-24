@@ -3,12 +3,14 @@ package business
 import (
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/alanloffler/go-calth-api/internal/middleware"
+	"github.com/alanloffler/go-calth-api/internal/user"
 	"github.com/gin-gonic/gin"
 )
 
 func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries) {
 	var repo *BusinessRepository = NewBusinessRepository(q)
-	var handler *BusinessHandler = NewBusinessHandler(repo)
+	var userRepo *user.UserRepository = user.NewUserRepository(q)
+	var handler *BusinessHandler = NewBusinessHandler(repo, userRepo)
 	var businesses *gin.RouterGroup = router.Group("/businesses")
 
 	businesses.POST("", middleware.PermissionMiddleware(q, "business-create"), handler.Create)
