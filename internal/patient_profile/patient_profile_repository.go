@@ -21,3 +21,7 @@ func (r *PatientProfileRepository) Create(ctx context.Context, arg sqlc.CreatePa
 func (r *PatientProfileRepository) GetByUserID(ctx context.Context, arg sqlc.GetPatientProfileByUserIDParams) (sqlc.PatientProfile, error) {
 	return r.q.GetPatientProfileByUserID(ctx, arg)
 }
+
+func (r *PatientProfileRepository) Update(ctx context.Context, arg sqlc.UpdatePatientProfileParams) (sqlc.PatientProfile, error) {
+	return r.q.UpdatePatientProfile(ctx, arg)
+}
