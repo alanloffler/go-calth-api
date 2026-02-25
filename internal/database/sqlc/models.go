@@ -56,6 +56,24 @@ type Permission struct {
 	DeletedAt   pgtype.Timestamptz `json:"deletedAt"`
 }
 
+type ProfessionalProfile struct {
+	ID                  pgtype.UUID        `json:"id"`
+	BusinessID          pgtype.UUID        `json:"businessId"`
+	UserID              pgtype.UUID        `json:"userId"`
+	LicenseID           string             `json:"licenseId"`
+	ProfessionalPrefix  string             `json:"professionalPrefix"`
+	Specialty           string             `json:"specialty"`
+	WorkingDays         string             `json:"workingDays"`
+	StartHour           string             `json:"startHour"`
+	EndHour             string             `json:"endHour"`
+	SlotDuration        string             `json:"slotDuration"`
+	DailyExceptionStart pgtype.Text        `json:"dailyExceptionStart"`
+	DailyExceptionEnd   pgtype.Text        `json:"dailyExceptionEnd"`
+	CreatedAt           pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt           pgtype.Timestamptz `json:"updatedAt"`
+	DeletedAt           pgtype.Timestamptz `json:"deletedAt"`
+}
+
 type Role struct {
 	ID          pgtype.UUID        `json:"id"`
 	Name        string             `json:"name"`
