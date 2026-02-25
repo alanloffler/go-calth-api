@@ -19,15 +19,15 @@ type CreateProfessionalRequest struct {
 }
 
 type CreateProfessionalProfileData struct {
-	LicenseID           string  `json:"license_id" binding:"required"`
-	ProfessionalPrefix  string  `json:"professional_prefix" binding:"required"`
+	LicenseID           string  `json:"licenseId" binding:"required"`
+	ProfessionalPrefix  string  `json:"professionalPrefix" binding:"required"`
 	Specialty           string  `json:"specialty" binding:"required"`
-	WorkingDays         []int   `json:"working_days" binding:"required"`
-	StartHour           string  `json:"start_hour" binding:"required"`
-	EndHour             string  `json:"end_hour" binding:"required"`
-	SlotDuration        string  `json:"slot_duration" binding:"required"`
-	DailyExceptionStart *string `json:"daily_exception_start"`
-	DailyExceptionEnd   *string `json:"daily_exception_end"`
+	WorkingDays         []int   `json:"workingDays" binding:"required"`
+	StartHour           string  `json:"startHour" binding:"required"`
+	EndHour             string  `json:"endHour" binding:"required"`
+	SlotDuration        string  `json:"slotDuration" binding:"required"`
+	DailyExceptionStart *string `json:"dailyExceptionStart"`
+	DailyExceptionEnd   *string `json:"dailyExceptionEnd"`
 }
 
 func (h *UserHandler) CreateProfessional(c *gin.Context) {
@@ -78,7 +78,7 @@ func (h *UserHandler) CreateProfessional(c *gin.Context) {
 		BusinessID:  businessID,
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al crear usuario", err))
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al crear profesional", err))
 		return
 	}
 
