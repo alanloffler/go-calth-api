@@ -29,13 +29,19 @@ WHERE
 -- name: UpdatePatientProfile :one
 UPDATE patient_profile
 SET
-  gender = $3,
-  birth_day = $4,
-  blood_type = $5,
-  weight = $6,
-  height = $7,
-  emergency_contact_name = $8,
-  emergency_contact_phone = $9,
+  gender = COALESCE(sqlc.narg ('gender'), gender),
+  birth_day = COALESCE(sqlc.narg ('birth_day'), birth_day),
+  blood_type = COALESCE(sqlc.narg ('blood_type'), blood_type),
+  weight = COALESCE(sqlc.narg ('weight'), weight),
+  height = COALESCE(sqlc.narg ('height'), height),
+  emergency_contact_name = COALESCE(
+    sqlc.narg ('emergency_contact_name'),
+    emergency_contact_name
+  ),
+  emergency_contact_phone = COALESCE(
+    sqlc.narg ('emergency_contact_phone'),
+    emergency_contact_phone
+  ),
   updated_at = now()
 WHERE
   business_id = $1
