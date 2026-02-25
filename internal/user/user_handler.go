@@ -9,6 +9,7 @@ import (
 
 	"github.com/alanloffler/go-calth-api/internal/common/ctxkeys"
 	"github.com/alanloffler/go-calth-api/internal/common/response"
+	"github.com/alanloffler/go-calth-api/internal/common/utils"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/alanloffler/go-calth-api/internal/patient_profile"
 	"github.com/gin-gonic/gin"
@@ -40,8 +41,38 @@ type CreateUserRequest struct {
 }
 
 type CreatePatientRequest struct {
-	User    CreateUserData           `json:"user" bindin:"required"`
+	User    CreateUserData           `json:"user" binding:"required"`
 	Profile CreatePatientProfileData `json:"profile" binding:"required"`
+}
+
+type UpdatePatientRequest struct {
+	User    UpdateUserData           `json:"user" binding:"required"`
+	Profile UpdatePatientProfileData `json:"profile" binding:"required"`
+}
+
+type UpdatePatientResponse struct {
+	User    sqlc.User           `json:"user"`
+	Profile sqlc.PatientProfile `json:"profile"`
+}
+
+type UpdateUserData struct {
+	Ic          *string `json:"ic" binding:"omitempty,len=8"`
+	UserName    *string `json:"userName" binding:"omitempty,min=3,max=100"`
+	FirstName   *string `json:"firstName" binding:"omitempty,min=3,max=100"`
+	LastName    *string `json:"lastName" binding:"omitempty,min=3,max=100"`
+	Email       *string `json:"email" binding:"omitempty,email,max=100"`
+	Password    *string `json:"password" binding:"omitempty,min=8,max=100"`
+	PhoneNumber *string `json:"phoneNumber" binding:"omitempty,len=10,numeric"`
+}
+
+type UpdatePatientProfileData struct {
+	Gender                *string  `json:"gender" binding:"omitempty"`
+	BirthDay              *string  `json:"birthDay" binding:"omitempty"`
+	BloodType             *string  `json:"bloodType" binding:"omitempty"`
+	Weight                *float64 `json:"weight" binding:"omitempty,gt=0,lt=999.99"`
+	Height                *float64 `json:"height" binding:"omitempty,gt=0,lt=300"`
+	EmergencyContactName  *string  `json:"emergencyContactName" binding:"omitempty"`
+	EmergencyContactPhone *string  `json:"emergencyContactPhone" binding:"omitempty,len=10,numeric"`
 }
 
 type CreateUserData struct {
@@ -493,6 +524,151 @@ func (h *UserHandler) Update(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.Success("Usuario actualizado", &user))
+}
+
+func (h *UserHandler) UpdatePatient(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	var req UpdatePatientRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error al actualizar paciente"))
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	current, err := h.repo.GetByID(ctx, id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado", err))
+		return
+	}
+
+	ic := current.Ic
+	if req.User.Ic != nil {
+		ic = *req.User.Ic
+	}
+	userName := current.UserName
+	if req.User.UserName != nil {
+		userName = *req.User.UserName
+	}
+	firstName := current.FirstName
+	if req.User.FirstName != nil {
+		firstName = *req.User.FirstName
+	}
+	lastName := current.LastName
+	if req.User.LastName != nil {
+		lastName = *req.User.LastName
+	}
+	email := current.Email
+	if req.User.Email != nil {
+		email = *req.User.Email
+	}
+	password := current.Password
+	if req.User.Password != nil {
+		hashed, err := bcrypt.GenerateFromPassword([]byte(*req.User.Password), bcrypt.DefaultCost)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al procesar contraseña", err))
+			return
+		}
+		password = string(hashed)
+	}
+	phoneNumber := current.PhoneNumber
+	if req.User.PhoneNumber != nil {
+		phoneNumber = *req.User.PhoneNumber
+	}
+
+	// Parse optional birthDay
+	var pgBirthDay pgtype.Date
+	if req.Profile.BirthDay != nil {
+		birthDay, err := time.Parse("2006-01-02", *req.Profile.BirthDay)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de fecha inválido", err))
+			return
+		}
+		if err := pgBirthDay.Scan(birthDay); err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de fecha inválido", err))
+			return
+		}
+	}
+
+	// Parse optional weight/height
+	var weight pgtype.Numeric
+	if req.Profile.Weight != nil {
+		if err := weight.Scan(fmt.Sprintf("%g", *req.Profile.Weight)); err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de peso inválido", err))
+			return
+		}
+	}
+
+	var height pgtype.Numeric
+	if req.Profile.Height != nil {
+		if err := height.Scan(fmt.Sprintf("%g", *req.Profile.Height)); err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de altura inválido", err))
+			return
+		}
+	}
+
+	tx, err := h.pool.Begin(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al iniciar transacción", err))
+		return
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := sqlc.New(tx)
+
+	updatedUser, err := qtx.UpdateUser(ctx, sqlc.UpdateUserParams{
+		ID:          id,
+		Ic:          ic,
+		UserName:    userName,
+		FirstName:   firstName,
+		LastName:    lastName,
+		Email:       email,
+		Password:    password,
+		PhoneNumber: phoneNumber,
+		RoleID:      current.RoleID,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar usuario", err))
+		return
+	}
+
+	updatedProfile, err := qtx.UpdatePatientProfile(ctx, sqlc.UpdatePatientProfileParams{
+		BusinessID:            businessID,
+		UserID:                id,
+		Gender:                utils.ToPgText(req.Profile.Gender),
+		BirthDay:              pgBirthDay,
+		BloodType:             utils.ToPgText(req.Profile.BloodType),
+		Weight:                weight,
+		Height:                height,
+		EmergencyContactName:  utils.ToPgText(req.Profile.EmergencyContactName),
+		EmergencyContactPhone: utils.ToPgText(req.Profile.EmergencyContactPhone),
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar perfil", err))
+		return
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al confirmar transacción", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Paciente actualizado", &UpdatePatientResponse{
+		User:    updatedUser,
+		Profile: updatedProfile,
+	}))
+
 }
 
 func (h *UserHandler) Delete(c *gin.Context) {
