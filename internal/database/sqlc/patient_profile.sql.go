@@ -113,13 +113,19 @@ func (q *Queries) GetPatientProfileByUserID(ctx context.Context, arg GetPatientP
 const updatePatientProfile = `-- name: UpdatePatientProfile :one
 UPDATE patient_profile
 SET
-  gender = $3,
-  birth_day = $4,
-  blood_type = $5,
-  weight = $6,
-  height = $7,
-  emergency_contact_name = $8,
-  emergency_contact_phone = $9,
+  gender = COALESCE($3, gender),
+  birth_day = COALESCE($4, birth_day),
+  blood_type = COALESCE($5, blood_type),
+  weight = COALESCE($6, weight),
+  height = COALESCE($7, height),
+  emergency_contact_name = COALESCE(
+    $8,
+    emergency_contact_name
+  ),
+  emergency_contact_phone = COALESCE(
+    $9,
+    emergency_contact_phone
+  ),
   updated_at = now()
 WHERE
   business_id = $1
@@ -132,13 +138,13 @@ RETURNING
 type UpdatePatientProfileParams struct {
 	BusinessID            pgtype.UUID    `json:"businessId"`
 	UserID                pgtype.UUID    `json:"userId"`
-	Gender                string         `json:"gender"`
+	Gender                pgtype.Text    `json:"gender"`
 	BirthDay              pgtype.Date    `json:"birthDay"`
-	BloodType             string         `json:"bloodType"`
+	BloodType             pgtype.Text    `json:"bloodType"`
 	Weight                pgtype.Numeric `json:"weight"`
 	Height                pgtype.Numeric `json:"height"`
-	EmergencyContactName  string         `json:"emergencyContactName"`
-	EmergencyContactPhone string         `json:"emergencyContactPhone"`
+	EmergencyContactName  pgtype.Text    `json:"emergencyContactName"`
+	EmergencyContactPhone pgtype.Text    `json:"emergencyContactPhone"`
 }
 
 func (q *Queries) UpdatePatientProfile(ctx context.Context, arg UpdatePatientProfileParams) (PatientProfile, error) {
