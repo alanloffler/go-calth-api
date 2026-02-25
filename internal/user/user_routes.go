@@ -14,6 +14,7 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool
 	var users *gin.RouterGroup = router.Group("/users")
 
 	users.POST("/patient", handler.CreatePatient)
+	users.POST("/professional", handler.CreateProfessional)
 	users.GET("", handler.GetAll)
 	users.GET("/soft", handler.GetAllWithSoftDeleted)
 	users.GET("/role/:role", handler.GetAllByRole)
