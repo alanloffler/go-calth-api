@@ -23,8 +23,8 @@ func (r *AuthRepository) GetUserByEmail(ctx context.Context, arg sqlc.GetUserByE
 	return r.q.GetUserByEmail(ctx, arg)
 }
 
-func (r *AuthRepository) GetUserByID(ctx context.Context, id pgtype.UUID) (sqlc.User, error) {
-	return r.q.GetUserByID(ctx, id)
+func (r *AuthRepository) GetUserByID(ctx context.Context, arg sqlc.GetUserByIDParams) (sqlc.GetUserByIDRow, error) {
+	return r.q.GetUserByID(ctx, arg)
 }
 
 func (r *AuthRepository) GetMe(ctx context.Context, arg sqlc.GetMeParams) ([]sqlc.GetMeRow, error) {
