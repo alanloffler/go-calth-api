@@ -19,6 +19,16 @@ type CreateProfessionalRequest struct {
 	Profile CreateProfessionalProfileData `json:"profile" binding:"required"`
 }
 
+type UpdateProfessionalRequest struct {
+	User    UpdateUserData                `json:"user" binding:"required"`
+	Profile UpdateProfessionalProfileData `json:"profile" binding:"required"`
+}
+
+type UpdateProfessionalResponse struct {
+	User    sqlc.User                `json:"user"`
+	Profile sqlc.ProfessionalProfile `json:"professionalProfile"`
+}
+
 type CreateProfessionalProfileData struct {
 	LicenseID           string  `json:"licenseId" binding:"required"`
 	ProfessionalPrefix  string  `json:"professionalPrefix" binding:"required"`
@@ -29,6 +39,18 @@ type CreateProfessionalProfileData struct {
 	SlotDuration        string  `json:"slotDuration" binding:"required"`
 	DailyExceptionStart *string `json:"dailyExceptionStart"`
 	DailyExceptionEnd   *string `json:"dailyExceptionEnd"`
+}
+
+type UpdateProfessionalProfileData struct {
+	LicenseID           *string `json:"licenseId" binding:"omitempty"`
+	ProfessionalPrefix  *string `json:"professionalPrefix" binding:"omitempty"`
+	Specialty           *string `json:"specialty" binding:"omitempty"`
+	WorkingDays         *[]int  `json:"workingDays" binding:"omitempty"`
+	StartHour           *string `json:"startHour" binding:"omitempty"`
+	EndHour             *string `json:"endHour" binding:"omitempty"`
+	SlotDuration        *string `json:"slotDuration" binding:"omitempty"`
+	DailyExceptionStart *string `json:"dailyExceptionStart" binding:"omitempty"`
+	DailyExceptionEnd   *string `json:"dailyExceptionEnd" binding:"omitempty"`
 }
 
 type userWithProfessionalProfile struct {
@@ -254,4 +276,124 @@ func (h *UserHandler) getProfessionalByID(c *gin.Context, withSoftDeleted bool) 
 	user.ProfessionalProfile = profResponse
 
 	c.JSON(http.StatusOK, response.Success("Profesional encontrado", &user))
+}
+
+func (h *UserHandler) UpdateProfessional(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	var req UpdateProfessionalRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error de validación de datos", err))
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	current, err := h.repo.q.GetUserByID(c.Request.Context(), sqlc.GetUserByIDParams{BusinessID: businessID, ID: id})
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Profesional no encontrado", err))
+		return
+	}
+
+	ic := current.Ic
+	if req.User.Ic != nil {
+		ic = *req.User.Ic
+	}
+	userName := current.UserName
+	if req.User.UserName != nil {
+		userName = *req.User.UserName
+	}
+	firstName := current.FirstName
+	if req.User.FirstName != nil {
+		firstName = *req.User.FirstName
+	}
+	lastName := current.LastName
+	if req.User.LastName != nil {
+		lastName = *req.User.LastName
+	}
+	email := current.Email
+	if req.User.Email != nil {
+		email = *req.User.Email
+	}
+	password := current.Password
+	if req.User.Password != nil {
+		hashed, err := bcrypt.GenerateFromPassword([]byte(*req.User.Password), bcrypt.DefaultCost)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al procesar contraseña", err))
+			return
+		}
+		password = string(hashed)
+	}
+	phoneNumber := current.PhoneNumber
+	if req.User.PhoneNumber != nil {
+		phoneNumber = *req.User.PhoneNumber
+	}
+
+	tx, err := h.pool.Begin(ctx)
+
+	qtx := sqlc.New(tx)
+
+	updatedUser, err := qtx.UpdateUser(ctx, sqlc.UpdateUserParams{
+		ID:          id,
+		Ic:          ic,
+		UserName:    userName,
+		FirstName:   firstName,
+		LastName:    lastName,
+		Email:       email,
+		Password:    password,
+		PhoneNumber: phoneNumber,
+		RoleID:      current.RoleID,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar el profesional", err))
+		return
+	}
+
+	var workingDaysStr *string
+	if req.Profile.WorkingDays != nil {
+		days := make([]string, len(*req.Profile.WorkingDays))
+		for i, d := range *req.Profile.WorkingDays {
+			days[i] = strconv.Itoa(d)
+		}
+		s := strings.Join(days, ",")
+		workingDaysStr = &s
+	}
+
+	updatedProfile, err := qtx.UpdateProfessionalProfile(ctx, sqlc.UpdateProfessionalProfileParams{
+		BusinessID:          businessID,
+		UserID:              id,
+		LicenseID:           utils.ToPgText(req.Profile.LicenseID),
+		ProfessionalPrefix:  utils.ToPgText(req.Profile.ProfessionalPrefix),
+		Specialty:           utils.ToPgText(req.Profile.Specialty),
+		WorkingDays:         utils.ToPgText(workingDaysStr),
+		StartHour:           utils.ToPgText(req.Profile.StartHour),
+		EndHour:             utils.ToPgText(req.Profile.EndHour),
+		SlotDuration:        utils.ToPgText(req.Profile.SlotDuration),
+		DailyExceptionStart: utils.ToPgText(req.Profile.DailyExceptionStart),
+		DailyExceptionEnd:   utils.ToPgText(req.Profile.DailyExceptionEnd),
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar el perfil", err))
+		return
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al confirmar la transacción", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Profesional actualizado", &UpdateProfessionalResponse{
+		User:    updatedUser,
+		Profile: updatedProfile,
+	}))
 }
