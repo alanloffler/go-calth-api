@@ -147,6 +147,14 @@ func (h *UserHandler) CreateProfessional(c *gin.Context) {
 }
 
 func (h *UserHandler) GetProfessionalByID(c *gin.Context) {
+	h.getProfessionalByID(c, false)
+}
+
+func (h *UserHandler) GetProfessionalByIDWithSoftDeleted(c *gin.Context) {
+	h.getProfessionalByID(c, true)
+}
+
+func (h *UserHandler) getProfessionalByID(c *gin.Context, withSoftDeleted bool) {
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
 		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
@@ -161,12 +169,20 @@ func (h *UserHandler) GetProfessionalByID(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	row, err := h.repo.GetByIDWithSoftDeleted(ctx, sqlc.GetUserByIDWithSoftDeletedParams{BusinessID: businessID, ID: id})
+	var row sqlc.GetUserByIDWithSoftDeletedRow
+	var err error
+	if withSoftDeleted {
+		row, err = h.repo.GetByIDWithSoftDeleted(ctx, sqlc.GetUserByIDWithSoftDeletedParams{BusinessID: businessID, ID: id})
+	} else {
+		// FIX: this must refactor sql query to use businessID and id, then use sqlc...Params
+		row, err = h.repo.GetByID(ctx, id)
+	}
 	if err != nil {
 		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Profesional no encontrado", err))
 		return
 	}
 
+	// TODO: here implement the condition withSoftDeleted
 	profile, err := h.professionalProfileRepo.GetProfessionalProfileByUserID(c.Request.Context(), sqlc.GetProfessionalProfileByUserIDParams{BusinessID: businessID, UserID: id})
 	if err != nil {
 		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Perfil profesional no encontrado", err))
