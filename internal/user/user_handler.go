@@ -364,13 +364,19 @@ func (h *UserHandler) GetAllByRoleWithSoftDeleted(c *gin.Context) {
 }
 
 func (h *UserHandler) GetByID(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
 	var id pgtype.UUID
 	if err := id.Scan(c.Param("id")); err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
 		return
 	}
 
-	user, err := h.repo.GetByID(c.Request.Context(), id)
+	user, err := h.repo.GetByID(c.Request.Context(), sqlc.GetUserByIDParams{BusinessID: businessID, ID: id})
 	if err != nil {
 		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado", err))
 		return
@@ -480,6 +486,12 @@ func (h *UserHandler) GetPatientByID(c *gin.Context) {
 }
 
 func (h *UserHandler) Update(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
 	var id pgtype.UUID
 	if err := id.Scan(c.Param("id")); err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
@@ -498,7 +510,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 		return
 	}
 
-	current, err := h.repo.GetByID(c.Request.Context(), id)
+	current, err := h.repo.GetByID(c.Request.Context(), sqlc.GetUserByIDParams{BusinessID: businessID, ID: id})
 	if err != nil {
 		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado", err))
 		return
@@ -554,7 +566,7 @@ func (h *UserHandler) UpdatePatient(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	current, err := h.repo.GetByID(ctx, id)
+	current, err := h.repo.GetByID(ctx, sqlc.GetUserByIDParams{BusinessID: businessID, ID: id})
 	if err != nil {
 		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado", err))
 		return
