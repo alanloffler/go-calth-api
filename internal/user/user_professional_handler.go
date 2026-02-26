@@ -169,20 +169,65 @@ func (h *UserHandler) getProfessionalByID(c *gin.Context, withSoftDeleted bool) 
 
 	ctx := c.Request.Context()
 
-	var row sqlc.GetUserByIDWithSoftDeletedRow
-	var err error
+	var user userWithProfessionalProfile
 	if withSoftDeleted {
-		row, err = h.repo.GetByIDWithSoftDeleted(ctx, sqlc.GetUserByIDWithSoftDeletedParams{BusinessID: businessID, ID: id})
+		row, err := h.repo.GetByIDWithSoftDeleted(ctx, sqlc.GetUserByIDWithSoftDeletedParams{BusinessID: businessID, ID: id})
+		if err != nil {
+			c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Profesional no encontrado", err))
+			return
+		}
+
+		user = userWithProfessionalProfile{
+			ID:          row.ID,
+			Ic:          row.Ic,
+			UserName:    row.UserName,
+			FirstName:   row.FirstName,
+			LastName:    row.LastName,
+			Email:       row.Email,
+			PhoneNumber: row.PhoneNumber,
+			BusinessID:  row.BusinessID,
+			CreatedAt:   row.CreatedAt,
+			UpdatedAt:   row.UpdatedAt,
+			DeletedAt:   row.DeletedAt,
+		}
+		if row.RoleID.Valid {
+			user.Role = &userRole{
+				ID:          row.RoleID,
+				Name:        row.RoleName.String,
+				Value:       row.RoleValue.String,
+				Description: row.RoleDescription.String,
+			}
+		}
 	} else {
-		// FIX: this must refactor sql query to use businessID and id, then use sqlc...Params
-		row, err = h.repo.GetByID(ctx, id)
-	}
-	if err != nil {
-		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Profesional no encontrado", err))
-		return
+		row, err := h.repo.GetByID(ctx, sqlc.GetUserByIDParams{BusinessID: businessID, ID: id})
+		if err != nil {
+			c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Profesional no encontrado", err))
+			return
+		}
+
+		user = userWithProfessionalProfile{
+			ID:          row.ID,
+			Ic:          row.Ic,
+			UserName:    row.UserName,
+			FirstName:   row.FirstName,
+			LastName:    row.LastName,
+			Email:       row.Email,
+			PhoneNumber: row.PhoneNumber,
+			BusinessID:  row.BusinessID,
+			CreatedAt:   row.CreatedAt,
+			UpdatedAt:   row.UpdatedAt,
+			DeletedAt:   row.DeletedAt,
+		}
+		if row.RoleID.Valid {
+			user.Role = &userRole{
+				ID:          row.RoleID,
+				Name:        row.RoleName.String,
+				Value:       row.RoleValue.String,
+				Description: row.RoleDescription.String,
+			}
+		}
 	}
 
-	// TODO: here implement the condition withSoftDeleted
 	profile, err := h.professionalProfileRepo.GetProfessionalProfileByUserID(c.Request.Context(), sqlc.GetProfessionalProfileByUserIDParams{BusinessID: businessID, UserID: id})
 	if err != nil {
 		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Perfil profesional no encontrado", err))
@@ -206,28 +251,7 @@ func (h *UserHandler) getProfessionalByID(c *gin.Context, withSoftDeleted bool) 
 		UpdatedAt:           profile.UpdatedAt,
 	}
 
-	user := userWithProfessionalProfile{
-		ID:                  row.ID,
-		Ic:                  row.Ic,
-		UserName:            row.UserName,
-		FirstName:           row.FirstName,
-		LastName:            row.LastName,
-		Email:               row.Email,
-		PhoneNumber:         row.PhoneNumber,
-		BusinessID:          row.BusinessID,
-		CreatedAt:           row.CreatedAt,
-		UpdatedAt:           row.UpdatedAt,
-		DeletedAt:           row.DeletedAt,
-		ProfessionalProfile: profResponse,
-	}
-	if row.RoleID.Valid {
-		user.Role = &userRole{
-			ID:          row.RoleID,
-			Name:        row.RoleName.String,
-			Value:       row.RoleValue.String,
-			Description: row.RoleDescription.String,
-		}
-	}
+	user.ProfessionalProfile = profResponse
 
 	c.JSON(http.StatusOK, response.Success("Profesional encontrado", &user))
 }
