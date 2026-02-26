@@ -21,3 +21,7 @@ func (r *ProfessionalProfileRepository) Create(ctx context.Context, arg sqlc.Cre
 func (r *ProfessionalProfileRepository) GetProfessionalProfileByUserID(ctx context.Context, arg sqlc.GetProfessionalProfileByUserIDParams) (sqlc.ProfessionalProfile, error) {
 	return r.q.GetProfessionalProfileByUserID(ctx, arg)
 }
+
+func (r *ProfessionalProfileRepository) GetProfessionalProfileByUserIDWithSoftDeleted(ctx context.Context, arg sqlc.GetProfessionalProfileByUserIDWithSoftDeletedParams) (sqlc.ProfessionalProfile, error) {
+	return r.q.GetProfessionalProfileByUserIDWithSoftDeleted(ctx, arg)
+}
