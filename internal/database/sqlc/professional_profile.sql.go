@@ -157,3 +157,82 @@ func (q *Queries) GetProfessionalProfileByUserIDWithSoftDeleted(ctx context.Cont
 	)
 	return i, err
 }
+
+const updateProfessionalProfile = `-- name: UpdateProfessionalProfile :one
+UPDATE professional_profile
+SET
+  license_id = COALESCE($3, license_id),
+  professional_prefix = COALESCE(
+    $4,
+    professional_prefix
+  ),
+  specialty = COALESCE($5, specialty),
+  working_days = COALESCE($6, working_days),
+  start_hour = COALESCE($7, start_hour),
+  end_hour = COALESCE($8, end_hour),
+  slot_duration = COALESCE($9, slot_duration),
+  daily_exception_start = COALESCE(
+    $10,
+    daily_exception_start
+  ),
+  daily_exception_end = COALESCE(
+    $11,
+    daily_exception_end
+  ),
+  updated_at = now()
+WHERE
+  business_id = $1
+  AND user_id = $2
+  AND deleted_at IS NULL
+RETURNING
+  id, business_id, user_id, license_id, professional_prefix, specialty, working_days, start_hour, end_hour, slot_duration, daily_exception_start, daily_exception_end, created_at, updated_at, deleted_at
+`
+
+type UpdateProfessionalProfileParams struct {
+	BusinessID          pgtype.UUID `json:"businessId"`
+	UserID              pgtype.UUID `json:"userId"`
+	LicenseID           pgtype.Text `json:"licenseId"`
+	ProfessionalPrefix  pgtype.Text `json:"professionalPrefix"`
+	Specialty           pgtype.Text `json:"specialty"`
+	WorkingDays         pgtype.Text `json:"workingDays"`
+	StartHour           pgtype.Text `json:"startHour"`
+	EndHour             pgtype.Text `json:"endHour"`
+	SlotDuration        pgtype.Text `json:"slotDuration"`
+	DailyExceptionStart pgtype.Text `json:"dailyExceptionStart"`
+	DailyExceptionEnd   pgtype.Text `json:"dailyExceptionEnd"`
+}
+
+func (q *Queries) UpdateProfessionalProfile(ctx context.Context, arg UpdateProfessionalProfileParams) (ProfessionalProfile, error) {
+	row := q.db.QueryRow(ctx, updateProfessionalProfile,
+		arg.BusinessID,
+		arg.UserID,
+		arg.LicenseID,
+		arg.ProfessionalPrefix,
+		arg.Specialty,
+		arg.WorkingDays,
+		arg.StartHour,
+		arg.EndHour,
+		arg.SlotDuration,
+		arg.DailyExceptionStart,
+		arg.DailyExceptionEnd,
+	)
+	var i ProfessionalProfile
+	err := row.Scan(
+		&i.ID,
+		&i.BusinessID,
+		&i.UserID,
+		&i.LicenseID,
+		&i.ProfessionalPrefix,
+		&i.Specialty,
+		&i.WorkingDays,
+		&i.StartHour,
+		&i.EndHour,
+		&i.SlotDuration,
+		&i.DailyExceptionStart,
+		&i.DailyExceptionEnd,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
