@@ -12,6 +12,7 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/common/utils"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/alanloffler/go-calth-api/internal/patient_profile"
+	"github.com/alanloffler/go-calth-api/internal/professional_profile"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -19,13 +20,19 @@ import (
 )
 
 type UserHandler struct {
-	repo               *UserRepository
-	pool               *pgxpool.Pool
-	patientProfileRepo *patient_profile.PatientProfileRepository
+	repo                    *UserRepository
+	pool                    *pgxpool.Pool
+	patientProfileRepo      *patient_profile.PatientProfileRepository
+	professionalProfileRepo *professional_profile.ProfessionalProfileRepository
 }
 
-func NewUserHandler(repo *UserRepository, pool *pgxpool.Pool, patientProfileRepo *patient_profile.PatientProfileRepository) *UserHandler {
-	return &UserHandler{repo: repo, pool: pool, patientProfileRepo: patientProfileRepo}
+func NewUserHandler(
+	repo *UserRepository,
+	pool *pgxpool.Pool,
+	patientProfileRepo *patient_profile.PatientProfileRepository,
+	professionalProfileRepo *professional_profile.ProfessionalProfileRepository,
+) *UserHandler {
+	return &UserHandler{repo: repo, pool: pool, patientProfileRepo: patientProfileRepo, professionalProfileRepo: professionalProfileRepo}
 }
 
 type CreateUserRequest struct {
@@ -425,7 +432,7 @@ func (h *UserHandler) GetPatientByID(c *gin.Context) {
 
 	var id pgtype.UUID
 	if err := id.Scan(c.Param("id")); err != nil {
-		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Formato de ID inválido", err))
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
 		return
 	}
 
