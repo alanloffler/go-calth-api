@@ -27,3 +27,12 @@ WHERE
   business_id = $1
   AND user_id = $2
   AND deleted_at IS NULL;
+
+-- name: GetProfessionalProfileByUserIDWithSoftDeleted :one
+SELECT
+  *
+FROM
+  professional_profile
+WHERE
+  business_id = $1
+  AND user_id = $2;
