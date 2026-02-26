@@ -80,3 +80,42 @@ func (q *Queries) CreateProfessionalProfile(ctx context.Context, arg CreateProfe
 	)
 	return i, err
 }
+
+const getProfessionalProfileByUserID = `-- name: GetProfessionalProfileByUserID :one
+SELECT
+  id, business_id, user_id, license_id, professional_prefix, specialty, working_days, start_hour, end_hour, slot_duration, daily_exception_start, daily_exception_end, created_at, updated_at, deleted_at
+FROM
+  professional_profile
+WHERE
+  business_id = $1
+  AND user_id = $2
+  AND deleted_at IS NULL
+`
+
+type GetProfessionalProfileByUserIDParams struct {
+	BusinessID pgtype.UUID `json:"businessId"`
+	UserID     pgtype.UUID `json:"userId"`
+}
+
+func (q *Queries) GetProfessionalProfileByUserID(ctx context.Context, arg GetProfessionalProfileByUserIDParams) (ProfessionalProfile, error) {
+	row := q.db.QueryRow(ctx, getProfessionalProfileByUserID, arg.BusinessID, arg.UserID)
+	var i ProfessionalProfile
+	err := row.Scan(
+		&i.ID,
+		&i.BusinessID,
+		&i.UserID,
+		&i.LicenseID,
+		&i.ProfessionalPrefix,
+		&i.Specialty,
+		&i.WorkingDays,
+		&i.StartHour,
+		&i.EndHour,
+		&i.SlotDuration,
+		&i.DailyExceptionStart,
+		&i.DailyExceptionEnd,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
