@@ -3,6 +3,7 @@ package user
 import (
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/alanloffler/go-calth-api/internal/patient_profile"
+	"github.com/alanloffler/go-calth-api/internal/professional_profile"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -10,7 +11,8 @@ import (
 func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool) {
 	var repo *UserRepository = NewUserRepository(q)
 	var ppRepo *patient_profile.PatientProfileRepository = patient_profile.NewPatientProfileRepository(q)
-	var handler *UserHandler = NewUserHandler(repo, pool, ppRepo)
+	var prpRepo *professional_profile.ProfessionalProfileRepository = professional_profile.NewProfessionalProfileRepository(q)
+	var handler *UserHandler = NewUserHandler(repo, pool, ppRepo, prpRepo)
 	var users *gin.RouterGroup = router.Group("/users")
 
 	users.POST("/patient", handler.CreatePatient)
@@ -22,6 +24,7 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool
 	users.GET("/:id", handler.GetByID)
 	users.GET("/:id/soft", handler.GetByIDWithSoftDeleted)
 	users.GET("/:id/patient/profile/soft", handler.GetPatientByID)
+	users.GET("/:id/professional/profile/soft", handler.GetProfessionalByID)
 	users.PATCH("/:id", handler.Update)
 	users.PATCH("/:id/patient", handler.UpdatePatient)
 	users.PATCH("/:id/restore", handler.Restore)
