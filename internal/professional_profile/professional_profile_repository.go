@@ -17,3 +17,7 @@ func NewProfessionalProfileRepository(q *sqlc.Queries) *ProfessionalProfileRepos
 func (r *ProfessionalProfileRepository) Create(ctx context.Context, arg sqlc.CreateProfessionalProfileParams) (sqlc.ProfessionalProfile, error) {
 	return r.q.CreateProfessionalProfile(ctx, arg)
 }
+
+func (r *ProfessionalProfileRepository) GetProfessionalProfileByUserID(ctx context.Context, arg sqlc.GetProfessionalProfileByUserIDParams) (sqlc.ProfessionalProfile, error) {
+	return r.q.GetProfessionalProfileByUserID(ctx, arg)
+}
