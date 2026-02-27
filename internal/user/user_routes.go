@@ -32,6 +32,7 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool
 	users.PATCH("/:id/restore", handler.Restore)
 	users.DELETE("/:id", handler.Delete)
 	users.DELETE("/:id/soft", handler.SoftDelete)
+	users.DELETE("/:id/professional/soft", handler.SoftDelete)
 	// Checks
 	users.GET("/check/email/:email", handler.CheckEmailAvailability)
 	users.GET("/check/ic/:ic", handler.CheckIcAvailability)
