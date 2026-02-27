@@ -169,12 +169,6 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 }
 
 func (h *AuthHandler) Refresh(c *gin.Context) {
-	businessID, ok := ctxkeys.BusinessID(c)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
-		return
-	}
-
 	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Token requerido"))
@@ -190,6 +184,12 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	var userID pgtype.UUID
 	if err := userID.Scan(claims.UserID); err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "ID de usuario inválido"))
+		return
+	}
+
+	var businessID pgtype.UUID
+	if err := businessID.Scan(claims.BusinessID); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "ID de negocio inválido"))
 		return
 	}
 
