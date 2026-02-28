@@ -23,8 +23,7 @@ FROM
   patient_profile
 WHERE
   business_id = $1
-  AND user_id = $2
-  AND deleted_at IS NULL;
+  AND user_id = $2;
 
 -- name: UpdatePatientProfile :one
 UPDATE patient_profile
