@@ -3,6 +3,8 @@ package user
 import (
 	"fmt"
 	"log"
+	"math"
+	"math/big"
 	"net/http"
 	"time"
 
@@ -63,7 +65,7 @@ type userWithPatientProfile struct {
 	CreatedAt      pgtype.Timestamptz     `json:"createdAt"`
 	UpdatedAt      pgtype.Timestamptz     `json:"updatedAt"`
 	DeletedAt      pgtype.Timestamptz     `json:"deletedAt"`
-	PatientProfile patientProfileResponse `json:"professionalProfile"`
+	PatientProfile patientProfileResponse `json:"patientProfile"`
 }
 
 type patientProfileResponse struct {
@@ -269,16 +271,23 @@ func (h *UserHandler) getPatientByID(c *gin.Context, withSoftDeleted bool) {
 	}
 
 	profResponse := patientProfileResponse{
-		Gender:                profile.Gender,
-		BirthDay:              profile.BirthDay.Time.Format("2006/01/02"),
-		BloodType:             profile.BloodType,
-		Weight:                float64(profile.Weight.Exp),
-		Height:                float64(profile.Height.Exp),
+		Gender:    profile.Gender,
+		BirthDay:  profile.BirthDay.Time.Format("2006/01/02"),
+		BloodType: profile.BloodType,
+		Weight: func() float64 {
+			f, _ := new(big.Float).SetInt(profile.Weight.Int).Float64()
+			return f * math.Pow10(int(profile.Weight.Exp))
+		}(),
+		Height: func() float64 {
+			f, _ := new(big.Float).SetInt(profile.Height.Int).Float64()
+			return f * math.Pow10(int(profile.Height.Exp))
+		}(),
 		EmergencyContactName:  profile.EmergencyContactName,
 		EmergencyContactPhone: profile.EmergencyContactPhone,
 	}
 
 	user.PatientProfile = profResponse
+	log.Print(user)
 
 	c.JSON(http.StatusOK, response.Success("Paciente encontrado", &user))
 }
