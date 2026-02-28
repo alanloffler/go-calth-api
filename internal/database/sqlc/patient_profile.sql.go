@@ -81,7 +81,6 @@ FROM
 WHERE
   business_id = $1
   AND user_id = $2
-  AND deleted_at IS NULL
 `
 
 type GetPatientProfileByUserIDParams struct {
