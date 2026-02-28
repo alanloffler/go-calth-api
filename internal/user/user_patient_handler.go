@@ -2,6 +2,7 @@ package user
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -47,6 +48,32 @@ type UpdatePatientProfileData struct {
 	Height                *float64 `json:"height" binding:"omitempty,gt=0,lt=300"`
 	EmergencyContactName  *string  `json:"emergencyContactName" binding:"omitempty"`
 	EmergencyContactPhone *string  `json:"emergencyContactPhone" binding:"omitempty,len=10,numeric"`
+}
+
+type userWithPatientProfile struct {
+	ID             pgtype.UUID            `json:"id"`
+	Ic             string                 `json:"ic"`
+	UserName       string                 `json:"userName"`
+	FirstName      string                 `json:"firstName"`
+	LastName       string                 `json:"lastName"`
+	Email          string                 `json:"email"`
+	PhoneNumber    string                 `json:"phoneNumber"`
+	Role           *userRole              `json:"role"`
+	BusinessID     pgtype.UUID            `json:"businessID"`
+	CreatedAt      pgtype.Timestamptz     `json:"createdAt"`
+	UpdatedAt      pgtype.Timestamptz     `json:"updatedAt"`
+	DeletedAt      pgtype.Timestamptz     `json:"deletedAt"`
+	PatientProfile patientProfileResponse `json:"professionalProfile"`
+}
+
+type patientProfileResponse struct {
+	Gender                string  `json:"gender"`
+	BirthDay              string  `json:"birthDay"`
+	BloodType             string  `json:"bloodType"`
+	Weight                float64 `json:"weight"`
+	Height                float64 `json:"height"`
+	EmergencyContactName  string  `json:"emergencyContactName"`
+	EmergencyContactPhone string  `json:"emergencyContactPhone"`
 }
 
 func (h *UserHandler) CreatePatient(c *gin.Context) {
@@ -147,6 +174,113 @@ func (h *UserHandler) CreatePatient(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, response.Created("Usuario creado", &user))
+}
+
+func (h *UserHandler) GetPatientByID(c *gin.Context) {
+	h.getPatientByID(c, false)
+}
+
+func (h *UserHandler) GetPatientByIDWithSoftDeleted(c *gin.Context) {
+	h.getPatientByID(c, true)
+}
+
+func (h *UserHandler) getPatientByID(c *gin.Context, withSoftDeleted bool) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+	log.Println(id)
+
+	ctx := c.Request.Context()
+
+	var user userWithPatientProfile
+	if withSoftDeleted {
+		row, err := h.repo.GetByIDWithSoftDeleted(ctx, sqlc.GetUserByIDWithSoftDeletedParams{BusinessID: businessID, ID: id})
+		if err != nil {
+			c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Paciente no encontrado", err))
+			return
+		}
+
+		user = userWithPatientProfile{
+			ID:          row.ID,
+			Ic:          row.Ic,
+			UserName:    row.UserName,
+			FirstName:   row.FirstName,
+			LastName:    row.LastName,
+			Email:       row.Email,
+			PhoneNumber: row.PhoneNumber,
+			BusinessID:  row.BusinessID,
+			CreatedAt:   row.CreatedAt,
+			UpdatedAt:   row.UpdatedAt,
+			DeletedAt:   row.DeletedAt,
+		}
+		if row.RoleID.Valid {
+			user.Role = &userRole{
+				ID:          row.RoleID,
+				Name:        row.RoleName.String,
+				Value:       row.RoleValue.String,
+				Description: row.RoleDescription.String,
+			}
+		}
+	} else {
+		row, err := h.repo.GetByID(ctx, sqlc.GetUserByIDParams{BusinessID: businessID, ID: id})
+		if err != nil {
+			c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Paciente no encontrado", err))
+			return
+		}
+
+		user = userWithPatientProfile{
+			ID:          row.ID,
+			Ic:          row.Ic,
+			UserName:    row.UserName,
+			FirstName:   row.FirstName,
+			LastName:    row.LastName,
+			Email:       row.Email,
+			PhoneNumber: row.PhoneNumber,
+			BusinessID:  row.BusinessID,
+			CreatedAt:   row.CreatedAt,
+			UpdatedAt:   row.UpdatedAt,
+			DeletedAt:   row.DeletedAt,
+		}
+		if row.RoleID.Valid {
+			user.Role = &userRole{
+				ID:          row.RoleID,
+				Name:        row.RoleName.String,
+				Value:       row.RoleValue.String,
+				Description: row.RoleDescription.String,
+			}
+		}
+	}
+
+	profile, err := h.patientProfileRepo.GetPatientProfileByUserID(c.Request.Context(), sqlc.GetPatientProfileByUserIDParams{
+		BusinessID: businessID,
+		UserID:     id,
+	})
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Perfil de paciente no encontrado", err))
+		return
+	}
+
+	profResponse := patientProfileResponse{
+		Gender:                profile.Gender,
+		BirthDay:              profile.BirthDay.Time.Format("2006/01/02"),
+		BloodType:             profile.BloodType,
+		Weight:                float64(profile.Weight.Exp),
+		Height:                float64(profile.Height.Exp),
+		EmergencyContactName:  profile.EmergencyContactName,
+		EmergencyContactPhone: profile.EmergencyContactPhone,
+	}
+
+	user.PatientProfile = profResponse
+
+	c.JSON(http.StatusOK, response.Success("Paciente encontrado", &user))
 }
 
 func (h *UserHandler) UpdatePatient(c *gin.Context) {
