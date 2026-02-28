@@ -291,62 +291,6 @@ func (h *UserHandler) GetByIDWithSoftDeleted(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Success("Usuario encontrado", &user))
 }
 
-func (h *UserHandler) GetPatientByID(c *gin.Context) {
-	businessID, ok := ctxkeys.BusinessID(c)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
-		return
-	}
-
-	var id pgtype.UUID
-	if err := id.Scan(c.Param("id")); err != nil {
-		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
-		return
-	}
-
-	ctx := c.Request.Context()
-
-	row, err := h.repo.GetByIDWithSoftDeleted(ctx, sqlc.GetUserByIDWithSoftDeletedParams{BusinessID: businessID, ID: id})
-	if err != nil {
-		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado", err))
-		return
-	}
-
-	profile, err := h.patientProfileRepo.GetByUserID(c.Request.Context(), sqlc.GetPatientProfileByUserIDParams{
-		BusinessID: businessID,
-		UserID:     id,
-	})
-	if err != nil {
-		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Perfil no encontrado", err))
-		return
-	}
-
-	user := userWithProfileResponse{
-		ID:             row.ID,
-		Ic:             row.Ic,
-		UserName:       row.UserName,
-		FirstName:      row.FirstName,
-		LastName:       row.LastName,
-		Email:          row.Email,
-		PhoneNumber:    row.PhoneNumber,
-		BusinessID:     row.BusinessID,
-		CreatedAt:      row.CreatedAt,
-		UpdatedAt:      row.UpdatedAt,
-		DeletedAt:      row.DeletedAt,
-		PatientProfile: profile,
-	}
-	if row.RoleID.Valid {
-		user.Role = &userRole{
-			ID:          row.RoleID,
-			Name:        row.RoleName.String,
-			Value:       row.RoleValue.String,
-			Description: row.RoleDescription.String,
-		}
-	}
-
-	c.JSON(http.StatusOK, response.Success("Usuario encontrado", &user))
-}
-
 func (h *UserHandler) Update(c *gin.Context) {
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
