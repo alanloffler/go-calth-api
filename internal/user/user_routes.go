@@ -39,8 +39,10 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool
 
 	users.DELETE("/:id", handler.Delete)
 	users.DELETE("/:id/soft", handler.SoftDelete)
+	users.DELETE("/:id/admin/soft", handler.SoftDelete)
 	users.DELETE("/:id/patient/soft", handler.SoftDelete)
 	users.DELETE("/:id/professional/soft", handler.SoftDelete)
+	users.DELETE("/:id/admin", handler.Delete)
 	users.DELETE("/:id/professional", handler.Delete)
 	// Checks
 	users.GET("/check/email/:email", handler.CheckEmailAvailability)
