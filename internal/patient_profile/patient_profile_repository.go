@@ -18,7 +18,7 @@ func (r *PatientProfileRepository) Create(ctx context.Context, arg sqlc.CreatePa
 	return r.q.CreatePatientProfile(ctx, arg)
 }
 
-func (r *PatientProfileRepository) GetByUserID(ctx context.Context, arg sqlc.GetPatientProfileByUserIDParams) (sqlc.PatientProfile, error) {
+func (r *PatientProfileRepository) GetPatientProfileByUserID(ctx context.Context, arg sqlc.GetPatientProfileByUserIDParams) (sqlc.PatientProfile, error) {
 	return r.q.GetPatientProfileByUserID(ctx, arg)
 }
 
