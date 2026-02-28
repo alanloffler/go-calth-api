@@ -25,7 +25,7 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool
 	users.GET("/:id", handler.GetByID)
 	users.GET("/:id/soft", handler.GetByIDWithSoftDeleted)
 	users.GET("/:id/admin/profile/soft", handler.GetByIDWithSoftDeleted)
-	users.GET("/:id/patient/profile/soft", handler.GetPatientByID)
+	users.GET("/:id/patient/profile/soft", handler.GetPatientByIDWithSoftDeleted)
 	users.GET("/:id/professional/profile/soft", handler.GetProfessionalByIDWithSoftDeleted)
 	users.GET("/:id/patient/profile", handler.GetPatientByID)
 	users.GET("/:id/professional/profile", handler.GetProfessionalByID)
