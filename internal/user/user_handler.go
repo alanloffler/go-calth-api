@@ -228,7 +228,7 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, response.Success("Usuario encontrado", &user))
 }
 
 func (h *UserHandler) GetByIDWithSoftDeleted(c *gin.Context) {
