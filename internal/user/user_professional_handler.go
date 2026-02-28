@@ -252,7 +252,7 @@ func (h *UserHandler) getProfessionalByID(c *gin.Context, withSoftDeleted bool) 
 
 	profile, err := h.professionalProfileRepo.GetProfessionalProfileByUserID(c.Request.Context(), sqlc.GetProfessionalProfileByUserIDParams{BusinessID: businessID, UserID: id})
 	if err != nil {
-		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Perfil profesional no encontrado", err))
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Perfil de profesional no encontrado", err))
 		return
 	}
 
