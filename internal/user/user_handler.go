@@ -97,22 +97,6 @@ type userByRoleResponse struct {
 	DeletedAt   pgtype.Timestamptz `json:"deletedAt"`
 }
 
-type userWithProfileResponse struct {
-	ID             pgtype.UUID        `json:"id"`
-	Ic             string             `json:"ic"`
-	UserName       string             `json:"userName"`
-	FirstName      string             `json:"firstName"`
-	LastName       string             `json:"lastName"`
-	Email          string             `json:"email"`
-	PhoneNumber    string             `json:"phoneNumber"`
-	Role           *userRole          `json:"role"`
-	BusinessID     pgtype.UUID        `json:"businessID"`
-	CreatedAt      pgtype.Timestamptz `json:"createdAt"`
-	UpdatedAt      pgtype.Timestamptz `json:"updatedAt"`
-	DeletedAt      pgtype.Timestamptz `json:"deletedAt"`
-	PatientProfile any                `json:"patientProfile"`
-}
-
 func (h *UserHandler) GetAll(c *gin.Context) {
 	users, err := h.repo.GetAll(c.Request.Context())
 	if err != nil {
