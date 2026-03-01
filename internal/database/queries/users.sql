@@ -197,14 +197,13 @@ WHERE
 -- name: UpdateUser :one
 UPDATE users
 SET
-  ic = $2,
-  user_name = $3,
-  first_name = $4,
-  last_name = $5,
-  email = $6,
-  password = $7,
-  phone_number = $8,
-  role_id = $9,
+  ic = COALESCE(sqlc.narg ('ic'), ic),
+  user_name = COALESCE(sqlc.narg ('user_name'), user_name),
+  first_name = COALESCE(sqlc.narg ('first_name'), first_name),
+  last_name = COALESCE(sqlc.narg ('last_name'), last_name),
+  email = COALESCE(sqlc.narg ('email'), email),
+  password = COALESCE(sqlc.narg ('password'), password),
+  phone_number = COALESCE(sqlc.narg ('phone_number'), phone_number),
   updated_at = now()
 WHERE
   id = $1
