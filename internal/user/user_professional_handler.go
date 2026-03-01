@@ -299,44 +299,14 @@ func (h *UserHandler) UpdateProfessional(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	current, err := h.repo.q.GetUserByID(c.Request.Context(), sqlc.GetUserByIDParams{BusinessID: businessID, ID: id})
-	if err != nil {
-		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Profesional no encontrado", err))
-		return
-	}
-
-	ic := current.Ic
-	if req.User.Ic != nil {
-		ic = *req.User.Ic
-	}
-	userName := current.UserName
-	if req.User.UserName != nil {
-		userName = *req.User.UserName
-	}
-	firstName := current.FirstName
-	if req.User.FirstName != nil {
-		firstName = *req.User.FirstName
-	}
-	lastName := current.LastName
-	if req.User.LastName != nil {
-		lastName = *req.User.LastName
-	}
-	email := current.Email
-	if req.User.Email != nil {
-		email = *req.User.Email
-	}
-	password := current.Password
+	var passwordHash pgtype.Text
 	if req.User.Password != nil {
 		hashed, err := bcrypt.GenerateFromPassword([]byte(*req.User.Password), bcrypt.DefaultCost)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al procesar contraseña", err))
 			return
 		}
-		password = string(hashed)
-	}
-	phoneNumber := current.PhoneNumber
-	if req.User.PhoneNumber != nil {
-		phoneNumber = *req.User.PhoneNumber
+		passwordHash = pgtype.Text{String: string(hashed), Valid: true}
 	}
 
 	tx, err := h.pool.Begin(ctx)
@@ -345,14 +315,13 @@ func (h *UserHandler) UpdateProfessional(c *gin.Context) {
 
 	updatedUser, err := qtx.UpdateUser(ctx, sqlc.UpdateUserParams{
 		ID:          id,
-		Ic:          ic,
-		UserName:    userName,
-		FirstName:   firstName,
-		LastName:    lastName,
-		Email:       email,
-		Password:    password,
-		PhoneNumber: phoneNumber,
-		RoleID:      current.RoleID,
+		Ic:          utils.ToPgText(req.User.Ic),
+		UserName:    utils.ToPgText(req.User.UserName),
+		FirstName:   utils.ToPgText(req.User.FirstName),
+		LastName:    utils.ToPgText(req.User.LastName),
+		Email:       utils.ToPgText(req.User.Email),
+		Password:    passwordHash,
+		PhoneNumber: utils.ToPgText(req.User.PhoneNumber),
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar el profesional", err))
