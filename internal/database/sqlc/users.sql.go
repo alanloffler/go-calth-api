@@ -905,14 +905,13 @@ func (q *Queries) UpdateRefreshToken(ctx context.Context, arg UpdateRefreshToken
 const updateUser = `-- name: UpdateUser :one
 UPDATE users
 SET
-  ic = $2,
-  user_name = $3,
-  first_name = $4,
-  last_name = $5,
-  email = $6,
-  password = $7,
-  phone_number = $8,
-  role_id = $9,
+  ic = COALESCE($2, ic),
+  user_name = COALESCE($3, user_name),
+  first_name = COALESCE($4, first_name),
+  last_name = COALESCE($5, last_name),
+  email = COALESCE($6, email),
+  password = COALESCE($7, password),
+  phone_number = COALESCE($8, phone_number),
   updated_at = now()
 WHERE
   id = $1
@@ -923,14 +922,13 @@ RETURNING
 
 type UpdateUserParams struct {
 	ID          pgtype.UUID `json:"id"`
-	Ic          string      `json:"ic"`
-	UserName    string      `json:"userName"`
-	FirstName   string      `json:"firstName"`
-	LastName    string      `json:"lastName"`
-	Email       string      `json:"email"`
-	Password    string      `json:"password"`
-	PhoneNumber string      `json:"phoneNumber"`
-	RoleID      pgtype.UUID `json:"roleId"`
+	Ic          pgtype.Text `json:"ic"`
+	UserName    pgtype.Text `json:"userName"`
+	FirstName   pgtype.Text `json:"firstName"`
+	LastName    pgtype.Text `json:"lastName"`
+	Email       pgtype.Text `json:"email"`
+	Password    pgtype.Text `json:"password"`
+	PhoneNumber pgtype.Text `json:"phoneNumber"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
@@ -943,7 +941,6 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		arg.Email,
 		arg.Password,
 		arg.PhoneNumber,
-		arg.RoleID,
 	)
 	var i User
 	err := row.Scan(
