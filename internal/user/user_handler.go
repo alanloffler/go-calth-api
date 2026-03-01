@@ -7,6 +7,7 @@ import (
 
 	"github.com/alanloffler/go-calth-api/internal/common/ctxkeys"
 	"github.com/alanloffler/go-calth-api/internal/common/response"
+	"github.com/alanloffler/go-calth-api/internal/common/utils"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/alanloffler/go-calth-api/internal/patient_profile"
 	"github.com/alanloffler/go-calth-api/internal/professional_profile"
@@ -64,15 +65,8 @@ type CreateUserData struct {
 	PhoneNumber string `json:"phoneNumber" binding:"required,len=10,numeric"`
 }
 
-type UpdateUserRequest struct {
-	Ic          string  `json:"ic" binding:"required,len=8"`
-	UserName    string  `json:"userName" binding:"required,min=3,max=100"`
-	FirstName   string  `json:"firstName" binding:"required,min=3,max=100"`
-	LastName    string  `json:"lastName" binding:"required,min=3,max=100"`
-	Email       string  `json:"email" binding:"required,email,max=100"`
-	Password    *string `json:"password" binding:"omitempty,min=8,max=100"`
-	PhoneNumber string  `json:"phoneNumber" binding:"required,len=10,numeric"`
-	RoleID      string  `json:"roleId" binding:"required,uuid"`
+type UpdateRequest struct {
+	User UpdateUserData `json:"user" binding:"required"`
 }
 
 type userRole struct {
@@ -276,56 +270,37 @@ func (h *UserHandler) GetByIDWithSoftDeleted(c *gin.Context) {
 }
 
 func (h *UserHandler) Update(c *gin.Context) {
-	businessID, ok := ctxkeys.BusinessID(c)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
-		return
-	}
-
 	var id pgtype.UUID
 	if err := id.Scan(c.Param("id")); err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
 		return
 	}
 
-	var req UpdateUserRequest
+	var req UpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error de validación de datos", err))
 		return
 	}
 
-	var roleID pgtype.UUID
-	if err := roleID.Scan(req.RoleID); err != nil {
-		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
-		return
-	}
-
-	current, err := h.repo.GetByID(c.Request.Context(), sqlc.GetUserByIDParams{BusinessID: businessID, ID: id})
-	if err != nil {
-		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado", err))
-		return
-	}
-
-	passwordHash := current.Password
-	if req.Password != nil {
-		hashed, err := bcrypt.GenerateFromPassword([]byte(*req.Password), bcrypt.DefaultCost)
+	var passwordHash pgtype.Text
+	if req.User.Password != nil {
+		hashed, err := bcrypt.GenerateFromPassword([]byte(*req.User.Password), bcrypt.DefaultCost)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al procesar contraseña", err))
 			return
 		}
-		passwordHash = string(hashed)
+		passwordHash = pgtype.Text{String: string(hashed), Valid: true}
 	}
 
 	user, err := h.repo.Update(c.Request.Context(), sqlc.UpdateUserParams{
 		ID:          id,
-		Ic:          req.Ic,
-		UserName:    req.UserName,
-		FirstName:   req.FirstName,
-		LastName:    req.LastName,
-		Email:       req.Email,
+		Ic:          utils.ToPgText(req.User.Ic),
+		UserName:    utils.ToPgText(req.User.UserName),
+		FirstName:   utils.ToPgText(req.User.FirstName),
+		LastName:    utils.ToPgText(req.User.LastName),
+		Email:       utils.ToPgText(req.User.Email),
 		Password:    passwordHash,
-		PhoneNumber: req.PhoneNumber,
-		RoleID:      roleID,
+		PhoneNumber: utils.ToPgText(req.User.PhoneNumber),
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar usuario", err))
