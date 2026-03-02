@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type EventRepository struct {
@@ -16,4 +17,8 @@ func NewEventRepository(q *sqlc.Queries) *EventRepository {
 
 func (r *EventRepository) Create(ctx context.Context, arg sqlc.CreateEventParams) (sqlc.Event, error) {
 	return r.q.CreateEvent(ctx, arg)
+}
+
+func (r *EventRepository) GetByID(ctx context.Context, id pgtype.UUID) (sqlc.Event, error) {
+	return r.q.GetEventByID(ctx, id)
 }
