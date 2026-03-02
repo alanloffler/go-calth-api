@@ -101,10 +101,12 @@ SELECT
   "role"."id" AS "role_id",
   "role"."name" AS "role_name",
   "role"."value" AS "role_value",
-  "role"."description" AS "role_description"
+  "role"."description" AS "role_description",
+  "profProfile"."professional_prefix" AS "professionalPrefix"
 FROM
   users "user"
   LEFT JOIN roles "role" ON "role"."id" = "user"."role_id"
+  LEFT JOIN professional_profile "profProfile" ON "profProfile"."user_id" = "user"."id"
 WHERE
   "user"."business_id" = $1
   AND "role"."value" = $2
