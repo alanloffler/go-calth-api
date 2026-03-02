@@ -29,6 +29,18 @@ type Business struct {
 	DeletedAt      pgtype.Timestamptz `json:"deletedAt"`
 }
 
+type Event struct {
+	ID             pgtype.UUID        `json:"id"`
+	Title          string             `json:"title"`
+	StartDate      pgtype.Timestamptz `json:"startDate"`
+	EndDate        pgtype.Timestamptz `json:"endDate"`
+	ProfessionalID pgtype.UUID        `json:"professionalId"`
+	UserID         pgtype.UUID        `json:"userId"`
+	CreatedAt      pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt      pgtype.Timestamptz `json:"updatedAt"`
+	DeletedAt      pgtype.Timestamptz `json:"deletedAt"`
+}
+
 type PatientProfile struct {
 	ID                    pgtype.UUID        `json:"id"`
 	BusinessID            pgtype.UUID        `json:"businessId"`
