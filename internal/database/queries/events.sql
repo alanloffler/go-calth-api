@@ -11,3 +11,11 @@ VALUES
   ($1, $2, $3, $4, $5)
 RETURNING
   *;
+
+-- name: GetEventByID :one
+SELECT
+  *
+FROM
+  events
+WHERE
+  id = $1;
