@@ -19,6 +19,10 @@ func (r *EventRepository) Create(ctx context.Context, arg sqlc.CreateEventParams
 	return r.q.CreateEvent(ctx, arg)
 }
 
+func (r *EventRepository) GetEventsByProfessionalID(ctx context.Context, arg sqlc.GetEventsByProfessionalIDParams) ([][]byte, error) {
+	return r.q.GetEventsByProfessionalID(ctx, arg)
+}
+
 func (r *EventRepository) GetByID(ctx context.Context, id pgtype.UUID) (sqlc.Event, error) {
 	return r.q.GetEventByID(ctx, id)
 }
