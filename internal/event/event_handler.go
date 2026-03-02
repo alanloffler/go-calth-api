@@ -18,10 +18,10 @@ type EventHandler struct {
 
 type CreateEventRequest struct {
 	Title          string `json:"title" binding:"required,min=3,max=255"`
-	StartDate      string `json:"start_date" binding:"required,datetime=2006-01-02T15:04:05Z07:00"`
-	EndDate        string `json:"end_date" binding:"required,datetime=2006-01-02T15:04:05Z07:00"`
-	ProfessionalID string `json:"professional_id" binding:"required,uuid"`
-	UserID         string `json:"user_id" binding:"required,uuid"`
+	StartDate      string `json:"startDate" binding:"required,datetime=2006-01-02T15:04:05Z07:00"`
+	EndDate        string `json:"endDate" binding:"required,datetime=2006-01-02T15:04:05Z07:00"`
+	ProfessionalID string `json:"professionalId" binding:"required,uuid"`
+	UserID         string `json:"userId" binding:"required,uuid"`
 }
 
 func NewEventHandler(repo *EventRepository) *EventHandler {
