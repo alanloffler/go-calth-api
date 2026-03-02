@@ -77,18 +77,23 @@ type userRole struct {
 }
 
 type userByRoleResponse struct {
-	ID          pgtype.UUID        `json:"id"`
-	Ic          string             `json:"ic"`
-	UserName    string             `json:"userName"`
-	FirstName   string             `json:"firstName"`
-	LastName    string             `json:"lastName"`
-	Email       string             `json:"email"`
-	PhoneNumber string             `json:"phoneNumber"`
-	Role        *userRole          `json:"role"`
-	BusinessID  pgtype.UUID        `json:"businessID"`
-	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
-	UpdatedAt   pgtype.Timestamptz `json:"updatedAt"`
-	DeletedAt   pgtype.Timestamptz `json:"deletedAt"`
+	ID                 pgtype.UUID                `json:"id"`
+	Ic                 string                     `json:"ic"`
+	UserName           string                     `json:"userName"`
+	FirstName          string                     `json:"firstName"`
+	LastName           string                     `json:"lastName"`
+	Email              string                     `json:"email"`
+	PhoneNumber        string                     `json:"phoneNumber"`
+	Role               *userRole                  `json:"role"`
+	ProfessionaProfile *professionalProfileInList `json:"professionalProfile"`
+	BusinessID         pgtype.UUID                `json:"businessID"`
+	CreatedAt          pgtype.Timestamptz         `json:"createdAt"`
+	UpdatedAt          pgtype.Timestamptz         `json:"updatedAt"`
+	DeletedAt          pgtype.Timestamptz         `json:"deletedAt"`
+}
+
+type professionalProfileInList struct {
+	ProfessionalPrefix string `json:"professionalPrefix"`
 }
 
 func (h *UserHandler) GetAll(c *gin.Context) {
@@ -150,6 +155,11 @@ func (h *UserHandler) GetAllByRole(c *gin.Context) {
 				Name:        row.RoleName.String,
 				Value:       row.RoleValue.String,
 				Description: row.RoleDescription.String,
+			}
+		}
+		if row.ProfessionalPrefix.Valid {
+			users[i].ProfessionaProfile = &professionalProfileInList{
+				ProfessionalPrefix: row.ProfessionalPrefix.String,
 			}
 		}
 	}
