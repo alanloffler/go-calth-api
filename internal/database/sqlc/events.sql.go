@@ -23,7 +23,7 @@ INSERT INTO
 VALUES
   ($1, $2, $3, $4, $5)
 RETURNING
-  id, title, start_date, end_date, professional_id, user_id, created_at, updated_at, deleted_at
+  id, title, start_date, end_date, business_id, professional_id, user_id, status, created_at, updated_at, deleted_at
 `
 
 type CreateEventParams struct {
@@ -48,8 +48,10 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		&i.Title,
 		&i.StartDate,
 		&i.EndDate,
+		&i.BusinessID,
 		&i.ProfessionalID,
 		&i.UserID,
+		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
@@ -57,28 +59,43 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 	return i, err
 }
 
-const getEventByID = `-- name: GetEventByID :one
+const getEventsByProfessionalID = `-- name: GetEventsByProfessionalID :many
 SELECT
-  id, title, start_date, end_date, professional_id, user_id, created_at, updated_at, deleted_at
+  id, title, start_date, end_date, business_id, professional_id, user_id, status, created_at, updated_at, deleted_at
 FROM
   events
 WHERE
   id = $1
 `
 
-func (q *Queries) GetEventByID(ctx context.Context, id pgtype.UUID) (Event, error) {
-	row := q.db.QueryRow(ctx, getEventByID, id)
-	var i Event
-	err := row.Scan(
-		&i.ID,
-		&i.Title,
-		&i.StartDate,
-		&i.EndDate,
-		&i.ProfessionalID,
-		&i.UserID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-	)
-	return i, err
+func (q *Queries) GetEventsByProfessionalID(ctx context.Context, id pgtype.UUID) ([]Event, error) {
+	rows, err := q.db.Query(ctx, getEventsByProfessionalID, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Event
+	for rows.Next() {
+		var i Event
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.StartDate,
+			&i.EndDate,
+			&i.BusinessID,
+			&i.ProfessionalID,
+			&i.UserID,
+			&i.Status,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
