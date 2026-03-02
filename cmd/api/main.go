@@ -9,6 +9,7 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/config"
 	"github.com/alanloffler/go-calth-api/internal/database"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
+	"github.com/alanloffler/go-calth-api/internal/event"
 	"github.com/alanloffler/go-calth-api/internal/health"
 	"github.com/alanloffler/go-calth-api/internal/middleware"
 	"github.com/alanloffler/go-calth-api/internal/permission"
@@ -60,6 +61,7 @@ func main() {
 	protected := router.Group("/")
 	protected.Use(middleware.AuthMiddleware(authService))
 	business.RegisterRoutes(protected, queries)
+	event.RegisterRoutes(protected, queries)
 	permission.RegisterRoutes(protected, queries)
 	role.RegisterRoutes(protected, queries, pool)
 	user.RegisterRoutes(protected, queries, pool)
