@@ -629,10 +629,12 @@ SELECT
   "role"."id" AS "role_id",
   "role"."name" AS "role_name",
   "role"."value" AS "role_value",
-  "role"."description" AS "role_description"
+  "role"."description" AS "role_description",
+  "profProfile"."professional_prefix" AS "professionalPrefix"
 FROM
   users "user"
   LEFT JOIN roles "role" ON "role"."id" = "user"."role_id"
+  LEFT JOIN professional_profile "profProfile" ON "profProfile"."user_id" = "user"."id"
 WHERE
   "user"."business_id" = $1
   AND "role"."value" = $2
@@ -645,21 +647,22 @@ type GetUsersByRoleParams struct {
 }
 
 type GetUsersByRoleRow struct {
-	ID              pgtype.UUID        `json:"id"`
-	Ic              string             `json:"ic"`
-	UserName        string             `json:"userName"`
-	FirstName       string             `json:"firstName"`
-	LastName        string             `json:"lastName"`
-	Email           string             `json:"email"`
-	PhoneNumber     string             `json:"phoneNumber"`
-	BusinessID      pgtype.UUID        `json:"businessId"`
-	CreatedAt       pgtype.Timestamptz `json:"createdAt"`
-	UpdatedAt       pgtype.Timestamptz `json:"updatedAt"`
-	DeletedAt       pgtype.Timestamptz `json:"deletedAt"`
-	RoleID          pgtype.UUID        `json:"roleId"`
-	RoleName        pgtype.Text        `json:"roleName"`
-	RoleValue       pgtype.Text        `json:"roleValue"`
-	RoleDescription pgtype.Text        `json:"roleDescription"`
+	ID                 pgtype.UUID        `json:"id"`
+	Ic                 string             `json:"ic"`
+	UserName           string             `json:"userName"`
+	FirstName          string             `json:"firstName"`
+	LastName           string             `json:"lastName"`
+	Email              string             `json:"email"`
+	PhoneNumber        string             `json:"phoneNumber"`
+	BusinessID         pgtype.UUID        `json:"businessId"`
+	CreatedAt          pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt          pgtype.Timestamptz `json:"updatedAt"`
+	DeletedAt          pgtype.Timestamptz `json:"deletedAt"`
+	RoleID             pgtype.UUID        `json:"roleId"`
+	RoleName           pgtype.Text        `json:"roleName"`
+	RoleValue          pgtype.Text        `json:"roleValue"`
+	RoleDescription    pgtype.Text        `json:"roleDescription"`
+	ProfessionalPrefix pgtype.Text        `json:"professionalPrefix"`
 }
 
 func (q *Queries) GetUsersByRole(ctx context.Context, arg GetUsersByRoleParams) ([]GetUsersByRoleRow, error) {
@@ -687,6 +690,7 @@ func (q *Queries) GetUsersByRole(ctx context.Context, arg GetUsersByRoleParams) 
 			&i.RoleName,
 			&i.RoleValue,
 			&i.RoleDescription,
+			&i.ProfessionalPrefix,
 		); err != nil {
 			return nil, err
 		}
