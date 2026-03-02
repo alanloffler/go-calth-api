@@ -56,3 +56,29 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 	)
 	return i, err
 }
+
+const getEventByID = `-- name: GetEventByID :one
+SELECT
+  id, title, start_date, end_date, professional_id, user_id, created_at, updated_at, deleted_at
+FROM
+  events
+WHERE
+  id = $1
+`
+
+func (q *Queries) GetEventByID(ctx context.Context, id pgtype.UUID) (Event, error) {
+	row := q.db.QueryRow(ctx, getEventByID, id)
+	var i Event
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.StartDate,
+		&i.EndDate,
+		&i.ProfessionalID,
+		&i.UserID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
