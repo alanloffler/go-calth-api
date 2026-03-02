@@ -1,9 +1,11 @@
 package event
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 
+	"github.com/alanloffler/go-calth-api/internal/common/ctxkeys"
 	"github.com/alanloffler/go-calth-api/internal/common/response"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/gin-gonic/gin"
@@ -27,6 +29,12 @@ func NewEventHandler(repo *EventRepository) *EventHandler {
 }
 
 func (h *EventHandler) Create(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
 	var req CreateEventRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error de validación de datos", err))
@@ -64,6 +72,7 @@ func (h *EventHandler) Create(c *gin.Context) {
 		Title:          req.Title,
 		StartDate:      startDate,
 		EndDate:        endDate,
+		BusinessID:     businessID,
 		ProfessionalID: professionalID,
 		UserID:         userID,
 	})
@@ -73,6 +82,36 @@ func (h *EventHandler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.Created("Evento creado", &event))
+}
+
+func (h *EventHandler) GetByProfessionalID(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID de professional inválido", err))
+		return
+	}
+
+	rawEvents, err := h.repo.GetEventsByProfessionalID(c.Request.Context(), sqlc.GetEventsByProfessionalIDParams{
+		BusinessID:     businessID,
+		ProfessionalID: id,
+	})
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Eventos no encontrados", err))
+		return
+	}
+
+	events := make([]json.RawMessage, len(rawEvents))
+	for i, e := range rawEvents {
+		events[i] = json.RawMessage(e)
+	}
+
+	c.JSON(http.StatusOK, response.Success("Eventos encontrados", &events))
 }
 
 func (h *EventHandler) GetByID(c *gin.Context) {
