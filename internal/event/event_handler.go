@@ -74,3 +74,19 @@ func (h *EventHandler) Create(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.Created("Evento creado", &event))
 }
+
+func (h *EventHandler) GetByID(c *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	event, err := h.repo.GetByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Evento no encontrado", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Evento encontrado", &event))
+}
