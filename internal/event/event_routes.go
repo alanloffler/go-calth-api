@@ -12,4 +12,5 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries) {
 	var events *gin.RouterGroup = router.Group("/events")
 
 	events.POST("", middleware.PermissionMiddleware(q, "events-create"), handler.Create)
+	events.GET("/:id", middleware.PermissionMiddleware(q, "events-view"), handler.GetByID)
 }
