@@ -17,11 +17,12 @@ INSERT INTO
     title,
     start_date,
     end_date,
+    business_id,
     professional_id,
     user_id
   )
 VALUES
-  ($1, $2, $3, $4, $5)
+  ($1, $2, $3, $4, $5, $6)
 RETURNING
   id, title, start_date, end_date, business_id, professional_id, user_id, status, created_at, updated_at, deleted_at
 `
@@ -30,6 +31,7 @@ type CreateEventParams struct {
 	Title          string             `json:"title"`
 	StartDate      pgtype.Timestamptz `json:"startDate"`
 	EndDate        pgtype.Timestamptz `json:"endDate"`
+	BusinessID     pgtype.UUID        `json:"businessId"`
 	ProfessionalID pgtype.UUID        `json:"professionalId"`
 	UserID         pgtype.UUID        `json:"userId"`
 }
@@ -39,6 +41,7 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		arg.Title,
 		arg.StartDate,
 		arg.EndDate,
+		arg.BusinessID,
 		arg.ProfessionalID,
 		arg.UserID,
 	)
@@ -59,7 +62,7 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 	return i, err
 }
 
-const getEventsByProfessionalID = `-- name: GetEventsByProfessionalID :many
+const getEventByID = `-- name: GetEventByID :one
 SELECT
   id, title, start_date, end_date, business_id, professional_id, user_id, status, created_at, updated_at, deleted_at
 FROM
@@ -68,31 +71,114 @@ WHERE
   id = $1
 `
 
-func (q *Queries) GetEventsByProfessionalID(ctx context.Context, id pgtype.UUID) ([]Event, error) {
-	rows, err := q.db.Query(ctx, getEventsByProfessionalID, id)
+func (q *Queries) GetEventByID(ctx context.Context, id pgtype.UUID) (Event, error) {
+	row := q.db.QueryRow(ctx, getEventByID, id)
+	var i Event
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.StartDate,
+		&i.EndDate,
+		&i.BusinessID,
+		&i.ProfessionalID,
+		&i.UserID,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const getEventsByProfessionalID = `-- name: GetEventsByProfessionalID :many
+SELECT
+  jsonb_build_object(
+    'id',
+    e.id,
+    'title',
+    e.title,
+    'startDate',
+    e.start_date,
+    'endDate',
+    e.end_date,
+    'businessId',
+    e.business_id,
+    'professionalId',
+    e.professional_id,
+    'userId',
+    e.user_id,
+    'status',
+    e.status,
+    'createdAt',
+    e.created_at,
+    'updatedAt',
+    e.updated_at,
+    'professional',
+    jsonb_build_object(
+      'id',
+      p.id,
+      'firstName',
+      p.first_name,
+      'lastName',
+      p.last_name,
+      'ic',
+      p.ic,
+      'role',
+      jsonb_build_object('name', pr.name, 'value', pr.value),
+      'professionalProfile',
+      jsonb_build_object('professionalPrefix', pp.professional_prefix)
+    ),
+    'user',
+    jsonb_build_object(
+      'id',
+      u.id,
+      'firstName',
+      u.first_name,
+      'lastName',
+      u.last_name,
+      'email',
+      u.email,
+      'phoneNumber',
+      u.phone_number,
+      'ic',
+      u.ic,
+      'role',
+      jsonb_build_object('name', ur.name, 'value', ur.value)
+    )
+  ) AS event
+FROM
+  events e
+  LEFT JOIN users u ON u.id = e.user_id
+  LEFT JOIN roles ur ON ur.id = u.role_id
+  LEFT JOIN users p ON p.id = e.professional_id
+  LEFT JOIN roles pr ON pr.id = p.role_id
+  LEFT JOIN professional_profile pp ON pp.user_id = p.id
+WHERE
+  e.business_id = $1
+  AND e.professional_id = $2
+  AND e.deleted_at IS NULL
+ORDER BY
+  e.start_date
+`
+
+type GetEventsByProfessionalIDParams struct {
+	BusinessID     pgtype.UUID `json:"businessId"`
+	ProfessionalID pgtype.UUID `json:"professionalId"`
+}
+
+func (q *Queries) GetEventsByProfessionalID(ctx context.Context, arg GetEventsByProfessionalIDParams) ([][]byte, error) {
+	rows, err := q.db.Query(ctx, getEventsByProfessionalID, arg.BusinessID, arg.ProfessionalID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Event
+	var items [][]byte
 	for rows.Next() {
-		var i Event
-		if err := rows.Scan(
-			&i.ID,
-			&i.Title,
-			&i.StartDate,
-			&i.EndDate,
-			&i.BusinessID,
-			&i.ProfessionalID,
-			&i.UserID,
-			&i.Status,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.DeletedAt,
-		); err != nil {
+		var event []byte
+		if err := rows.Scan(&event); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, event)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
