@@ -25,6 +25,10 @@ type CreateEventRequest struct {
 	UserID         string `json:"userId" binding:"required,uuid"`
 }
 
+type UpdateEventStatusRequest struct {
+	Status string `json:"status" binding:"required"`
+}
+
 func NewEventHandler(repo *EventRepository) *EventHandler {
 	return &EventHandler{repo: repo}
 }
@@ -252,4 +256,44 @@ func (h *EventHandler) GetByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.Success("Evento encontrado", &event))
+}
+
+func (h *EventHandler) UpdateEventStatus(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	var req UpdateEventStatusRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error de validación de datos", err))
+		return
+	}
+
+	status := sqlc.EventStatus(req.Status)
+	switch status {
+	case sqlc.EventStatusAbsent, sqlc.EventStatusAttended, sqlc.EventStatusCancelled, sqlc.EventStatusInProgress, sqlc.EventStatusPending:
+	default:
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Estado inválido"))
+		return
+	}
+
+	event, err := h.repo.UpdateEventStatus(c.Request.Context(), sqlc.UpdateEventStatusParams{
+		BusinessID: businessID,
+		ID:         id,
+		Status:     status,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar estado del evento", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Estado del evento actualizado", &event))
 }
