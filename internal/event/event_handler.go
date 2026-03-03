@@ -190,6 +190,54 @@ func (h *EventHandler) GetProfessionalEventsByDay(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Success("Eventos encontrados", &events))
 }
 
+func (h *EventHandler) GetProfessionalEventsByDayArray(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID de profesional inválido", err))
+		return
+	}
+
+	loc, err := time.LoadLocation("America/Argentina/Buenos_Aires")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error de zona horaria", err))
+		return
+	}
+
+	dayStr := c.Param("day")
+	dayTime, err := time.ParseInLocation("2006-01-02", dayStr, loc)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de día inválido", err))
+		return
+	}
+
+	startOfDay := pgtype.Timestamptz{Time: dayTime, Valid: true}
+	endOfDay := pgtype.Timestamptz{Time: dayTime.Add(24*time.Hour - time.Second), Valid: true}
+
+	slotTimes, err := h.repo.GetProfessionalEventsByDayArray(c.Request.Context(), sqlc.GetProfessionalEventsByDayArrayParams{
+		BusinessID:     businessID,
+		ProfessionalID: id,
+		StartDate:      startOfDay,
+		StartDate_2:    endOfDay,
+	})
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Eventos no encontrados", err))
+		return
+	}
+
+	dates := make([]string, len(slotTimes))
+	for i, st := range slotTimes {
+		dates[i] = st.Time.In(loc).Format("15:00")
+	}
+
+	c.JSON(http.StatusOK, response.Success("Fechas encontradas", &dates))
+}
+
 func (h *EventHandler) GetByID(c *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(c.Param("id")); err != nil {
