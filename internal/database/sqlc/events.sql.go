@@ -430,3 +430,51 @@ func (q *Queries) GetProfessionalEventsByDayArray(ctx context.Context, arg GetPr
 	}
 	return items, nil
 }
+
+const updateEventStatus = `-- name: UpdateEventStatus :one
+UPDATE events
+SET
+  status = $3,
+  updated_at = now()
+WHERE
+  id = $1
+  AND business_id = $2
+  AND deleted_at IS NULL
+RETURNING
+  id,
+  title,
+  start_date,
+  end_date,
+  business_id,
+  professional_id,
+  user_id,
+  status,
+  created_at,
+  updated_at,
+  deleted_at
+`
+
+type UpdateEventStatusParams struct {
+	ID         pgtype.UUID `json:"id"`
+	BusinessID pgtype.UUID `json:"businessId"`
+	Status     EventStatus `json:"status"`
+}
+
+func (q *Queries) UpdateEventStatus(ctx context.Context, arg UpdateEventStatusParams) (Event, error) {
+	row := q.db.QueryRow(ctx, updateEventStatus, arg.ID, arg.BusinessID, arg.Status)
+	var i Event
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.StartDate,
+		&i.EndDate,
+		&i.BusinessID,
+		&i.ProfessionalID,
+		&i.UserID,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
