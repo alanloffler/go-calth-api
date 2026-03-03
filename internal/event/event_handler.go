@@ -245,7 +245,7 @@ func (h *EventHandler) GetProfessionalEventsByDayArray(c *gin.Context) {
 
 	dates := make([]string, len(slotTimes))
 	for i, st := range slotTimes {
-		dates[i] = st.Time.In(loc).Format("15:00")
+		dates[i] = st.Time.In(loc).Format("15:04")
 	}
 
 	c.JSON(http.StatusOK, response.Success("Fechas encontradas", &dates))
