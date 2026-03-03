@@ -383,3 +383,50 @@ func (q *Queries) GetProfessionalEventsByDay(ctx context.Context, arg GetProfess
 	}
 	return items, nil
 }
+
+const getProfessionalEventsByDayArray = `-- name: GetProfessionalEventsByDayArray :many
+SELECT
+  e.start_date
+FROM
+  events e
+WHERE
+  e.business_id = $1
+  AND e.professional_id = $2
+  AND e.start_date >= $3
+  AND e.start_date <= $4
+  AND e.deleted_at IS NULL
+ORDER BY
+  e.start_date
+`
+
+type GetProfessionalEventsByDayArrayParams struct {
+	BusinessID     pgtype.UUID        `json:"businessId"`
+	ProfessionalID pgtype.UUID        `json:"professionalId"`
+	StartDate      pgtype.Timestamptz `json:"startDate"`
+	StartDate_2    pgtype.Timestamptz `json:"startDate2"`
+}
+
+func (q *Queries) GetProfessionalEventsByDayArray(ctx context.Context, arg GetProfessionalEventsByDayArrayParams) ([]pgtype.Timestamptz, error) {
+	rows, err := q.db.Query(ctx, getProfessionalEventsByDayArray,
+		arg.BusinessID,
+		arg.ProfessionalID,
+		arg.StartDate,
+		arg.StartDate_2,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.Timestamptz
+	for rows.Next() {
+		var start_date pgtype.Timestamptz
+		if err := rows.Scan(&start_date); err != nil {
+			return nil, err
+		}
+		items = append(items, start_date)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
