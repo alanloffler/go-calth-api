@@ -25,6 +25,15 @@ type CreateEventRequest struct {
 	UserID         string `json:"userId" binding:"required,uuid"`
 }
 
+type UpdateEventRequest struct {
+	Title          *string `json:"title" binding:"omitempty,min=3,max=255"`
+	StartDate      *string `json:"startDate" binding:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	EndDate        *string `json:"endDate" binding:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	ProfessionalID *string `json:"professionalId" binding:"omitempty,uuid"`
+	UserID         *string `json:"userId" binding:"omitempty,uuid"`
+	Status         *string `json:"status" binding:"omitempty"`
+}
+
 type UpdateEventStatusRequest struct {
 	Status string `json:"status" binding:"required"`
 }
@@ -256,6 +265,90 @@ func (h *EventHandler) GetByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.Success("Evento encontrado", &event))
+}
+
+func (h *EventHandler) UpdateEvent(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	var req UpdateEventRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error de validación de datos", err))
+		return
+	}
+
+	params := sqlc.UpdateEventParams{
+		BusinessID: businessID,
+		ID:         id,
+	}
+
+	if req.Title != nil {
+		params.Title = pgtype.Text{String: *req.Title, Valid: true}
+	}
+
+	if req.StartDate != nil {
+		t, err := time.Parse(time.RFC3339, *req.StartDate)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de fecha de inicio inválido", err))
+			return
+		}
+		params.StartDate = pgtype.Timestamptz{Time: t, Valid: true}
+	}
+
+	if req.EndDate != nil {
+		t, err := time.Parse(time.RFC3339, *req.EndDate)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de fecha de finalización inválido", err))
+			return
+		}
+		params.EndDate = pgtype.Timestamptz{Time: t, Valid: true}
+	}
+
+	if req.ProfessionalID != nil {
+		var professionalID pgtype.UUID
+		if err := professionalID.Scan(*req.ProfessionalID); err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID del profesional inválido", err))
+			return
+		}
+		params.ProfessionalID = professionalID
+	}
+
+	if req.UserID != nil {
+		var userID pgtype.UUID
+		if err := userID.Scan(*req.UserID); err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID del paciente inválido", err))
+			return
+		}
+		params.UserID = userID
+	}
+
+	if req.Status != nil {
+		status := sqlc.EventStatus(*req.Status)
+		switch status {
+		case sqlc.EventStatusAbsent, sqlc.EventStatusAttended, sqlc.EventStatusCancelled, sqlc.EventStatusInProgress, sqlc.EventStatusPending:
+		default:
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Estado inválido"))
+			return
+		}
+		params.Status = sqlc.NullEventStatus{EventStatus: status, Valid: true}
+	}
+
+	event, err := h.repo.UpdateEvent(c.Request.Context(), params)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar evento", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Evento actualizado", &event))
 }
 
 func (h *EventHandler) UpdateEventStatus(c *gin.Context) {
