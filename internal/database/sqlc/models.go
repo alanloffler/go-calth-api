@@ -14,9 +14,11 @@ import (
 type EventStatus string
 
 const (
-	EventStatusPENDING   EventStatus = "PENDING"
-	EventStatusCONFIRMED EventStatus = "CONFIRMED"
-	EventStatusCANCELLED EventStatus = "CANCELLED"
+	EventStatusAbsent     EventStatus = "absent"
+	EventStatusAttended   EventStatus = "attended"
+	EventStatusCancelled  EventStatus = "cancelled"
+	EventStatusInProgress EventStatus = "in_progress"
+	EventStatusPending    EventStatus = "pending"
 )
 
 func (e *EventStatus) Scan(src interface{}) error {
