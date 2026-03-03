@@ -31,6 +31,10 @@ func (r *EventRepository) GetProfessionalEventsByDay(ctx context.Context, arg sq
 	return r.q.GetProfessionalEventsByDay(ctx, arg)
 }
 
+func (r *EventRepository) GetProfessionalEventsByDayArray(ctx context.Context, arg sqlc.GetProfessionalEventsByDayArrayParams) ([]pgtype.Timestamptz, error) {
+	return r.q.GetProfessionalEventsByDayArray(ctx, arg)
+}
+
 func (r *EventRepository) GetByID(ctx context.Context, id pgtype.UUID) (sqlc.Event, error) {
 	return r.q.GetEventByID(ctx, id)
 }
