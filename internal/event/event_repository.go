@@ -23,6 +23,10 @@ func (r *EventRepository) GetEventsByProfessionalID(ctx context.Context, arg sql
 	return r.q.GetEventsByProfessionalID(ctx, arg)
 }
 
+func (r *EventRepository) GetEventsByBusinessID(ctx context.Context, arg sqlc.GetEventsByBusinessIDParams) ([][]byte, error) {
+	return r.q.GetEventsByBusinessID(ctx, arg)
+}
+
 func (r *EventRepository) GetByID(ctx context.Context, id pgtype.UUID) (sqlc.Event, error) {
 	return r.q.GetEventByID(ctx, id)
 }
