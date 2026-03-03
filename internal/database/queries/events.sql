@@ -222,6 +222,20 @@ WHERE
 ORDER BY
   e.start_date;
 
+-- name: GetProfessionalEventsByDayArray :many
+SELECT
+  e.start_date
+FROM
+  events e
+WHERE
+  e.business_id = $1
+  AND e.professional_id = $2
+  AND e.start_date >= $3
+  AND e.start_date <= $4
+  AND e.deleted_at IS NULL
+ORDER BY
+  e.start_date;
+
 -- name: GetEventByID :one
 SELECT
   *
