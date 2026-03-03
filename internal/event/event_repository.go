@@ -38,3 +38,7 @@ func (r *EventRepository) GetProfessionalEventsByDayArray(ctx context.Context, a
 func (r *EventRepository) GetByID(ctx context.Context, id pgtype.UUID) (sqlc.Event, error) {
 	return r.q.GetEventByID(ctx, id)
 }
+
+func (r *EventRepository) UpdateEventStatus(ctx context.Context, arg sqlc.UpdateEventStatusParams) (sqlc.Event, error) {
+	return r.q.UpdateEventStatus(ctx, arg)
+}
