@@ -431,6 +431,73 @@ func (q *Queries) GetProfessionalEventsByDayArray(ctx context.Context, arg GetPr
 	return items, nil
 }
 
+const updateEvent = `-- name: UpdateEvent :one
+UPDATE events
+SET
+  title = COALESCE($3, title),
+  start_date = COALESCE($4, start_date),
+  end_date = COALESCE($5, end_date),
+  professional_id = COALESCE($6, professional_id),
+  user_id = COALESCE($7, user_id),
+  status = COALESCE($8, status),
+  updated_at = now()
+WHERE
+  business_id = $1
+  AND id = $2
+  AND deleted_at IS NULL
+RETURNING
+  id,
+  title,
+  start_date,
+  end_date,
+  business_id,
+  professional_id,
+  user_id,
+  status,
+  created_at,
+  updated_at,
+  deleted_at
+`
+
+type UpdateEventParams struct {
+	BusinessID     pgtype.UUID        `json:"businessId"`
+	ID             pgtype.UUID        `json:"id"`
+	Title          pgtype.Text        `json:"title"`
+	StartDate      pgtype.Timestamptz `json:"startDate"`
+	EndDate        pgtype.Timestamptz `json:"endDate"`
+	ProfessionalID pgtype.UUID        `json:"professionalId"`
+	UserID         pgtype.UUID        `json:"userId"`
+	Status         NullEventStatus    `json:"status"`
+}
+
+func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event, error) {
+	row := q.db.QueryRow(ctx, updateEvent,
+		arg.BusinessID,
+		arg.ID,
+		arg.Title,
+		arg.StartDate,
+		arg.EndDate,
+		arg.ProfessionalID,
+		arg.UserID,
+		arg.Status,
+	)
+	var i Event
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.StartDate,
+		&i.EndDate,
+		&i.BusinessID,
+		&i.ProfessionalID,
+		&i.UserID,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const updateEventStatus = `-- name: UpdateEventStatus :one
 UPDATE events
 SET
