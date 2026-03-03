@@ -3,6 +3,7 @@ package event
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/alanloffler/go-calth-api/internal/common/ctxkeys"
@@ -82,6 +83,33 @@ func (h *EventHandler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.Created("Evento creado", &event))
+}
+
+func (h *EventHandler) GetByBusinessID(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	limit, err := strconv.ParseInt(c.Query("limit"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Límite inválido", err))
+		return
+	}
+
+	rawEvents, err := h.repo.GetEventsByBusinessID(c.Request.Context(), sqlc.GetEventsByBusinessIDParams{BusinessID: businessID, Limit: int32(limit)})
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Eventos no encontrados", err))
+		return
+	}
+
+	events := make([]json.RawMessage, len(rawEvents))
+	for i, e := range rawEvents {
+		events[i] = json.RawMessage(e)
+	}
+
+	c.JSON(http.StatusOK, response.Success("Eventos encontrados", &events))
 }
 
 func (h *EventHandler) GetByProfessionalID(c *gin.Context) {
