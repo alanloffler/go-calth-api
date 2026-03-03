@@ -243,3 +243,25 @@ FROM
   events
 WHERE
   id = $1;
+
+-- name: UpdateEventStatus :one
+UPDATE events
+SET
+  status = $3,
+  updated_at = now()
+WHERE
+  id = $1
+  AND business_id = $2
+  AND deleted_at IS NULL
+RETURNING
+  id,
+  title,
+  start_date,
+  end_date,
+  business_id,
+  professional_id,
+  user_id,
+  status,
+  created_at,
+  updated_at,
+  deleted_at;
