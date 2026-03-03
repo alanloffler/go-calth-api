@@ -39,6 +39,10 @@ func (r *EventRepository) GetByID(ctx context.Context, id pgtype.UUID) (sqlc.Eve
 	return r.q.GetEventByID(ctx, id)
 }
 
+func (r *EventRepository) UpdateEvent(ctx context.Context, arg sqlc.UpdateEventParams) (sqlc.Event, error) {
+	return r.q.UpdateEvent(ctx, arg)
+}
+
 func (r *EventRepository) UpdateEventStatus(ctx context.Context, arg sqlc.UpdateEventStatusParams) (sqlc.Event, error) {
 	return r.q.UpdateEventStatus(ctx, arg)
 }
