@@ -265,3 +265,30 @@ RETURNING
   created_at,
   updated_at,
   deleted_at;
+
+-- name: UpdateEvent :one
+UPDATE events
+SET
+  title = COALESCE(sqlc.narg ('title'), title),
+  start_date = COALESCE(sqlc.narg ('start_date'), start_date),
+  end_date = COALESCE(sqlc.narg ('end_date'), end_date),
+  professional_id = COALESCE(sqlc.narg ('professional_id'), professional_id),
+  user_id = COALESCE(sqlc.narg ('user_id'), user_id),
+  status = COALESCE(sqlc.narg ('status'), status),
+  updated_at = now()
+WHERE
+  business_id = $1
+  AND id = $2
+  AND deleted_at IS NULL
+RETURNING
+  id,
+  title,
+  start_date,
+  end_date,
+  business_id,
+  professional_id,
+  user_id,
+  status,
+  created_at,
+  updated_at,
+  deleted_at;
