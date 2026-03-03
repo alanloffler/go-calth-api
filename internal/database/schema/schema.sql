@@ -130,7 +130,13 @@ CREATE TABLE role_permissions (
 );
 
 -- // Events //
-CREATE TYPE event_status AS ENUM('PENDING', 'CONFIRMED', 'CANCELLED');
+CREATE TYPE event_status AS ENUM(
+  'absent',
+  'attended',
+  'cancelled',
+  'in_progress',
+  'pending'
+);
 
 CREATE TABLE events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -140,7 +146,7 @@ CREATE TABLE events (
   business_id UUID NOT NULL,
   professional_id UUID NOT NULL,
   user_id UUID NOT NULL,
-  status event_status NOT NULL DEFAULT 'PENDING',
+  status event_status NOT NULL DEFAULT 'pending',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   deleted_at TIMESTAMPTZ,
