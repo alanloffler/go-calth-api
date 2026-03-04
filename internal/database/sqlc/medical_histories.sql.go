@@ -68,3 +68,89 @@ func (q *Queries) CreateMedicalHistory(ctx context.Context, arg CreateMedicalHis
 	)
 	return i, err
 }
+
+const getMedicalHistoriesByPatientIDWithSoftDeleted = `-- name: GetMedicalHistoriesByPatientIDWithSoftDeleted :many
+SELECT
+  mh.id, mh.business_id, mh.user_id, mh.professional_id, mh.event_id, mh.date, mh.reason, mh.recipe, mh.comments, mh.created_at, mh.updated_at, mh.deleted_at,
+  u.ic,
+  u.first_name,
+  u.last_name,
+  p.first_name,
+  p.last_name,
+  pp.professional_prefix
+FROM
+  medical_histories mh
+  LEFT JOIN users u ON u.id = mh.user_id
+  LEFT JOIN users p ON p.id = mh.professional_id
+  LEFT JOIN professional_profile pp ON pp.user_id = p.id
+WHERE
+  mh.business_id = $1
+  AND mh.user_id = $2
+ORDER BY
+  mh.date DESC
+`
+
+type GetMedicalHistoriesByPatientIDWithSoftDeletedParams struct {
+	BusinessID pgtype.UUID `json:"businessId"`
+	UserID     pgtype.UUID `json:"userId"`
+}
+
+type GetMedicalHistoriesByPatientIDWithSoftDeletedRow struct {
+	ID                 pgtype.UUID        `json:"id"`
+	BusinessID         pgtype.UUID        `json:"businessId"`
+	UserID             pgtype.UUID        `json:"userId"`
+	ProfessionalID     pgtype.UUID        `json:"professionalId"`
+	EventID            pgtype.UUID        `json:"eventId"`
+	Date               pgtype.Timestamptz `json:"date"`
+	Reason             string             `json:"reason"`
+	Recipe             bool               `json:"recipe"`
+	Comments           string             `json:"comments"`
+	CreatedAt          pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt          pgtype.Timestamptz `json:"updatedAt"`
+	DeletedAt          pgtype.Timestamptz `json:"deletedAt"`
+	Ic                 pgtype.Text        `json:"ic"`
+	FirstName          pgtype.Text        `json:"firstName"`
+	LastName           pgtype.Text        `json:"lastName"`
+	FirstName_2        pgtype.Text        `json:"firstName2"`
+	LastName_2         pgtype.Text        `json:"lastName2"`
+	ProfessionalPrefix pgtype.Text        `json:"professionalPrefix"`
+}
+
+func (q *Queries) GetMedicalHistoriesByPatientIDWithSoftDeleted(ctx context.Context, arg GetMedicalHistoriesByPatientIDWithSoftDeletedParams) ([]GetMedicalHistoriesByPatientIDWithSoftDeletedRow, error) {
+	rows, err := q.db.Query(ctx, getMedicalHistoriesByPatientIDWithSoftDeleted, arg.BusinessID, arg.UserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetMedicalHistoriesByPatientIDWithSoftDeletedRow
+	for rows.Next() {
+		var i GetMedicalHistoriesByPatientIDWithSoftDeletedRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.BusinessID,
+			&i.UserID,
+			&i.ProfessionalID,
+			&i.EventID,
+			&i.Date,
+			&i.Reason,
+			&i.Recipe,
+			&i.Comments,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+			&i.Ic,
+			&i.FirstName,
+			&i.LastName,
+			&i.FirstName_2,
+			&i.LastName_2,
+			&i.ProfessionalPrefix,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
