@@ -91,6 +91,20 @@ type Event struct {
 	DeletedAt      pgtype.Timestamptz `json:"deletedAt"`
 }
 
+type MedicalHistory struct {
+	ID             pgtype.UUID        `json:"id"`
+	BusinessID     pgtype.UUID        `json:"businessId"`
+	ProfessionalID pgtype.UUID        `json:"professionalId"`
+	EventID        pgtype.UUID        `json:"eventId"`
+	Date           pgtype.Timestamptz `json:"date"`
+	Reason         string             `json:"reason"`
+	Recipe         bool               `json:"recipe"`
+	Comments       string             `json:"comments"`
+	CreatedAt      pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt      pgtype.Timestamptz `json:"updatedAt"`
+	DeletedAt      pgtype.Timestamptz `json:"deletedAt"`
+}
+
 type PatientProfile struct {
 	ID                    pgtype.UUID        `json:"id"`
 	BusinessID            pgtype.UUID        `json:"businessId"`
