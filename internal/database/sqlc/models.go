@@ -94,6 +94,7 @@ type Event struct {
 type MedicalHistory struct {
 	ID             pgtype.UUID        `json:"id"`
 	BusinessID     pgtype.UUID        `json:"businessId"`
+	UserID         pgtype.UUID        `json:"userId"`
 	ProfessionalID pgtype.UUID        `json:"professionalId"`
 	EventID        pgtype.UUID        `json:"eventId"`
 	Date           pgtype.Timestamptz `json:"date"`
