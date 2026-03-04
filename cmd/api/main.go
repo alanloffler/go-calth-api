@@ -11,6 +11,7 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/alanloffler/go-calth-api/internal/event"
 	"github.com/alanloffler/go-calth-api/internal/health"
+	"github.com/alanloffler/go-calth-api/internal/medical_history"
 	"github.com/alanloffler/go-calth-api/internal/middleware"
 	"github.com/alanloffler/go-calth-api/internal/permission"
 	"github.com/alanloffler/go-calth-api/internal/role"
@@ -62,6 +63,7 @@ func main() {
 	protected.Use(middleware.AuthMiddleware(authService))
 	business.RegisterRoutes(protected, queries)
 	event.RegisterRoutes(protected, queries)
+	medical_history.RegisterRoutes(protected, queries)
 	permission.RegisterRoutes(protected, queries)
 	role.RegisterRoutes(protected, queries, pool)
 	user.RegisterRoutes(protected, queries, pool)
