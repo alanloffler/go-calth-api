@@ -165,6 +165,7 @@ CREATE INDEX idx_events_business_user_start ON events (business_id, user_id, sta
 CREATE TABLE medical_histories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   business_id UUID NOT NULL,
+  user_id UUID NOT NULL,
   professional_id UUID NOT NULL,
   event_id UUID NULL,
   date TIMESTAMPTZ NOT NULL,
