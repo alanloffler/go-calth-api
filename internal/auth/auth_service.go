@@ -19,7 +19,7 @@ type TokenPair struct {
 
 type TokenClaims struct {
 	UserID     string `json:"userId"`
-	BusinessID string `json:"businessID"`
+	BusinessID string `json:"businessId"`
 	RoleID     string `json:"roleId"`
 	jwt.RegisteredClaims
 }
