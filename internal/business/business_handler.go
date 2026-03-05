@@ -68,7 +68,7 @@ type businessUserResponse struct {
 	Email       string             `json:"email"`
 	PhoneNumber string             `json:"phoneNumber"`
 	Role        *businessUserRole  `json:"role"`
-	BusinessID  pgtype.UUID        `json:"businessID"`
+	BusinessID  pgtype.UUID        `json:"businessId"`
 	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
 	UpdatedAt   pgtype.Timestamptz `json:"updatedAt"`
 	DeletedAt   pgtype.Timestamptz `json:"deletedAt"`
