@@ -193,7 +193,7 @@ func (h *MedicalHistoryHandler) SoftDelete(c *gin.Context) {
 
 	rows, err := h.repo.SoftDelete(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error al eliminar historia médica", err))
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al eliminar historia médica", err))
 		return
 	}
 	if rows == 0 {
@@ -202,4 +202,24 @@ func (h *MedicalHistoryHandler) SoftDelete(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.Success[any]("Historia médica eliminada", nil))
+}
+
+func (h *MedicalHistoryHandler) Restore(c *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	rows, err := h.repo.Restore(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al restaurar la historia médica", err))
+		return
+	}
+	if rows == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Historia médica no encontrada"))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success[any]("Historia médica restaurada", nil))
 }
