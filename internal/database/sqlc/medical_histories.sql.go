@@ -154,3 +154,22 @@ func (q *Queries) GetMedicalHistoriesByPatientIDWithSoftDeleted(ctx context.Cont
 	}
 	return items, nil
 }
+
+const softDeleteMedicalHistory = `-- name: SoftDeleteMedicalHistory :execrows
+UPDATE medical_histories
+SET
+  deleted_at = now()
+WHERE
+  id = $1
+  AND deleted_at IS NULL
+RETURNING
+  id, business_id, user_id, professional_id, event_id, date, reason, recipe, comments, created_at, updated_at, deleted_at
+`
+
+func (q *Queries) SoftDeleteMedicalHistory(ctx context.Context, id pgtype.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, softDeleteMedicalHistory, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
