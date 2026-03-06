@@ -252,13 +252,22 @@ func (h *EventHandler) GetProfessionalEventsByDayArray(c *gin.Context) {
 }
 
 func (h *EventHandler) GetByID(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
 	var id pgtype.UUID
 	if err := id.Scan(c.Param("id")); err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
 		return
 	}
 
-	event, err := h.repo.GetByID(c.Request.Context(), id)
+	event, err := h.repo.GetByID(c.Request.Context(), sqlc.GetEventByIDParams{
+		BusinessID: businessID,
+		ID:         id,
+	})
 	if err != nil {
 		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Evento no encontrado", err))
 		return
