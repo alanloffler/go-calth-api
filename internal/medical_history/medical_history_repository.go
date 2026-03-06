@@ -26,3 +26,7 @@ func (r *MedicalHistoryRepository) GetAllByPatientIDWithSoftDeleted(ctx context.
 func (r *MedicalHistoryRepository) SoftDelete(ctx context.Context, id pgtype.UUID) (int64, error) {
 	return r.q.SoftDeleteMedicalHistory(ctx, id)
 }
+
+func (r *MedicalHistoryRepository) Restore(ctx context.Context, id pgtype.UUID) (int64, error) {
+	return r.q.RestoreMedicalHistory(ctx, id)
+}
