@@ -242,7 +242,8 @@ SELECT
 FROM
   events
 WHERE
-  id = $1;
+  business_id = $1
+  AND id = $2;
 
 -- name: UpdateEventStatus :one
 UPDATE events
