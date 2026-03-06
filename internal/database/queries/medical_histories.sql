@@ -51,7 +51,8 @@ UPDATE medical_histories
 SET
   deleted_at = NULL
 WHERE
-  id = $1
+  business_id = $1
+  AND id = $2
   AND deleted_at IS NOT NULL
 RETURNING
   *;
