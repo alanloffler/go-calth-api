@@ -40,7 +40,8 @@ UPDATE medical_histories
 SET
   deleted_at = now()
 WHERE
-  id = $1
+  business_id = $1
+  AND id = $2
   AND deleted_at IS NULL
 RETURNING
   *;
