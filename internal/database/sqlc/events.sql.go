@@ -504,8 +504,8 @@ SET
   status = $3,
   updated_at = now()
 WHERE
-  id = $1
-  AND business_id = $2
+  business_id = $1
+  AND id = $2
   AND deleted_at IS NULL
 RETURNING
   id,
@@ -522,13 +522,13 @@ RETURNING
 `
 
 type UpdateEventStatusParams struct {
-	ID         pgtype.UUID `json:"id"`
 	BusinessID pgtype.UUID `json:"businessId"`
+	ID         pgtype.UUID `json:"id"`
 	Status     EventStatus `json:"status"`
 }
 
 func (q *Queries) UpdateEventStatus(ctx context.Context, arg UpdateEventStatusParams) (Event, error) {
-	row := q.db.QueryRow(ctx, updateEventStatus, arg.ID, arg.BusinessID, arg.Status)
+	row := q.db.QueryRow(ctx, updateEventStatus, arg.BusinessID, arg.ID, arg.Status)
 	var i Event
 	err := row.Scan(
 		&i.ID,
