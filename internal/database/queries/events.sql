@@ -250,8 +250,8 @@ SET
   status = $3,
   updated_at = now()
 WHERE
-  id = $1
-  AND business_id = $2
+  business_id = $1
+  AND id = $2
   AND deleted_at IS NULL
 RETURNING
   id,
