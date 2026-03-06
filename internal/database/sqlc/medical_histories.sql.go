@@ -69,6 +69,19 @@ func (q *Queries) CreateMedicalHistory(ctx context.Context, arg CreateMedicalHis
 	return i, err
 }
 
+const deleteMedicalHistory = `-- name: DeleteMedicalHistory :exec
+DELETE FROM medical_histories
+WHERE
+  business_id = $1
+  AND id = $1
+  AND deleted_at IS NULL
+`
+
+func (q *Queries) DeleteMedicalHistory(ctx context.Context, businessID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteMedicalHistory, businessID)
+	return err
+}
+
 const getMedicalHistoriesByPatientIDWithSoftDeleted = `-- name: GetMedicalHistoriesByPatientIDWithSoftDeleted :many
 SELECT
   mh.id, mh.business_id, mh.user_id, mh.professional_id, mh.event_id, mh.date, mh.reason, mh.recipe, mh.comments, mh.created_at, mh.updated_at, mh.deleted_at,
