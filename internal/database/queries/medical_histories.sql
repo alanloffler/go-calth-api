@@ -44,3 +44,13 @@ WHERE
   AND deleted_at IS NULL
 RETURNING
   *;
+
+-- name: RestoreMedicalHistory :execrows
+UPDATE medical_histories
+SET
+  deleted_at = NULL
+WHERE
+  id = $1
+  AND deleted_at IS NOT NULL
+RETURNING
+  *;
