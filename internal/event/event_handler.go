@@ -2,6 +2,7 @@ package event
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -141,6 +142,47 @@ func (h *EventHandler) GetByProfessionalID(c *gin.Context) {
 	rawEvents, err := h.repo.GetEventsByProfessionalID(c.Request.Context(), sqlc.GetEventsByProfessionalIDParams{
 		BusinessID:     businessID,
 		ProfessionalID: id,
+	})
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Eventos no encontrados", err))
+		return
+	}
+
+	events := make([]json.RawMessage, len(rawEvents))
+	for i, e := range rawEvents {
+		events[i] = json.RawMessage(e)
+	}
+
+	c.JSON(http.StatusOK, response.Success("Eventos encontrados", &events))
+}
+
+func (h *EventHandler) GetEventsByBusinessProfessionalPatient(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	var professionalID pgtype.UUID
+	if err := professionalID.Scan(c.Query("professional")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID de profesional inválido", err))
+		return
+	}
+
+	var userID pgtype.UUID
+	if err := userID.Scan(c.Param("patient_id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID de paciente inválido", err))
+		return
+	}
+
+	log.Println(businessID)
+	log.Println(professionalID)
+	log.Println(userID)
+
+	rawEvents, err := h.repo.GetEventsByBusinessProfessionalPatient(c.Request.Context(), sqlc.GetEventsByBusinessProfessionalPatientParams{
+		BusinessID:     businessID,
+		ProfessionalID: professionalID,
+		UserID:         userID,
 	})
 	if err != nil {
 		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Eventos no encontrados", err))
