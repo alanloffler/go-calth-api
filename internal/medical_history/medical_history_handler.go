@@ -214,13 +214,22 @@ func (h *MedicalHistoryHandler) SoftDelete(c *gin.Context) {
 }
 
 func (h *MedicalHistoryHandler) Restore(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
 	var id pgtype.UUID
 	if err := id.Scan(c.Param("id")); err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
 		return
 	}
 
-	rows, err := h.repo.Restore(c.Request.Context(), id)
+	rows, err := h.repo.Restore(c.Request.Context(), sqlc.RestoreMedicalHistoryParams{
+		BusinessID: businessID,
+		ID:         id,
+	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al restaurar la historia médica", err))
 		return
