@@ -236,6 +236,73 @@ WHERE
 ORDER BY
   e.start_date;
 
+-- name: GetEventsByBusinessProfessionalPatient :many
+SELECT
+  jsonb_build_object(
+    'id',
+    e.id,
+    'title',
+    e.title,
+    'startDate',
+    e.start_date,
+    'endDate',
+    e.end_date,
+    'businessId',
+    e.business_id,
+    'userId',
+    e.user_id,
+    'status',
+    e.status,
+    'createdAt',
+    e.created_at,
+    'updatedAt',
+    e.updated_at,
+    'professional',
+    jsonb_build_object(
+      'id',
+      p.id,
+      'firstName',
+      p.first_name,
+      'lastName',
+      p.last_name,
+      'ic',
+      p.ic,
+      'professionalProfile',
+      jsonb_build_object('professionalPrefix', pp.professional_prefix)
+    ),
+    'user',
+    jsonb_build_object(
+      'id',
+      u.id,
+      'firstName',
+      u.first_name,
+      'lastName',
+      u.last_name,
+      'email',
+      u.email,
+      'phoneNumber',
+      u.phone_number,
+      'ic',
+      u.ic,
+      'role',
+      jsonb_build_object('name', ur.name, 'value', ur.value)
+    )
+  ) AS event
+FROM
+  events e
+  LEFT JOIN users u ON u.id = e.user_id
+  LEFT JOIN roles ur ON ur.id = u.role_id
+  LEFT JOIN users p ON p.id = e.professional_id
+  LEFT JOIN professional_profile pp ON pp.user_id = p.id
+WHERE
+  e.business_id = $1
+  AND e.professional_id = $2
+  AND e.user_id = $3
+  AND e.deleted_at IS NULL
+ORDER BY
+  e.start_date::date DESC,
+  e.end_date::time DESC;
+
 -- name: GetEventByID :one
 SELECT
   *
