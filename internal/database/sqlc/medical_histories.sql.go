@@ -173,14 +173,20 @@ UPDATE medical_histories
 SET
   deleted_at = NULL
 WHERE
-  id = $1
+  business_id = $1
+  AND id = $2
   AND deleted_at IS NOT NULL
 RETURNING
   id, business_id, user_id, professional_id, event_id, date, reason, recipe, comments, created_at, updated_at, deleted_at
 `
 
-func (q *Queries) RestoreMedicalHistory(ctx context.Context, id pgtype.UUID) (int64, error) {
-	result, err := q.db.Exec(ctx, restoreMedicalHistory, id)
+type RestoreMedicalHistoryParams struct {
+	BusinessID pgtype.UUID `json:"businessId"`
+	ID         pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) RestoreMedicalHistory(ctx context.Context, arg RestoreMedicalHistoryParams) (int64, error) {
+	result, err := q.db.Exec(ctx, restoreMedicalHistory, arg.BusinessID, arg.ID)
 	if err != nil {
 		return 0, err
 	}
