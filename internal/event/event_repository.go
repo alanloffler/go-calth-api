@@ -39,7 +39,7 @@ func (r *EventRepository) GetEventsByBusinessProfessionalPatient(ctx context.Con
 	return r.q.GetEventsByBusinessProfessionalPatient(ctx, arg)
 }
 
-func (r *EventRepository) GetByID(ctx context.Context, arg sqlc.GetEventByIDParams) (sqlc.Event, error) {
+func (r *EventRepository) GetByID(ctx context.Context, arg sqlc.GetEventByIDParams) ([]byte, error) {
 	return r.q.GetEventByID(ctx, arg)
 }
 
