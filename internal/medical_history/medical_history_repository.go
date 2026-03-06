@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type MedicalHistoryRepository struct {
@@ -20,4 +21,8 @@ func (r *MedicalHistoryRepository) CreateMedicaHistory(ctx context.Context, arg 
 
 func (r *MedicalHistoryRepository) GetAllByPatientIDWithSoftDeleted(ctx context.Context, arg sqlc.GetMedicalHistoriesByPatientIDWithSoftDeletedParams) ([]sqlc.GetMedicalHistoriesByPatientIDWithSoftDeletedRow, error) {
 	return r.q.GetMedicalHistoriesByPatientIDWithSoftDeleted(ctx, arg)
+}
+
+func (r *MedicalHistoryRepository) SoftDelete(ctx context.Context, id pgtype.UUID) (int64, error) {
+	return r.q.SoftDeleteMedicalHistory(ctx, id)
 }
