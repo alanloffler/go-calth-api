@@ -306,7 +306,7 @@ func (h *EventHandler) GetByID(c *gin.Context) {
 		return
 	}
 
-	event, err := h.repo.GetByID(c.Request.Context(), sqlc.GetEventByIDParams{
+	rawEvent, err := h.repo.GetByID(c.Request.Context(), sqlc.GetEventByIDParams{
 		BusinessID: businessID,
 		ID:         id,
 	})
@@ -314,6 +314,8 @@ func (h *EventHandler) GetByID(c *gin.Context) {
 		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Evento no encontrado", err))
 		return
 	}
+
+	event := json.RawMessage(rawEvent)
 
 	c.JSON(http.StatusOK, response.Success("Evento encontrado", &event))
 }
