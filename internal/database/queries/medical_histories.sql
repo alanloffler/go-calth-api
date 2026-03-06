@@ -54,3 +54,10 @@ WHERE
   AND deleted_at IS NOT NULL
 RETURNING
   *;
+
+-- name: DeleteMedicalHistory :exec
+DELETE FROM medical_histories
+WHERE
+  business_id = $1
+  AND id = $1
+  AND deleted_at IS NULL;
