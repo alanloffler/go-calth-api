@@ -64,12 +64,87 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 
 const getEventByID = `-- name: GetEventByID :one
 SELECT
-  id, title, start_date, end_date, business_id, professional_id, user_id, status, created_at, updated_at, deleted_at
+  jsonb_build_object(
+    'id', e.id,
+    'title', e.title,
+    'startDate', e.start_date,
+    'endDate', e.end_date,
+    'businessId', e.business_id,
+    'professionalId', e.professional_id,
+    'userId', e.user_id,
+    'status', e.status,
+    'createdAt', e.created_at,
+    'updatedAt', e.updated_at,
+    'deletedAt', e.deleted_at,
+    'professional', jsonb_build_object(
+      'id', p.id,
+      'ic', p.ic,
+      'userName', p.user_name,
+      'firstName', p.first_name,
+      'lastName', p.last_name,
+      'email', p.email,
+      'password', p.password,
+      'phoneNumber', p.phone_number,
+      'roleId', p.role_id,
+      'businessId', p.business_id,
+      'refreshToken', p.refresh_token,
+      'createdAt', p.created_at,
+      'updatedAt', p.updated_at,
+      'deletedAt', p.deleted_at,
+      'professionalProfile', jsonb_build_object(
+        'id', pp.id,
+        'businessId', pp.business_id,
+        'userId', pp.user_id,
+        'licenseId', pp.license_id,
+        'professionalPrefix', pp.professional_prefix,
+        'specialty', pp.specialty,
+        'workingDays', pp.working_days,
+        'startHour', pp.start_hour,
+        'endHour', pp.end_hour,
+        'slotDuration', pp.slot_duration,
+        'dailyExceptionStart', pp.daily_exception_start,
+        'dailyExceptionEnd', pp.daily_exception_end,
+        'createdAt', pp.created_at,
+        'updatedAt', pp.updated_at,
+        'deletedAt', pp.deleted_at
+      )
+    ),
+    'user', jsonb_build_object(
+      'id', u.id,
+      'ic', u.ic,
+      'userName', u.user_name,
+      'firstName', u.first_name,
+      'lastName', u.last_name,
+      'email', u.email,
+      'password', u.password,
+      'phoneNumber', u.phone_number,
+      'roleId', u.role_id,
+      'businessId', u.business_id,
+      'refreshToken', u.refresh_token,
+      'createdAt', u.created_at,
+      'updatedAt', u.updated_at,
+      'deletedAt', u.deleted_at,
+      'role', jsonb_build_object(
+        'id', ur.id,
+        'name', ur.name,
+        'value', ur.value,
+        'description', ur.description,
+        'createdAt', ur.created_at,
+        'updatedAt', ur.updated_at,
+        'deletedAt', ur.deleted_at
+      )
+    )
+  ) AS event
 FROM
-  events
+  events e
+  LEFT JOIN users u ON u.id = e.user_id
+  LEFT JOIN roles ur ON ur.id = u.role_id
+  LEFT JOIN users p ON p.id = e.professional_id
+  LEFT JOIN professional_profile pp ON pp.user_id = p.id
 WHERE
-  business_id = $1
-  AND id = $2
+  e.business_id = $1
+  AND e.id = $2
+  AND e.deleted_at IS NULL
 `
 
 type GetEventByIDParams struct {
@@ -77,23 +152,11 @@ type GetEventByIDParams struct {
 	ID         pgtype.UUID `json:"id"`
 }
 
-func (q *Queries) GetEventByID(ctx context.Context, arg GetEventByIDParams) (Event, error) {
+func (q *Queries) GetEventByID(ctx context.Context, arg GetEventByIDParams) ([]byte, error) {
 	row := q.db.QueryRow(ctx, getEventByID, arg.BusinessID, arg.ID)
-	var i Event
-	err := row.Scan(
-		&i.ID,
-		&i.Title,
-		&i.StartDate,
-		&i.EndDate,
-		&i.BusinessID,
-		&i.ProfessionalID,
-		&i.UserID,
-		&i.Status,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-	)
-	return i, err
+	var event []byte
+	err := row.Scan(&event)
+	return event, err
 }
 
 const getEventsByBusinessID = `-- name: GetEventsByBusinessID :many
