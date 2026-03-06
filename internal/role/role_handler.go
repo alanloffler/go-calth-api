@@ -436,7 +436,7 @@ func (h *RoleHandler) SoftDelete(c *gin.Context) {
 
 	rows, err := h.repo.SoftDelete(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error al eliminar rol"))
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al eliminar rol"))
 		return
 	}
 	if rows == 0 {
