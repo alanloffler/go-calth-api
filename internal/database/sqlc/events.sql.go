@@ -68,11 +68,17 @@ SELECT
 FROM
   events
 WHERE
-  id = $1
+  business_id = $1
+  AND id = $2
 `
 
-func (q *Queries) GetEventByID(ctx context.Context, id pgtype.UUID) (Event, error) {
-	row := q.db.QueryRow(ctx, getEventByID, id)
+type GetEventByIDParams struct {
+	BusinessID pgtype.UUID `json:"businessId"`
+	ID         pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) GetEventByID(ctx context.Context, arg GetEventByIDParams) (Event, error) {
+	row := q.db.QueryRow(ctx, getEventByID, arg.BusinessID, arg.ID)
 	var i Event
 	err := row.Scan(
 		&i.ID,
