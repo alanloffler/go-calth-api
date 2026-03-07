@@ -241,3 +241,28 @@ func (h *MedicalHistoryHandler) Restore(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.Success[any]("Historia médica restaurada", nil))
 }
+
+func (h *MedicalHistoryHandler) Delete(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	err := h.repo.Delete(c.Request.Context(), sqlc.DeleteMedicalHistoryParams{
+		BusinessID: businessID,
+		ID:         id,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error eliminando historia médica", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success[any]("Historia médica eliminada", nil))
+}
