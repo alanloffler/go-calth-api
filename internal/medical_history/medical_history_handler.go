@@ -43,6 +43,16 @@ type MedicalHistoryResponse struct {
 	Professional   ProfessionalResponse `json:"professional"`
 }
 
+type UpdateMedicalHistoryRequest struct {
+	UserID         string `json:"userId" binding:"omitempty,uuid"`
+	ProfessionalID string `json:"professionalId" binding:"omitempty,uuid"`
+	EventID        string `json:"eventId" binding:"omitempty,uuid"`
+	Date           string `json:"date" binding:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	Reason         string `json:"reason" binding:"omitempty,min=3,max=100"`
+	Recipe         *bool  `json:"recipe"`
+	Comments       string `json:"comments" binding:"omitempty,min=3"`
+}
+
 type UserResponse struct {
 	IC        string `json:"ic"`
 	FirstName string `json:"firstName"`
@@ -182,6 +192,75 @@ func (h *MedicalHistoryHandler) GetAllByPatientIDWithSoftDeleted(c *gin.Context)
 	}
 
 	c.JSON(http.StatusOK, response.Success("Historias médicas encontradas", &result))
+}
+
+func (h *MedicalHistoryHandler) Update(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
+		return
+	}
+
+	var req UpdateMedicalHistoryRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error de validación de datos", err))
+		return
+	}
+
+	params := sqlc.UpdateMedicalHistoryParams{
+		BusinessIDFilter: businessID,
+		ID:               id,
+		Reason:           pgtype.Text{String: req.Reason, Valid: true},
+		Comments:         pgtype.Text{String: req.Comments, Valid: true},
+	}
+
+	if req.Recipe != nil {
+		params.Recipe = pgtype.Bool{Bool: *req.Recipe, Valid: true}
+	}
+
+	if req.UserID != "" {
+		if err := params.UserID.Scan(req.UserID); err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID del paciente inválido", err))
+			return
+		}
+	}
+
+	if req.ProfessionalID != "" {
+		if err := params.ProfessionalID.Scan(req.ProfessionalID); err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID del profesional inválido", err))
+			return
+		}
+	}
+
+	if req.EventID != "" {
+		if err := params.EventID.Scan(req.EventID); err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID del turno inválido", err))
+			return
+		}
+	}
+
+	if req.Date != "" {
+		date, err := time.Parse(time.RFC3339, req.Date)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de fecha inválido", err))
+			return
+		}
+		params.Date = pgtype.Timestamptz{Time: date, Valid: true}
+	}
+
+	mh, err := h.repo.Update(c.Request.Context(), params)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar la historia médica", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Historia médica actualizada", &mh))
 }
 
 func (h *MedicalHistoryHandler) SoftDelete(c *gin.Context) {
