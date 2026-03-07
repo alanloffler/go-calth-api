@@ -222,3 +222,67 @@ func (q *Queries) SoftDeleteMedicalHistory(ctx context.Context, arg SoftDeleteMe
 	}
 	return result.RowsAffected(), nil
 }
+
+const updateMedicalHistory = `-- name: UpdateMedicalHistory :one
+UPDATE medical_histories
+SET
+  business_id = COALESCE($1, business_id),
+  user_id = COALESCE($2, user_id),
+  professional_id = COALESCE($3, professional_id),
+  event_id = COALESCE($4, event_id),
+  date = COALESCE($5, date),
+  reason = COALESCE($6, reason),
+  recipe = COALESCE($7, recipe),
+  comments = COALESCE($8, comments),
+  updated_at = now()
+WHERE
+  business_id = $9
+  AND id = $10
+  AND deleted_at IS NULL
+RETURNING
+  id, business_id, user_id, professional_id, event_id, date, reason, recipe, comments, created_at, updated_at, deleted_at
+`
+
+type UpdateMedicalHistoryParams struct {
+	BusinessID       pgtype.UUID        `json:"businessId"`
+	UserID           pgtype.UUID        `json:"userId"`
+	ProfessionalID   pgtype.UUID        `json:"professionalId"`
+	EventID          pgtype.UUID        `json:"eventId"`
+	Date             pgtype.Timestamptz `json:"date"`
+	Reason           pgtype.Text        `json:"reason"`
+	Recipe           pgtype.Bool        `json:"recipe"`
+	Comments         pgtype.Text        `json:"comments"`
+	BusinessIDFilter pgtype.UUID        `json:"businessIdFilter"`
+	ID               pgtype.UUID        `json:"id"`
+}
+
+func (q *Queries) UpdateMedicalHistory(ctx context.Context, arg UpdateMedicalHistoryParams) (MedicalHistory, error) {
+	row := q.db.QueryRow(ctx, updateMedicalHistory,
+		arg.BusinessID,
+		arg.UserID,
+		arg.ProfessionalID,
+		arg.EventID,
+		arg.Date,
+		arg.Reason,
+		arg.Recipe,
+		arg.Comments,
+		arg.BusinessIDFilter,
+		arg.ID,
+	)
+	var i MedicalHistory
+	err := row.Scan(
+		&i.ID,
+		&i.BusinessID,
+		&i.UserID,
+		&i.ProfessionalID,
+		&i.EventID,
+		&i.Date,
+		&i.Reason,
+		&i.Recipe,
+		&i.Comments,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
