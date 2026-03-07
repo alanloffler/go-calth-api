@@ -14,6 +14,7 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries) {
 	medical_histories.POST("", middleware.PermissionMiddleware(q, "medical_history-create"), handler.CreateMedicalHistory)
 	medical_histories.GET("/:id/patient/removed", middleware.PermissionMiddleware(q, "medical_history-view"), handler.GetAllByPatientIDWithSoftDeleted)
 	medical_histories.GET("/:id/patient", middleware.PermissionMiddleware(q, "medical_history-view"), handler.GetAllByPatientIDWithSoftDeleted)
+	medical_histories.PATCH("/:id", middleware.PermissionMiddleware(q, "medical_history-update"), handler.Update)
 	medical_histories.PATCH("/:id/restore", middleware.PermissionMiddleware(q, "medical_history-restore"), handler.Restore)
 	medical_histories.DELETE("/:id/soft", middleware.PermissionMiddleware(q, "medical_history-delete"), handler.SoftDelete)
 	medical_histories.DELETE("/:id", middleware.PermissionMiddleware(q, "medical_history-delete-hard"), handler.Delete)
