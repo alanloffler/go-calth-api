@@ -73,12 +73,17 @@ const deleteMedicalHistory = `-- name: DeleteMedicalHistory :exec
 DELETE FROM medical_histories
 WHERE
   business_id = $1
-  AND id = $1
+  AND id = $2
   AND deleted_at IS NULL
 `
 
-func (q *Queries) DeleteMedicalHistory(ctx context.Context, businessID pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, deleteMedicalHistory, businessID)
+type DeleteMedicalHistoryParams struct {
+	BusinessID pgtype.UUID `json:"businessId"`
+	ID         pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) DeleteMedicalHistory(ctx context.Context, arg DeleteMedicalHistoryParams) error {
+	_, err := q.db.Exec(ctx, deleteMedicalHistory, arg.BusinessID, arg.ID)
 	return err
 }
 
