@@ -35,6 +35,25 @@ WHERE
 ORDER BY
   mh.date DESC;
 
+-- name: UpdateMedicalHistory :one
+UPDATE medical_histories
+SET
+  business_id = COALESCE(sqlc.narg ('business_id'), business_id),
+  user_id = COALESCE(sqlc.narg ('user_id'), user_id),
+  professional_id = COALESCE(sqlc.narg ('professional_id'), professional_id),
+  event_id = COALESCE(sqlc.narg ('event_id'), event_id),
+  date = COALESCE(sqlc.narg ('date'), date),
+  reason = COALESCE(sqlc.narg ('reason'), reason),
+  recipe = COALESCE(sqlc.narg ('recipe'), recipe),
+  comments = COALESCE(sqlc.narg ('comments'), comments),
+  updated_at = now()
+WHERE
+  business_id = sqlc.arg ('business_id_filter')
+  AND id = sqlc.arg ('id')
+  AND deleted_at IS NULL
+RETURNING
+  *;
+
 -- name: SoftDeleteMedicalHistory :execrows
 UPDATE medical_histories
 SET
