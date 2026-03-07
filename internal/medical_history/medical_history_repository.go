@@ -22,6 +22,10 @@ func (r *MedicalHistoryRepository) GetAllByPatientIDWithSoftDeleted(ctx context.
 	return r.q.GetMedicalHistoriesByPatientIDWithSoftDeleted(ctx, arg)
 }
 
+func (r *MedicalHistoryRepository) Update(ctx context.Context, arg sqlc.UpdateMedicalHistoryParams) (sqlc.MedicalHistory, error) {
+	return r.q.UpdateMedicalHistory(ctx, arg)
+}
+
 func (r *MedicalHistoryRepository) SoftDelete(ctx context.Context, arg sqlc.SoftDeleteMedicalHistoryParams) (int64, error) {
 	return r.q.SoftDeleteMedicalHistory(ctx, arg)
 }
