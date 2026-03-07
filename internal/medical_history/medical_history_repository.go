@@ -29,3 +29,7 @@ func (r *MedicalHistoryRepository) SoftDelete(ctx context.Context, arg sqlc.Soft
 func (r *MedicalHistoryRepository) Restore(ctx context.Context, arg sqlc.RestoreMedicalHistoryParams) (int64, error) {
 	return r.q.RestoreMedicalHistory(ctx, arg)
 }
+
+func (r *MedicalHistoryRepository) Delete(ctx context.Context, arg sqlc.DeleteMedicalHistoryParams) error {
+	return r.q.DeleteMedicalHistory(ctx, arg)
+}
