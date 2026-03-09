@@ -43,6 +43,8 @@ func NewEventHandler(repo *EventRepository) *EventHandler {
 	return &EventHandler{repo: repo}
 }
 
+// TODO: create findEventsFiltered -> already at Nest.js API
+
 func (h *EventHandler) Create(c *gin.Context) {
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
