@@ -20,6 +20,8 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries) {
 	events.GET("/professional/:id/date-array/:day", middleware.PermissionMiddleware(q, "events-view"), handler.GetProfessionalEventsByDayArray)
 	events.GET("/:id", middleware.PermissionMiddleware(q, "events-view"), handler.GetByID)
 
+	// TODO: create findEventsFiltered -> already at Nest.js API
+
 	events.PATCH("/:id/status", middleware.PermissionMiddleware(q, "events-update"), handler.UpdateEventStatus)
 	events.PATCH("/:id", middleware.PermissionMiddleware(q, "events-update"), handler.UpdateEvent)
 }
