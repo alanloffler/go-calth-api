@@ -293,6 +293,8 @@ func (h *EventHandler) GetProfessionalEventsByDayArray(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Success("Fechas encontradas", &dates))
 }
 
+// TODO: return { data: the events, total: the count of total items}
+// TODO: implement pagination with limit and pageIndex
 func (h *EventHandler) GetEventsFiltered(c *gin.Context) {
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
