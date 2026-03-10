@@ -1,4 +1,3 @@
--- TODO: create findEventsFiltered -> already at Nest.js API
 -- name: CreateEvent :one
 INSERT INTO
   events (
@@ -303,6 +302,90 @@ WHERE
 ORDER BY
   e.start_date::date DESC,
   e.end_date::time DESC;
+
+-- name: GetEventsFiltered :many
+SELECT
+  jsonb_build_object(
+    'id',
+    e.id,
+    'title',
+    e.title,
+    'startDate',
+    e.start_date,
+    'endDate',
+    e.end_date,
+    'businessId',
+    e.business_id,
+    'userId',
+    e.user_id,
+    'status',
+    e.status,
+    'createdAt',
+    e.created_at,
+    'updatedAt',
+    e.created_at,
+    'user',
+    jsonb_build_object(
+      'id',
+      u.id,
+      'firstName',
+      u.first_name,
+      'lastName',
+      u.last_name,
+      'email',
+      u.email,
+      'phoneNumber',
+      u.phone_number,
+      'role',
+      jsonb_build_object('name', r.name, 'value', r.value)
+    ),
+    'professional',
+    jsonb_build_object(
+      'id',
+      p.id,
+      'firstName',
+      p.first_name,
+      'lastName',
+      p.last_name,
+      'ic',
+      p.ic,
+      'professionalProfile',
+      jsonb_build_object('professionalPrefix', pp.professional_prefix)
+    )
+  ) AS event
+FROM
+  events e
+  LEFT JOIN users u ON e.user_id = u.id
+  LEFT JOIN roles r ON u.role_id = r.id
+  LEFT JOIN users p ON e.professional_id = p.id
+  LEFT JOIN professional_profile pp ON p.id = pp.user_id
+WHERE
+  e.business_id = sqlc.arg (business_id)
+  AND (
+    sqlc.narg (start_of_day)::timestamp IS NULL
+    OR e.start_date >= sqlc.narg (start_of_day)
+  )
+  AND (
+    sqlc.narg (end_of_day)::timestamp IS NULL
+    OR e.start_date <= sqlc.narg (end_of_day)
+  )
+  AND (
+    sqlc.narg (patient_id)::uuid IS NULL
+    OR u.id = sqlc.narg (patient_id)
+  )
+  AND (
+    sqlc.narg (professional_id)::uuid IS NULL
+    OR p.id = sqlc.narg (professional_id)
+  )
+  AND (
+    sqlc.narg (status)::text IS NULL
+    OR e.status::text = sqlc.narg (status)
+  )
+ORDER BY
+  e.start_date::date DESC,
+  e.start_date::time ASC
+LIMIT
+  sqlc.arg (query_limit);
 
 -- name: GetEventByID :one
 SELECT
