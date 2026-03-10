@@ -15,8 +15,6 @@ func NewEventRepository(q *sqlc.Queries) *EventRepository {
 	return &EventRepository{q: q}
 }
 
-// TODO: create findEventsFiltered -> already at Nest.js API
-
 func (r *EventRepository) Create(ctx context.Context, arg sqlc.CreateEventParams) (sqlc.Event, error) {
 	return r.q.CreateEvent(ctx, arg)
 }
@@ -39,6 +37,10 @@ func (r *EventRepository) GetProfessionalEventsByDayArray(ctx context.Context, a
 
 func (r *EventRepository) GetEventsByBusinessProfessionalPatient(ctx context.Context, arg sqlc.GetEventsByBusinessProfessionalPatientParams) ([][]byte, error) {
 	return r.q.GetEventsByBusinessProfessionalPatient(ctx, arg)
+}
+
+func (r *EventRepository) GetEventsFiltered(ctx context.Context, arg sqlc.GetEventsFilteredParams) ([][]byte, error) {
+	return r.q.GetEventsFiltered(ctx, arg)
 }
 
 func (r *EventRepository) GetByID(ctx context.Context, arg sqlc.GetEventByIDParams) ([]byte, error) {
