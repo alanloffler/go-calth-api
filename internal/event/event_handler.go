@@ -43,8 +43,6 @@ func NewEventHandler(repo *EventRepository) *EventHandler {
 	return &EventHandler{repo: repo}
 }
 
-// TODO: create findEventsFiltered -> already at Nest.js API
-
 func (h *EventHandler) Create(c *gin.Context) {
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
@@ -293,6 +291,77 @@ func (h *EventHandler) GetProfessionalEventsByDayArray(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.Success("Fechas encontradas", &dates))
+}
+
+func (h *EventHandler) GetEventsFiltered(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	params := sqlc.GetEventsFilteredParams{
+		BusinessID: businessID,
+	}
+
+	if limitStr := c.Query("limit"); limitStr != "" {
+		limit, err := strconv.ParseInt(limitStr, 10, 32)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Límite inválido", err))
+			return
+		}
+		params.QueryLimit = int32(limit)
+	}
+
+	if professionalIDStr := c.Query("professionalId"); professionalIDStr != "" {
+		var professionalID pgtype.UUID
+		if err := professionalID.Scan(professionalIDStr); err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID de profesional inválido", err))
+			return
+		}
+		params.ProfessionalID = professionalID
+	}
+
+	if patientIDStr := c.Query("patientId"); patientIDStr != "" {
+		var patientID pgtype.UUID
+		if err := patientID.Scan(patientIDStr); err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID de paciente inválido", err))
+			return
+		}
+		params.PatientID = patientID
+	}
+
+	if statusStr := c.Query("status"); statusStr != "" {
+		params.Status = pgtype.Text{String: statusStr, Valid: true}
+	}
+
+	if dateStr := c.Query("date"); dateStr != "" {
+		loc, err := time.LoadLocation("America/Argentina/Buenos_Aires")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error de zona horaria", err))
+			return
+		}
+		date, err := time.ParseInLocation("2006-01-02", dateStr, loc)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de fecha inválido", err))
+			return
+		}
+		params.StartOfDay = pgtype.Timestamp{Time: date, Valid: true}
+		params.EndOfDay = pgtype.Timestamp{Time: date.Add(24*time.Hour - time.Second), Valid: true}
+	}
+
+	rawEvents, err := h.repo.GetEventsFiltered(c.Request.Context(), params)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al obtener eventos", err))
+		return
+	}
+
+	events := make([]json.RawMessage, len(rawEvents))
+	for i, e := range rawEvents {
+		events[i] = json.RawMessage(e)
+	}
+
+	c.JSON(http.StatusOK, response.Success("Eventos encontrados", &events))
 }
 
 func (h *EventHandler) GetByID(c *gin.Context) {
