@@ -293,8 +293,6 @@ func (h *EventHandler) GetProfessionalEventsByDayArray(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Success("Fechas encontradas", &dates))
 }
 
-// TODO: return { data: the events, total: the count of total items}
-// TODO: implement pagination with limit and pageIndex
 func (h *EventHandler) GetEventsFiltered(c *gin.Context) {
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
@@ -306,14 +304,27 @@ func (h *EventHandler) GetEventsFiltered(c *gin.Context) {
 		BusinessID: businessID,
 	}
 
+	limit := int32(10)
 	if limitStr := c.Query("limit"); limitStr != "" {
-		limit, err := strconv.ParseInt(limitStr, 10, 32)
+		parsedLimit, err := strconv.ParseInt(limitStr, 10, 32)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Límite inválido", err))
 			return
 		}
-		params.QueryLimit = int32(limit)
+		limit = int32(parsedLimit)
 	}
+	params.QueryLimit = limit
+
+	pageIndex := int32(1)
+	if pageStr := c.Query("page"); pageStr != "" {
+		parsedPage, err := strconv.ParseInt(pageStr, 10, 32)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Página inválida", err))
+			return
+		}
+		pageIndex = int32(parsedPage)
+	}
+	params.QueryOffset = (pageIndex - 1) * limit
 
 	if professionalIDStr := c.Query("professionalId"); professionalIDStr != "" {
 		var professionalID pgtype.UUID
@@ -352,6 +363,21 @@ func (h *EventHandler) GetEventsFiltered(c *gin.Context) {
 		params.EndOfDay = pgtype.Timestamp{Time: date.Add(24*time.Hour - time.Second), Valid: true}
 	}
 
+	countParams := sqlc.GetEventsFilteredCountParams{
+		BusinessID:     params.BusinessID,
+		StartOfDay:     params.StartOfDay,
+		EndOfDay:       params.EndOfDay,
+		PatientID:      params.PatientID,
+		ProfessionalID: params.ProfessionalID,
+		Status:         params.Status,
+	}
+
+	total, err := h.repo.GetEventsFilteredCount(c.Request.Context(), countParams)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al contar eventos", err))
+		return
+	}
+
 	rawEvents, err := h.repo.GetEventsFiltered(c.Request.Context(), params)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al obtener eventos", err))
@@ -363,7 +389,11 @@ func (h *EventHandler) GetEventsFiltered(c *gin.Context) {
 		events[i] = json.RawMessage(e)
 	}
 
-	c.JSON(http.StatusOK, response.Success("Eventos encontrados", &events))
+	result := response.PaginatedData[json.RawMessage]{
+		Result: events,
+		Total:  total,
+	}
+	c.JSON(http.StatusOK, response.Success("Eventos encontrados", &result))
 }
 
 func (h *EventHandler) GetByID(c *gin.Context) {
