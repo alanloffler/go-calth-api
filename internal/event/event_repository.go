@@ -43,6 +43,10 @@ func (r *EventRepository) GetEventsFiltered(ctx context.Context, arg sqlc.GetEve
 	return r.q.GetEventsFiltered(ctx, arg)
 }
 
+func (r *EventRepository) GetEventsFilteredCount(ctx context.Context, arg sqlc.GetEventsFilteredCountParams) (int32, error) {
+	return r.q.GetEventsFilteredCount(ctx, arg)
+}
+
 func (r *EventRepository) GetByID(ctx context.Context, arg sqlc.GetEventByIDParams) ([]byte, error) {
 	return r.q.GetEventByID(ctx, arg)
 }
