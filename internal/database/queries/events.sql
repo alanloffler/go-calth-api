@@ -385,7 +385,39 @@ ORDER BY
   e.start_date::date DESC,
   e.start_date::time ASC
 LIMIT
-  sqlc.arg (query_limit);
+  sqlc.arg (query_limit)
+OFFSET
+  sqlc.arg (query_offset);
+
+-- name: GetEventsFilteredCount :one
+SELECT
+  COUNT(e.id)::int AS total
+FROM
+  events e
+  LEFT JOIN users u ON e.user_id = u.id
+  LEFT JOIN users p ON e.professional_id = p.id
+WHERE
+  e.business_id = sqlc.arg (business_id)
+  AND (
+    sqlc.narg (start_of_day)::timestamp IS NULL
+    OR e.start_date >= sqlc.narg (start_of_day)
+  )
+  AND (
+    sqlc.narg (end_of_day)::timestamp IS NULL
+    OR e.start_date <= sqlc.narg (end_of_day)
+  )
+  AND (
+    sqlc.narg (patient_id)::uuid IS NULL
+    OR u.id = sqlc.narg (patient_id)
+  )
+  AND (
+    sqlc.narg (professional_id)::uuid IS NULL
+    OR p.id = sqlc.narg (professional_id)
+  )
+  AND (
+    sqlc.narg (status)::text IS NULL
+    OR e.status::text = sqlc.narg (status)
+  );
 
 -- name: GetEventByID :one
 SELECT
