@@ -15,10 +15,10 @@ type EventStatus string
 
 const (
 	EventStatusAbsent     EventStatus = "absent"
-	EventStatusAttended   EventStatus = "attended"
 	EventStatusCancelled  EventStatus = "cancelled"
 	EventStatusInProgress EventStatus = "in_progress"
 	EventStatusPending    EventStatus = "pending"
+	EventStatusPresent    EventStatus = "present"
 )
 
 func (e *EventStatus) Scan(src interface{}) error {
