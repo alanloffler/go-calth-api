@@ -517,7 +517,7 @@ func (h *EventHandler) UpdateEvent(c *gin.Context) {
 	if req.Status != nil {
 		status := sqlc.EventStatus(*req.Status)
 		switch status {
-		case sqlc.EventStatusAbsent, sqlc.EventStatusAttended, sqlc.EventStatusCancelled, sqlc.EventStatusInProgress, sqlc.EventStatusPending:
+		case sqlc.EventStatusAbsent, sqlc.EventStatusPresent, sqlc.EventStatusCancelled, sqlc.EventStatusInProgress, sqlc.EventStatusPending:
 		default:
 			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Estado inválido"))
 			return
@@ -555,7 +555,7 @@ func (h *EventHandler) UpdateEventStatus(c *gin.Context) {
 
 	status := sqlc.EventStatus(req.Status)
 	switch status {
-	case sqlc.EventStatusAbsent, sqlc.EventStatusAttended, sqlc.EventStatusCancelled, sqlc.EventStatusInProgress, sqlc.EventStatusPending:
+	case sqlc.EventStatusAbsent, sqlc.EventStatusPresent, sqlc.EventStatusCancelled, sqlc.EventStatusInProgress, sqlc.EventStatusPending:
 	default:
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Estado inválido"))
 		return
