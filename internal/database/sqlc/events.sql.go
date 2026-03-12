@@ -586,12 +586,52 @@ WHERE
     OR e.status::text = $6
   )
 ORDER BY
+  CASE
+    WHEN $7 = 'start_date'
+    AND $8 = 'asc' THEN e.start_date
+  END ASC,
+  CASE
+    WHEN $7 = 'start_date'
+    AND $8 = 'desc' THEN e.start_date
+  END DESC,
+  CASE
+    WHEN $7 = 'status'
+    AND $8 = 'asc' THEN e.status
+  END ASC,
+  CASE
+    WHEN $7 = 'status'
+    AND $8 = 'desc' THEN e.status
+  END DESC,
+  CASE
+    WHEN $7 = 'title'
+    AND $8 = 'asc' THEN e.title
+  END ASC,
+  CASE
+    WHEN $7 = 'title'
+    AND $8 = 'desc' THEN e.title
+  END DESC,
+  CASE
+    WHEN $7 = 'professional.firstName'
+    AND $8 = 'asc' THEN p.first_name
+  END ASC,
+  CASE
+    WHEN $7 = 'professional.firstName'
+    AND $8 = 'desc' THEN p.first_name
+  END DESC,
+  CASE
+    WHEN $7 = 'user.firstName'
+    AND $8 = 'asc' THEN u.first_name
+  END ASC,
+  CASE
+    WHEN $7 = 'user.firstName'
+    AND $8 = 'desc' THEN u.first_name
+  END DESC,
   e.start_date::date DESC,
   e.start_date::time ASC
 LIMIT
-  $8
+  $10
 OFFSET
-  $7
+  $9
 `
 
 type GetEventsFilteredParams struct {
@@ -601,6 +641,8 @@ type GetEventsFilteredParams struct {
 	PatientID      pgtype.UUID      `json:"patientId"`
 	ProfessionalID pgtype.UUID      `json:"professionalId"`
 	Status         pgtype.Text      `json:"status"`
+	SortBy         interface{}      `json:"sortBy"`
+	SortOrder      interface{}      `json:"sortOrder"`
 	QueryOffset    int32            `json:"queryOffset"`
 	QueryLimit     int32            `json:"queryLimit"`
 }
@@ -613,6 +655,8 @@ func (q *Queries) GetEventsFiltered(ctx context.Context, arg GetEventsFilteredPa
 		arg.PatientID,
 		arg.ProfessionalID,
 		arg.Status,
+		arg.SortBy,
+		arg.SortOrder,
 		arg.QueryOffset,
 		arg.QueryLimit,
 	)
