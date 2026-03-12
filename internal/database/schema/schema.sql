@@ -132,10 +132,10 @@ CREATE TABLE role_permissions (
 -- // Events //
 CREATE TYPE event_status AS ENUM(
   'absent',
-  'attended',
   'cancelled',
   'in_progress',
-  'pending'
+  'pending',
+  'present'
 );
 
 CREATE TABLE events (
