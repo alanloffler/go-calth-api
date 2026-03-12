@@ -382,6 +382,46 @@ WHERE
     OR e.status::text = sqlc.narg (status)
   )
 ORDER BY
+  CASE
+    WHEN sqlc.narg (sort_by) = 'start_date'
+    AND sqlc.narg (sort_order) = 'asc' THEN e.start_date
+  END ASC,
+  CASE
+    WHEN sqlc.narg (sort_by) = 'start_date'
+    AND sqlc.narg (sort_order) = 'desc' THEN e.start_date
+  END DESC,
+  CASE
+    WHEN sqlc.narg (sort_by) = 'status'
+    AND sqlc.narg (sort_order) = 'asc' THEN e.status
+  END ASC,
+  CASE
+    WHEN sqlc.narg (sort_by) = 'status'
+    AND sqlc.narg (sort_order) = 'desc' THEN e.status
+  END DESC,
+  CASE
+    WHEN sqlc.narg (sort_by) = 'title'
+    AND sqlc.narg (sort_order) = 'asc' THEN e.title
+  END ASC,
+  CASE
+    WHEN sqlc.narg (sort_by) = 'title'
+    AND sqlc.narg (sort_order) = 'desc' THEN e.title
+  END DESC,
+  CASE
+    WHEN sqlc.narg (sort_by) = 'professional.firstName'
+    AND sqlc.narg (sort_order) = 'asc' THEN p.first_name
+  END ASC,
+  CASE
+    WHEN sqlc.narg (sort_by) = 'professional.firstName'
+    AND sqlc.narg (sort_order) = 'desc' THEN p.first_name
+  END DESC,
+  CASE
+    WHEN sqlc.narg (sort_by) = 'user.firstName'
+    AND sqlc.narg (sort_order) = 'asc' THEN u.first_name
+  END ASC,
+  CASE
+    WHEN sqlc.narg (sort_by) = 'user.firstName'
+    AND sqlc.narg (sort_order) = 'desc' THEN u.first_name
+  END DESC,
   e.start_date::date DESC,
   e.start_date::time ASC
 LIMIT
