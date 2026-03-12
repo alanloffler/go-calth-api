@@ -161,6 +161,16 @@ CREATE INDEX idx_events_business_professional_start ON events (business_id, prof
 
 CREATE INDEX idx_events_business_user_start ON events (business_id, user_id, start_date);
 
+CREATE INDEX idx_events_business_status_start ON events (business_id, status, start_date);
+
+CREATE INDEX idx_events_business_title ON events (business_id, title);
+
+CREATE INDEX idx_events_not_deleted ON events (business_id, start_date)
+WHERE
+  deleted_at IS NULL;
+
+CREATE INDEX idx_users_first_name ON users (first_name);
+
 -- // Medical Histories //
 CREATE TABLE medical_histories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
