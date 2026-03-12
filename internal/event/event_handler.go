@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/alanloffler/go-calth-api/internal/common/ctxkeys"
@@ -325,6 +326,32 @@ func (h *EventHandler) GetEventsFiltered(c *gin.Context) {
 		pageIndex = int32(parsedPage)
 	}
 	params.QueryOffset = (pageIndex - 1) * limit
+
+	sortByMapping := map[string]string{
+		"startDate":              "start_date",
+		"status":                 "status",
+		"title":                  "title",
+		"user_firstName":         "user.first_name",
+		"professional_firstName": "professional.first_name",
+	}
+
+	if sortBy := c.Query("sortBy"); sortBy != "" {
+		if mapped, ok := sortByMapping[sortBy]; ok {
+			params.SortBy = pgtype.Text{String: mapped, Valid: true}
+		} else {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "sortBy inválido"))
+			return
+		}
+	}
+
+	if sortOrder := c.Query("sortOrder"); sortOrder != "" {
+		sortOrder = strings.ToLower(sortOrder)
+		if sortOrder != "asc" && sortOrder != "desc" {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "sortOrder debe ser ASC o DESC"))
+			return
+		}
+		params.SortOrder = pgtype.Text{String: sortOrder, Valid: true}
+	}
 
 	if professionalIDStr := c.Query("professionalId"); professionalIDStr != "" {
 		var professionalID pgtype.UUID
