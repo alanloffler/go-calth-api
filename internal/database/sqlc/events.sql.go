@@ -62,6 +62,52 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 	return i, err
 }
 
+const getDaysWithEvents = `-- name: GetDaysWithEvents :many
+SELECT DISTINCT
+  DATE (start_date) AS day
+FROM
+  events
+WHERE
+  business_id = $1
+  AND professional_id = $2
+  AND start_date >= $3
+  AND start_date <= $4
+ORDER BY
+  day
+`
+
+type GetDaysWithEventsParams struct {
+	BusinessID     pgtype.UUID        `json:"businessId"`
+	ProfessionalID pgtype.UUID        `json:"professionalId"`
+	StartDate      pgtype.Timestamptz `json:"startDate"`
+	StartDate_2    pgtype.Timestamptz `json:"startDate2"`
+}
+
+func (q *Queries) GetDaysWithEvents(ctx context.Context, arg GetDaysWithEventsParams) ([]pgtype.Date, error) {
+	rows, err := q.db.Query(ctx, getDaysWithEvents,
+		arg.BusinessID,
+		arg.ProfessionalID,
+		arg.StartDate,
+		arg.StartDate_2,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.Date
+	for rows.Next() {
+		var day pgtype.Date
+		if err := rows.Scan(&day); err != nil {
+			return nil, err
+		}
+		items = append(items, day)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getEventByID = `-- name: GetEventByID :one
 SELECT
   jsonb_build_object(
