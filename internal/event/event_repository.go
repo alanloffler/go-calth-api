@@ -43,6 +43,10 @@ func (r *EventRepository) GetEventsFiltered(ctx context.Context, arg sqlc.GetEve
 	return r.q.GetEventsFiltered(ctx, arg)
 }
 
+func (r *EventRepository) GetDaysWithEvents(ctx context.Context, arg sqlc.GetDaysWithEventsParams) ([]pgtype.Date, error) {
+	return r.q.GetDaysWithEvents(ctx, arg)
+}
+
 func (r *EventRepository) GetEventsFilteredCount(ctx context.Context, arg sqlc.GetEventsFilteredCountParams) (int32, error) {
 	return r.q.GetEventsFilteredCount(ctx, arg)
 }
