@@ -423,6 +423,64 @@ func (h *EventHandler) GetEventsFiltered(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Success("Eventos encontrados", &result))
 }
 
+func (h *EventHandler) GetDaysWithEvents(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	var professionalID pgtype.UUID
+	if err := professionalID.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID profesional inválido", err))
+		return
+	}
+
+	fromDateStr := c.Query("fromDate")
+	toDateStr := c.Query("toDate")
+
+	if fromDateStr == "" || toDateStr == "" {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "fromDate y toDate son requeridos"))
+		return
+	}
+
+	loc, err := time.LoadLocation("America/Argentina/Buenos_Aires")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error de zona horaria", err))
+		return
+	}
+
+	fromDate, err := time.ParseInLocation("2006-01-02", fromDateStr, loc)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de fecha inválido", err))
+		return
+	}
+
+	toDate, err := time.ParseInLocation("2006-01-02", toDateStr, loc)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de fecha inválido", err))
+		return
+	}
+
+	days, err := h.repo.GetDaysWithEvents(c.Request.Context(), sqlc.GetDaysWithEventsParams{
+		BusinessID:     businessID,
+		ProfessionalID: professionalID,
+		StartDate:      pgtype.Timestamptz{Time: fromDate, Valid: true},
+		StartDate_2:    pgtype.Timestamptz{Time: toDate.Add(24*time.Hour - time.Second), Valid: true},
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al obtener días con eventos", err))
+		return
+	}
+
+	result := make(map[string]bool)
+	for _, d := range days {
+		result[d.Time.Format("2")] = true
+	}
+
+	c.JSON(http.StatusOK, response.Success("Días ocupados", &result))
+}
+
 func (h *EventHandler) GetByID(c *gin.Context) {
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
