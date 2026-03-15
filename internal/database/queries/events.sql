@@ -431,6 +431,19 @@ LIMIT
 OFFSET
   sqlc.arg (query_offset);
 
+-- name: GetDaysWithEvents :many
+SELECT DISTINCT
+  DATE (start_date) AS day
+FROM
+  events
+WHERE
+  business_id = $1
+  AND professional_id = $2
+  AND start_date >= $3
+  AND start_date <= $4
+ORDER BY
+  day;
+
 -- name: GetEventsFilteredCount :one
 SELECT
   COUNT(e.id)::int AS total
