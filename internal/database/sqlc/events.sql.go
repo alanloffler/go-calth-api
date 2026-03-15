@@ -532,6 +532,8 @@ SELECT
     jsonb_build_object(
       'id',
       u.id,
+      'ic',
+      u.ic,
       'firstName',
       u.first_name,
       'lastName',
