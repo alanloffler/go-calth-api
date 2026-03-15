@@ -99,7 +99,7 @@ func (h *UserHandler) CreatePatient(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	role, err := h.repo.q.GetRoleByValue(ctx, "patient")
+	role, err := h.repo.GetQueries().GetRoleByValue(ctx, "patient")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Rol de paciente no encontrado", err))
 		return
