@@ -7,12 +7,35 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type UserRepositoryInterface interface {
+	GetQueries() *sqlc.Queries
+	Create(ctx context.Context, arg sqlc.CreateUserParams) (sqlc.User, error)
+	GetAll(ctx context.Context) ([]sqlc.User, error)
+	GetAllWithSoftDeleted(ctx context.Context) ([]sqlc.User, error)
+	GetAllByRole(ctx context.Context, arg sqlc.GetUsersByRoleParams) ([]sqlc.GetUsersByRoleRow, error)
+	GetAllByRoleWithSoftDeleted(ctx context.Context, arg sqlc.GetUsersByRoleWithSoftDeletedParams) ([]sqlc.GetUsersByRoleWithSoftDeletedRow, error)
+	GetByID(ctx context.Context, arg sqlc.GetUserByIDParams) (sqlc.GetUserByIDRow, error)
+	GetByIDWithSoftDeleted(ctx context.Context, arg sqlc.GetUserByIDWithSoftDeletedParams) (sqlc.GetUserByIDWithSoftDeletedRow, error)
+	GetByBusinessID(ctx context.Context, businessID pgtype.UUID) ([]sqlc.GetUsersByBusinessIDRow, error)
+	Update(ctx context.Context, arg sqlc.UpdateUserParams) (sqlc.User, error)
+	Delete(ctx context.Context, id pgtype.UUID) error
+	SoftDelete(ctx context.Context, id pgtype.UUID) (int64, error)
+	Restore(ctx context.Context, id pgtype.UUID) (int64, error)
+	CheckIcAvailability(ctx context.Context, arg sqlc.CheckIcAvailabilityParams) (bool, error)
+	CheckEmailAvailability(ctx context.Context, arg sqlc.CheckEmailAvailabilityParams) (bool, error)
+	CheckUsernameAvailability(ctx context.Context, arg sqlc.CheckUsernameAvailabilityParams) (bool, error)
+}
+
 type UserRepository struct {
 	q *sqlc.Queries
 }
 
 func NewUserRepository(q *sqlc.Queries) *UserRepository {
 	return &UserRepository{q: q}
+}
+
+func (r *UserRepository) GetQueries() *sqlc.Queries {
+	return r.q
 }
 
 func (r *UserRepository) Create(ctx context.Context, arg sqlc.CreateUserParams) (sqlc.User, error) {
