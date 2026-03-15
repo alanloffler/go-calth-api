@@ -45,7 +45,7 @@ func (h *UserHandler) CreateAdmin(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	role, err := h.repo.q.GetRoleByValue(ctx, "admin")
+	role, err := h.repo.GetQueries().GetRoleByValue(ctx, "admin")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Rol de administrador no encontrado", err))
 		return
