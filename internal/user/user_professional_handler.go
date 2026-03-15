@@ -105,7 +105,7 @@ func (h *UserHandler) CreateProfessional(c *gin.Context) {
 
 	ctx := c.Request.Context()
 
-	role, err := h.repo.q.GetRoleByValue(ctx, "professional")
+	role, err := h.repo.GetQueries().GetRoleByValue(ctx, "professional")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Rol de profesional no encontrado", err))
 		return
