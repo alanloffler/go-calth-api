@@ -18,14 +18,14 @@ import (
 )
 
 type UserHandler struct {
-	repo                    *UserRepository
+	repo                    UserRepositoryInterface
 	pool                    *pgxpool.Pool
 	patientProfileRepo      *patient_profile.PatientProfileRepository
 	professionalProfileRepo *professional_profile.ProfessionalProfileRepository
 }
 
 func NewUserHandler(
-	repo *UserRepository,
+	repo UserRepositoryInterface,
 	pool *pgxpool.Pool,
 	patientProfileRepo *patient_profile.PatientProfileRepository,
 	professionalProfileRepo *professional_profile.ProfessionalProfileRepository,
