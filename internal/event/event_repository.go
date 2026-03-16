@@ -55,8 +55,8 @@ func (r *EventRepository) GetByID(ctx context.Context, arg sqlc.GetByIDParams) (
 	return r.q.GetByID(ctx, arg)
 }
 
-func (r *EventRepository) UpdateEvent(ctx context.Context, arg sqlc.UpdateEventParams) (sqlc.Event, error) {
-	return r.q.UpdateEvent(ctx, arg)
+func (r *EventRepository) Update(ctx context.Context, arg sqlc.UpdateParams) (sqlc.Event, error) {
+	return r.q.Update(ctx, arg)
 }
 
 func (r *EventRepository) UpdateStatus(ctx context.Context, arg sqlc.UpdateStatusParams) (sqlc.Event, error) {
