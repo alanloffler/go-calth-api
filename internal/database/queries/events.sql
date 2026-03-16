@@ -230,7 +230,7 @@ WHERE
 ORDER BY
   e.start_date;
 
--- name: GetProfessionalEventsByDayArray :many
+-- name: GetByProfessionalDayArray :many
 SELECT
   e.start_date
 FROM
