@@ -624,7 +624,7 @@ func (h *EventHandler) UpdateEvent(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Success("Evento actualizado", &event))
 }
 
-func (h *EventHandler) UpdateEventStatus(c *gin.Context) {
+func (h *EventHandler) UpdateStatus(c *gin.Context) {
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
 		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
@@ -651,7 +651,7 @@ func (h *EventHandler) UpdateEventStatus(c *gin.Context) {
 		return
 	}
 
-	event, err := h.repo.UpdateEventStatus(c.Request.Context(), sqlc.UpdateEventStatusParams{
+	event, err := h.repo.UpdateStatus(c.Request.Context(), sqlc.UpdateStatusParams{
 		BusinessID: businessID,
 		ID:         id,
 		Status:     status,
