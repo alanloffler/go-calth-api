@@ -653,7 +653,7 @@ RETURNING
   updated_at,
   deleted_at;
 
--- name: UpdateEvent :one
+-- name: Update :one
 UPDATE events
 SET
   title = COALESCE(sqlc.narg ('title'), title),
