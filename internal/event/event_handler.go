@@ -140,9 +140,41 @@ func (h *EventHandler) GetByProfessionalID(c *gin.Context) {
 		return
 	}
 
+	var startDate, endDate pgtype.Timestamptz
+
+	if startDateStr := c.Query("startDate"); startDateStr != "" {
+		loc, err := time.LoadLocation("America/Argentina/Buenos_Aires")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error de zona horaria", err))
+			return
+		}
+		parsedStartDate, err := time.ParseInLocation(time.RFC3339, startDateStr, loc)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de fecha de inicio inválido", err))
+			return
+		}
+		startDate = pgtype.Timestamptz{Time: parsedStartDate, Valid: true}
+	}
+
+	if endDateStr := c.Query("endDate"); endDateStr != "" {
+		loc, err := time.LoadLocation("America/Argentina/Buenos_Aires")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error de zona horaria", err))
+			return
+		}
+		parsedEndDate, err := time.ParseInLocation(time.RFC3339, endDateStr, loc)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de fecha de fin inválido", err))
+			return
+		}
+		endDate = pgtype.Timestamptz{Time: parsedEndDate, Valid: true}
+	}
+
 	rawEvents, err := h.repo.GetEventsByProfessionalID(c.Request.Context(), sqlc.GetEventsByProfessionalIDParams{
 		BusinessID:     businessID,
 		ProfessionalID: id,
+		StartDate:      startDate,
+		EndDate:        endDate,
 	})
 	if err != nil {
 		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Eventos no encontrados", err))
