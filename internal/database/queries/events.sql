@@ -631,7 +631,7 @@ WHERE
   AND e.id = $2
   AND e.deleted_at IS NULL;
 
--- name: UpdateEventStatus :one
+-- name: UpdateStatus :one
 UPDATE events
 SET
   status = $3,
