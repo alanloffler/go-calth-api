@@ -80,6 +80,14 @@ WHERE
   e.business_id = $1
   AND e.professional_id = $2
   AND e.deleted_at IS NULL
+  AND (
+    sqlc.arg (start_date)::timestamptz IS NULL
+    OR e.end_date >= sqlc.arg (start_date)
+  )
+  AND (
+    sqlc.arg (end_date)::timestamptz IS NULL
+    OR e.start_date <= sqlc.arg (end_date)
+  )
 ORDER BY
   e.start_date;
 
