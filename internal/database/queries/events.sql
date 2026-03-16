@@ -91,7 +91,7 @@ WHERE
 ORDER BY
   e.start_date;
 
--- name: GetEventsByBusinessID :many
+-- name: GetByBusinessID :many
 SELECT
   jsonb_build_object(
     'id',
