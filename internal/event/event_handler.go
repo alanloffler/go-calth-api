@@ -422,7 +422,7 @@ func (h *EventHandler) GetFiltered(c *gin.Context) {
 		params.EndOfDay = pgtype.Timestamp{Time: date.Add(24*time.Hour - time.Second), Valid: true}
 	}
 
-	countParams := sqlc.GetEventsFilteredCountParams{
+	countParams := sqlc.GetFilteredCountParams{
 		BusinessID:     params.BusinessID,
 		StartOfDay:     params.StartOfDay,
 		EndOfDay:       params.EndOfDay,
@@ -431,7 +431,7 @@ func (h *EventHandler) GetFiltered(c *gin.Context) {
 		Status:         params.Status,
 	}
 
-	total, err := h.repo.GetEventsFilteredCount(c.Request.Context(), countParams)
+	total, err := h.repo.GetFilteredCount(c.Request.Context(), countParams)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al contar eventos", err))
 		return
