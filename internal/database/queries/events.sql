@@ -452,7 +452,7 @@ WHERE
 ORDER BY
   day;
 
--- name: GetEventsFilteredCount :one
+-- name: GetFilteredCount :one
 SELECT
   COUNT(e.id)::int AS total
 FROM
