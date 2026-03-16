@@ -568,60 +568,6 @@ func (q *Queries) GetEventsByProfessionalID(ctx context.Context, arg GetEventsBy
 	return items, nil
 }
 
-const getEventsFilteredCount = `-- name: GetEventsFilteredCount :one
-SELECT
-  COUNT(e.id)::int AS total
-FROM
-  events e
-  LEFT JOIN users u ON e.user_id = u.id
-  LEFT JOIN users p ON e.professional_id = p.id
-WHERE
-  e.business_id = $1
-  AND (
-    $2::timestamp IS NULL
-    OR e.start_date >= $2
-  )
-  AND (
-    $3::timestamp IS NULL
-    OR e.start_date <= $3
-  )
-  AND (
-    $4::uuid IS NULL
-    OR u.id = $4
-  )
-  AND (
-    $5::uuid IS NULL
-    OR p.id = $5
-  )
-  AND (
-    $6::text IS NULL
-    OR e.status::text = $6
-  )
-`
-
-type GetEventsFilteredCountParams struct {
-	BusinessID     pgtype.UUID      `json:"businessId"`
-	StartOfDay     pgtype.Timestamp `json:"startOfDay"`
-	EndOfDay       pgtype.Timestamp `json:"endOfDay"`
-	PatientID      pgtype.UUID      `json:"patientId"`
-	ProfessionalID pgtype.UUID      `json:"professionalId"`
-	Status         pgtype.Text      `json:"status"`
-}
-
-func (q *Queries) GetEventsFilteredCount(ctx context.Context, arg GetEventsFilteredCountParams) (int32, error) {
-	row := q.db.QueryRow(ctx, getEventsFilteredCount,
-		arg.BusinessID,
-		arg.StartOfDay,
-		arg.EndOfDay,
-		arg.PatientID,
-		arg.ProfessionalID,
-		arg.Status,
-	)
-	var total int32
-	err := row.Scan(&total)
-	return total, err
-}
-
 const getFiltered = `-- name: GetFiltered :many
 SELECT
   jsonb_build_object(
@@ -793,6 +739,60 @@ func (q *Queries) GetFiltered(ctx context.Context, arg GetFilteredParams) ([][]b
 		return nil, err
 	}
 	return items, nil
+}
+
+const getFilteredCount = `-- name: GetFilteredCount :one
+SELECT
+  COUNT(e.id)::int AS total
+FROM
+  events e
+  LEFT JOIN users u ON e.user_id = u.id
+  LEFT JOIN users p ON e.professional_id = p.id
+WHERE
+  e.business_id = $1
+  AND (
+    $2::timestamp IS NULL
+    OR e.start_date >= $2
+  )
+  AND (
+    $3::timestamp IS NULL
+    OR e.start_date <= $3
+  )
+  AND (
+    $4::uuid IS NULL
+    OR u.id = $4
+  )
+  AND (
+    $5::uuid IS NULL
+    OR p.id = $5
+  )
+  AND (
+    $6::text IS NULL
+    OR e.status::text = $6
+  )
+`
+
+type GetFilteredCountParams struct {
+	BusinessID     pgtype.UUID      `json:"businessId"`
+	StartOfDay     pgtype.Timestamp `json:"startOfDay"`
+	EndOfDay       pgtype.Timestamp `json:"endOfDay"`
+	PatientID      pgtype.UUID      `json:"patientId"`
+	ProfessionalID pgtype.UUID      `json:"professionalId"`
+	Status         pgtype.Text      `json:"status"`
+}
+
+func (q *Queries) GetFilteredCount(ctx context.Context, arg GetFilteredCountParams) (int32, error) {
+	row := q.db.QueryRow(ctx, getFilteredCount,
+		arg.BusinessID,
+		arg.StartOfDay,
+		arg.EndOfDay,
+		arg.PatientID,
+		arg.ProfessionalID,
+		arg.Status,
+	)
+	var total int32
+	err := row.Scan(&total)
+	return total, err
 }
 
 const getProfessionalEventsByDay = `-- name: GetProfessionalEventsByDay :many
