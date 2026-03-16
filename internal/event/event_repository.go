@@ -51,8 +51,8 @@ func (r *EventRepository) GetEventsFilteredCount(ctx context.Context, arg sqlc.G
 	return r.q.GetEventsFilteredCount(ctx, arg)
 }
 
-func (r *EventRepository) GetByID(ctx context.Context, arg sqlc.GetEventByIDParams) ([]byte, error) {
-	return r.q.GetEventByID(ctx, arg)
+func (r *EventRepository) GetByID(ctx context.Context, arg sqlc.GetByIDParams) ([]byte, error) {
+	return r.q.GetByID(ctx, arg)
 }
 
 func (r *EventRepository) UpdateEvent(ctx context.Context, arg sqlc.UpdateEventParams) (sqlc.Event, error) {
