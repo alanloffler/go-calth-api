@@ -278,7 +278,7 @@ func (h *EventHandler) GetByProfessionalDay(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Success("Eventos encontrados", &events))
 }
 
-func (h *EventHandler) GetProfessionalEventsByDayArray(c *gin.Context) {
+func (h *EventHandler) GetByProfessionalDayArray(c *gin.Context) {
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
 		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
@@ -307,7 +307,7 @@ func (h *EventHandler) GetProfessionalEventsByDayArray(c *gin.Context) {
 	startOfDay := pgtype.Timestamptz{Time: dayTime, Valid: true}
 	endOfDay := pgtype.Timestamptz{Time: dayTime.Add(24*time.Hour - time.Second), Valid: true}
 
-	slotTimes, err := h.repo.GetProfessionalEventsByDayArray(c.Request.Context(), sqlc.GetProfessionalEventsByDayArrayParams{
+	slotTimes, err := h.repo.GetByProfessionalDayArray(c.Request.Context(), sqlc.GetByProfessionalDayArrayParams{
 		BusinessID:     businessID,
 		ProfessionalID: id,
 		StartDate:      startOfDay,
