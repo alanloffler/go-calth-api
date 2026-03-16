@@ -224,6 +224,117 @@ func (q *Queries) GetByID(ctx context.Context, arg GetByIDParams) ([]byte, error
 	return event, err
 }
 
+const getByProfessionalID = `-- name: GetByProfessionalID :many
+SELECT
+  jsonb_build_object(
+    'id',
+    e.id,
+    'title',
+    e.title,
+    'startDate',
+    e.start_date,
+    'endDate',
+    e.end_date,
+    'businessId',
+    e.business_id,
+    'professionalId',
+    e.professional_id,
+    'userId',
+    e.user_id,
+    'status',
+    e.status,
+    'createdAt',
+    e.created_at,
+    'updatedAt',
+    e.updated_at,
+    'professional',
+    jsonb_build_object(
+      'id',
+      p.id,
+      'firstName',
+      p.first_name,
+      'lastName',
+      p.last_name,
+      'ic',
+      p.ic,
+      'role',
+      jsonb_build_object('name', pr.name, 'value', pr.value),
+      'professionalProfile',
+      jsonb_build_object('professionalPrefix', pp.professional_prefix)
+    ),
+    'user',
+    jsonb_build_object(
+      'id',
+      u.id,
+      'firstName',
+      u.first_name,
+      'lastName',
+      u.last_name,
+      'email',
+      u.email,
+      'phoneNumber',
+      u.phone_number,
+      'ic',
+      u.ic,
+      'role',
+      jsonb_build_object('name', ur.name, 'value', ur.value)
+    )
+  ) AS event
+FROM
+  events e
+  LEFT JOIN users u ON u.id = e.user_id
+  LEFT JOIN roles ur ON ur.id = u.role_id
+  LEFT JOIN users p ON p.id = e.professional_id
+  LEFT JOIN roles pr ON pr.id = p.role_id
+  LEFT JOIN professional_profile pp ON pp.user_id = p.id
+WHERE
+  e.business_id = $1
+  AND e.professional_id = $2
+  AND e.deleted_at IS NULL
+  AND (
+    $3::timestamptz IS NULL
+    OR e.end_date >= $3
+  )
+  AND (
+    $4::timestamptz IS NULL
+    OR e.start_date <= $4
+  )
+ORDER BY
+  e.start_date
+`
+
+type GetByProfessionalIDParams struct {
+	BusinessID     pgtype.UUID        `json:"businessId"`
+	ProfessionalID pgtype.UUID        `json:"professionalId"`
+	StartDate      pgtype.Timestamptz `json:"startDate"`
+	EndDate        pgtype.Timestamptz `json:"endDate"`
+}
+
+func (q *Queries) GetByProfessionalID(ctx context.Context, arg GetByProfessionalIDParams) ([][]byte, error) {
+	rows, err := q.db.Query(ctx, getByProfessionalID,
+		arg.BusinessID,
+		arg.ProfessionalID,
+		arg.StartDate,
+		arg.EndDate,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items [][]byte
+	for rows.Next() {
+		var event []byte
+		if err := rows.Scan(&event); err != nil {
+			return nil, err
+		}
+		items = append(items, event)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getDaysWithEvents = `-- name: GetDaysWithEvents :many
 SELECT DISTINCT
   DATE (start_date) AS day
@@ -439,117 +550,6 @@ type GetEventsByBusinessProfessionalPatientParams struct {
 
 func (q *Queries) GetEventsByBusinessProfessionalPatient(ctx context.Context, arg GetEventsByBusinessProfessionalPatientParams) ([][]byte, error) {
 	rows, err := q.db.Query(ctx, getEventsByBusinessProfessionalPatient, arg.BusinessID, arg.ProfessionalID, arg.UserID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items [][]byte
-	for rows.Next() {
-		var event []byte
-		if err := rows.Scan(&event); err != nil {
-			return nil, err
-		}
-		items = append(items, event)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getEventsByProfessionalID = `-- name: GetEventsByProfessionalID :many
-SELECT
-  jsonb_build_object(
-    'id',
-    e.id,
-    'title',
-    e.title,
-    'startDate',
-    e.start_date,
-    'endDate',
-    e.end_date,
-    'businessId',
-    e.business_id,
-    'professionalId',
-    e.professional_id,
-    'userId',
-    e.user_id,
-    'status',
-    e.status,
-    'createdAt',
-    e.created_at,
-    'updatedAt',
-    e.updated_at,
-    'professional',
-    jsonb_build_object(
-      'id',
-      p.id,
-      'firstName',
-      p.first_name,
-      'lastName',
-      p.last_name,
-      'ic',
-      p.ic,
-      'role',
-      jsonb_build_object('name', pr.name, 'value', pr.value),
-      'professionalProfile',
-      jsonb_build_object('professionalPrefix', pp.professional_prefix)
-    ),
-    'user',
-    jsonb_build_object(
-      'id',
-      u.id,
-      'firstName',
-      u.first_name,
-      'lastName',
-      u.last_name,
-      'email',
-      u.email,
-      'phoneNumber',
-      u.phone_number,
-      'ic',
-      u.ic,
-      'role',
-      jsonb_build_object('name', ur.name, 'value', ur.value)
-    )
-  ) AS event
-FROM
-  events e
-  LEFT JOIN users u ON u.id = e.user_id
-  LEFT JOIN roles ur ON ur.id = u.role_id
-  LEFT JOIN users p ON p.id = e.professional_id
-  LEFT JOIN roles pr ON pr.id = p.role_id
-  LEFT JOIN professional_profile pp ON pp.user_id = p.id
-WHERE
-  e.business_id = $1
-  AND e.professional_id = $2
-  AND e.deleted_at IS NULL
-  AND (
-    $3::timestamptz IS NULL
-    OR e.end_date >= $3
-  )
-  AND (
-    $4::timestamptz IS NULL
-    OR e.start_date <= $4
-  )
-ORDER BY
-  e.start_date
-`
-
-type GetEventsByProfessionalIDParams struct {
-	BusinessID     pgtype.UUID        `json:"businessId"`
-	ProfessionalID pgtype.UUID        `json:"professionalId"`
-	StartDate      pgtype.Timestamptz `json:"startDate"`
-	EndDate        pgtype.Timestamptz `json:"endDate"`
-}
-
-func (q *Queries) GetEventsByProfessionalID(ctx context.Context, arg GetEventsByProfessionalIDParams) ([][]byte, error) {
-	rows, err := q.db.Query(ctx, getEventsByProfessionalID,
-		arg.BusinessID,
-		arg.ProfessionalID,
-		arg.StartDate,
-		arg.EndDate,
-	)
 	if err != nil {
 		return nil, err
 	}
