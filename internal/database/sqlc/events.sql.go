@@ -155,6 +155,100 @@ func (q *Queries) GetByBusinessID(ctx context.Context, arg GetByBusinessIDParams
 	return items, nil
 }
 
+const getByBusinessProfessionalPatient = `-- name: GetByBusinessProfessionalPatient :many
+SELECT
+  jsonb_build_object(
+    'id',
+    e.id,
+    'title',
+    e.title,
+    'startDate',
+    e.start_date,
+    'endDate',
+    e.end_date,
+    'businessId',
+    e.business_id,
+    'userId',
+    e.user_id,
+    'status',
+    e.status,
+    'createdAt',
+    e.created_at,
+    'updatedAt',
+    e.updated_at,
+    'professional',
+    jsonb_build_object(
+      'id',
+      p.id,
+      'firstName',
+      p.first_name,
+      'lastName',
+      p.last_name,
+      'ic',
+      p.ic,
+      'professionalProfile',
+      jsonb_build_object('professionalPrefix', pp.professional_prefix)
+    ),
+    'user',
+    jsonb_build_object(
+      'id',
+      u.id,
+      'firstName',
+      u.first_name,
+      'lastName',
+      u.last_name,
+      'email',
+      u.email,
+      'phoneNumber',
+      u.phone_number,
+      'ic',
+      u.ic,
+      'role',
+      jsonb_build_object('name', ur.name, 'value', ur.value)
+    )
+  ) AS event
+FROM
+  events e
+  LEFT JOIN users u ON u.id = e.user_id
+  LEFT JOIN roles ur ON ur.id = u.role_id
+  LEFT JOIN users p ON p.id = e.professional_id
+  LEFT JOIN professional_profile pp ON pp.user_id = p.id
+WHERE
+  e.business_id = $1
+  AND e.professional_id = $2
+  AND e.user_id = $3
+  AND e.deleted_at IS NULL
+ORDER BY
+  e.start_date::date DESC,
+  e.end_date::time DESC
+`
+
+type GetByBusinessProfessionalPatientParams struct {
+	BusinessID     pgtype.UUID `json:"businessId"`
+	ProfessionalID pgtype.UUID `json:"professionalId"`
+	UserID         pgtype.UUID `json:"userId"`
+}
+
+func (q *Queries) GetByBusinessProfessionalPatient(ctx context.Context, arg GetByBusinessProfessionalPatientParams) ([][]byte, error) {
+	rows, err := q.db.Query(ctx, getByBusinessProfessionalPatient, arg.BusinessID, arg.ProfessionalID, arg.UserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items [][]byte
+	for rows.Next() {
+		var event []byte
+		if err := rows.Scan(&event); err != nil {
+			return nil, err
+		}
+		items = append(items, event)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getByID = `-- name: GetByID :one
 SELECT
   jsonb_build_object(
@@ -467,100 +561,6 @@ func (q *Queries) GetDaysWithEvents(ctx context.Context, arg GetDaysWithEventsPa
 			return nil, err
 		}
 		items = append(items, day)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getEventsByBusinessProfessionalPatient = `-- name: GetEventsByBusinessProfessionalPatient :many
-SELECT
-  jsonb_build_object(
-    'id',
-    e.id,
-    'title',
-    e.title,
-    'startDate',
-    e.start_date,
-    'endDate',
-    e.end_date,
-    'businessId',
-    e.business_id,
-    'userId',
-    e.user_id,
-    'status',
-    e.status,
-    'createdAt',
-    e.created_at,
-    'updatedAt',
-    e.updated_at,
-    'professional',
-    jsonb_build_object(
-      'id',
-      p.id,
-      'firstName',
-      p.first_name,
-      'lastName',
-      p.last_name,
-      'ic',
-      p.ic,
-      'professionalProfile',
-      jsonb_build_object('professionalPrefix', pp.professional_prefix)
-    ),
-    'user',
-    jsonb_build_object(
-      'id',
-      u.id,
-      'firstName',
-      u.first_name,
-      'lastName',
-      u.last_name,
-      'email',
-      u.email,
-      'phoneNumber',
-      u.phone_number,
-      'ic',
-      u.ic,
-      'role',
-      jsonb_build_object('name', ur.name, 'value', ur.value)
-    )
-  ) AS event
-FROM
-  events e
-  LEFT JOIN users u ON u.id = e.user_id
-  LEFT JOIN roles ur ON ur.id = u.role_id
-  LEFT JOIN users p ON p.id = e.professional_id
-  LEFT JOIN professional_profile pp ON pp.user_id = p.id
-WHERE
-  e.business_id = $1
-  AND e.professional_id = $2
-  AND e.user_id = $3
-  AND e.deleted_at IS NULL
-ORDER BY
-  e.start_date::date DESC,
-  e.end_date::time DESC
-`
-
-type GetEventsByBusinessProfessionalPatientParams struct {
-	BusinessID     pgtype.UUID `json:"businessId"`
-	ProfessionalID pgtype.UUID `json:"professionalId"`
-	UserID         pgtype.UUID `json:"userId"`
-}
-
-func (q *Queries) GetEventsByBusinessProfessionalPatient(ctx context.Context, arg GetEventsByBusinessProfessionalPatientParams) ([][]byte, error) {
-	rows, err := q.db.Query(ctx, getEventsByBusinessProfessionalPatient, arg.BusinessID, arg.ProfessionalID, arg.UserID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items [][]byte
-	for rows.Next() {
-		var event []byte
-		if err := rows.Scan(&event); err != nil {
-			return nil, err
-		}
-		items = append(items, event)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
