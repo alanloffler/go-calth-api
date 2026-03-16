@@ -244,7 +244,7 @@ WHERE
 ORDER BY
   e.start_date;
 
--- name: GetEventsByBusinessProfessionalPatient :many
+-- name: GetByBusinessProfessionalPatient :many
 SELECT
   jsonb_build_object(
     'id',
