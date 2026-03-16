@@ -189,7 +189,7 @@ func (h *EventHandler) GetByProfessionalID(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Success("Eventos encontrados", &events))
 }
 
-func (h *EventHandler) GetEventsByBusinessProfessionalPatient(c *gin.Context) {
+func (h *EventHandler) GetByBusinessProfessionalPatient(c *gin.Context) {
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
 		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
@@ -212,7 +212,7 @@ func (h *EventHandler) GetEventsByBusinessProfessionalPatient(c *gin.Context) {
 	log.Println(professionalID)
 	log.Println(userID)
 
-	rawEvents, err := h.repo.GetEventsByBusinessProfessionalPatient(c.Request.Context(), sqlc.GetEventsByBusinessProfessionalPatientParams{
+	rawEvents, err := h.repo.GetByBusinessProfessionalPatient(c.Request.Context(), sqlc.GetByBusinessProfessionalPatientParams{
 		BusinessID:     businessID,
 		ProfessionalID: professionalID,
 		UserID:         userID,
