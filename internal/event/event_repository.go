@@ -31,8 +31,8 @@ func (r *EventRepository) GetByProfessionalDay(ctx context.Context, arg sqlc.Get
 	return r.q.GetByProfessionalDay(ctx, arg)
 }
 
-func (r *EventRepository) GetProfessionalEventsByDayArray(ctx context.Context, arg sqlc.GetProfessionalEventsByDayArrayParams) ([]pgtype.Timestamptz, error) {
-	return r.q.GetProfessionalEventsByDayArray(ctx, arg)
+func (r *EventRepository) GetByProfessionalDayArray(ctx context.Context, arg sqlc.GetByProfessionalDayArrayParams) ([]pgtype.Timestamptz, error) {
+	return r.q.GetByProfessionalDayArray(ctx, arg)
 }
 
 func (r *EventRepository) GetByBusinessProfessionalPatient(ctx context.Context, arg sqlc.GetByBusinessProfessionalPatientParams) ([][]byte, error) {
