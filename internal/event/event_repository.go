@@ -39,7 +39,7 @@ func (r *EventRepository) GetEventsByBusinessProfessionalPatient(ctx context.Con
 	return r.q.GetEventsByBusinessProfessionalPatient(ctx, arg)
 }
 
-func (r *EventRepository) GetEventsFiltered(ctx context.Context, arg sqlc.GetFilteredParams) ([][]byte, error) {
+func (r *EventRepository) GetFiltered(ctx context.Context, arg sqlc.GetFilteredParams) ([][]byte, error) {
 	return r.q.GetFiltered(ctx, arg)
 }
 
