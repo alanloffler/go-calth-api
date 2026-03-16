@@ -326,14 +326,14 @@ func (h *EventHandler) GetProfessionalEventsByDayArray(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Success("Fechas encontradas", &dates))
 }
 
-func (h *EventHandler) GetEventsFiltered(c *gin.Context) {
+func (h *EventHandler) GetFiltered(c *gin.Context) {
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
 		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
 		return
 	}
 
-	params := sqlc.GetEventsFilteredParams{
+	params := sqlc.GetFilteredParams{
 		BusinessID: businessID,
 	}
 
