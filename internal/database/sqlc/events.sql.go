@@ -524,17 +524,32 @@ WHERE
   e.business_id = $1
   AND e.professional_id = $2
   AND e.deleted_at IS NULL
+  AND (
+    $3::timestamptz IS NULL
+    OR e.end_date >= $3
+  )
+  AND (
+    $4::timestamptz IS NULL
+    OR e.start_date <= $4
+  )
 ORDER BY
   e.start_date
 `
 
 type GetEventsByProfessionalIDParams struct {
-	BusinessID     pgtype.UUID `json:"businessId"`
-	ProfessionalID pgtype.UUID `json:"professionalId"`
+	BusinessID     pgtype.UUID        `json:"businessId"`
+	ProfessionalID pgtype.UUID        `json:"professionalId"`
+	StartDate      pgtype.Timestamptz `json:"startDate"`
+	EndDate        pgtype.Timestamptz `json:"endDate"`
 }
 
 func (q *Queries) GetEventsByProfessionalID(ctx context.Context, arg GetEventsByProfessionalIDParams) ([][]byte, error) {
-	rows, err := q.db.Query(ctx, getEventsByProfessionalID, arg.BusinessID, arg.ProfessionalID)
+	rows, err := q.db.Query(ctx, getEventsByProfessionalID,
+		arg.BusinessID,
+		arg.ProfessionalID,
+		arg.StartDate,
+		arg.EndDate,
+	)
 	if err != nil {
 		return nil, err
 	}
