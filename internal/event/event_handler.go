@@ -437,7 +437,7 @@ func (h *EventHandler) GetFiltered(c *gin.Context) {
 		return
 	}
 
-	rawEvents, err := h.repo.GetEventsFiltered(c.Request.Context(), params)
+	rawEvents, err := h.repo.GetFiltered(c.Request.Context(), params)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al obtener eventos", err))
 		return
