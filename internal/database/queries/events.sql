@@ -13,7 +13,7 @@ VALUES
 RETURNING
   *;
 
--- name: GetEventsByProfessionalID :many
+-- name: GetByProfessionalID :many
 SELECT
   jsonb_build_object(
     'id',
