@@ -482,7 +482,7 @@ WHERE
     OR e.status::text = sqlc.narg (status)
   );
 
--- name: GetEventByID :one
+-- name: GetByID :one
 SELECT
   jsonb_build_object(
     'id',
