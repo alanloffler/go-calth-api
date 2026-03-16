@@ -84,7 +84,7 @@ func (h *EventHandler) Create(c *gin.Context) {
 		return
 	}
 
-	event, err := h.repo.Create(c.Request.Context(), sqlc.CreateEventParams{
+	event, err := h.repo.Create(c.Request.Context(), sqlc.CreateParams{
 		Title:          req.Title,
 		StartDate:      startDate,
 		EndDate:        endDate,
