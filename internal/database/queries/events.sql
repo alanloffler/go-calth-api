@@ -311,7 +311,7 @@ ORDER BY
   e.start_date::date DESC,
   e.end_date::time DESC;
 
--- name: GetEventsFiltered :many
+-- name: GetFiltered :many
 SELECT
   jsonb_build_object(
     'id',
