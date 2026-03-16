@@ -47,8 +47,8 @@ func (r *EventRepository) GetDaysWithEvents(ctx context.Context, arg sqlc.GetDay
 	return r.q.GetDaysWithEvents(ctx, arg)
 }
 
-func (r *EventRepository) GetEventsFilteredCount(ctx context.Context, arg sqlc.GetEventsFilteredCountParams) (int32, error) {
-	return r.q.GetEventsFilteredCount(ctx, arg)
+func (r *EventRepository) GetFilteredCount(ctx context.Context, arg sqlc.GetFilteredCountParams) (int32, error) {
+	return r.q.GetFilteredCount(ctx, arg)
 }
 
 func (r *EventRepository) GetByID(ctx context.Context, arg sqlc.GetByIDParams) ([]byte, error) {
