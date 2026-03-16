@@ -19,8 +19,8 @@ func (r *EventRepository) Create(ctx context.Context, arg sqlc.CreateParams) (sq
 	return r.q.Create(ctx, arg)
 }
 
-func (r *EventRepository) GetEventsByProfessionalID(ctx context.Context, arg sqlc.GetEventsByProfessionalIDParams) ([][]byte, error) {
-	return r.q.GetEventsByProfessionalID(ctx, arg)
+func (r *EventRepository) GetByProfessionalID(ctx context.Context, arg sqlc.GetByProfessionalIDParams) ([][]byte, error) {
+	return r.q.GetByProfessionalID(ctx, arg)
 }
 
 func (r *EventRepository) GetEventsByBusinessID(ctx context.Context, arg sqlc.GetEventsByBusinessIDParams) ([][]byte, error) {
