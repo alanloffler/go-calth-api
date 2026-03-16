@@ -15,8 +15,8 @@ func NewEventRepository(q *sqlc.Queries) *EventRepository {
 	return &EventRepository{q: q}
 }
 
-func (r *EventRepository) Create(ctx context.Context, arg sqlc.CreateEventParams) (sqlc.Event, error) {
-	return r.q.CreateEvent(ctx, arg)
+func (r *EventRepository) Create(ctx context.Context, arg sqlc.CreateParams) (sqlc.Event, error) {
+	return r.q.Create(ctx, arg)
 }
 
 func (r *EventRepository) GetEventsByProfessionalID(ctx context.Context, arg sqlc.GetEventsByProfessionalIDParams) ([][]byte, error) {
