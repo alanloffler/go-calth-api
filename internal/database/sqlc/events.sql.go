@@ -947,7 +947,7 @@ func (q *Queries) GetProfessionalEventsByDayArray(ctx context.Context, arg GetPr
 	return items, nil
 }
 
-const updateEvent = `-- name: UpdateEvent :one
+const update = `-- name: Update :one
 UPDATE events
 SET
   title = COALESCE($3, title),
@@ -975,7 +975,7 @@ RETURNING
   deleted_at
 `
 
-type UpdateEventParams struct {
+type UpdateParams struct {
 	BusinessID     pgtype.UUID        `json:"businessId"`
 	ID             pgtype.UUID        `json:"id"`
 	Title          pgtype.Text        `json:"title"`
@@ -986,8 +986,8 @@ type UpdateEventParams struct {
 	Status         NullEventStatus    `json:"status"`
 }
 
-func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event, error) {
-	row := q.db.QueryRow(ctx, updateEvent,
+func (q *Queries) Update(ctx context.Context, arg UpdateParams) (Event, error) {
+	row := q.db.QueryRow(ctx, update,
 		arg.BusinessID,
 		arg.ID,
 		arg.Title,
