@@ -158,7 +158,7 @@ ORDER BY
 LIMIT
   $2;
 
--- name: GetProfessionalEventsByDay :many
+-- name: GetByProfessionalDay :many
 SELECT
   jsonb_build_object(
     'id',
