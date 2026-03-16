@@ -1014,7 +1014,7 @@ func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event
 	return i, err
 }
 
-const updateEventStatus = `-- name: UpdateEventStatus :one
+const updateStatus = `-- name: UpdateStatus :one
 UPDATE events
 SET
   status = $3,
@@ -1037,14 +1037,14 @@ RETURNING
   deleted_at
 `
 
-type UpdateEventStatusParams struct {
+type UpdateStatusParams struct {
 	BusinessID pgtype.UUID `json:"businessId"`
 	ID         pgtype.UUID `json:"id"`
 	Status     EventStatus `json:"status"`
 }
 
-func (q *Queries) UpdateEventStatus(ctx context.Context, arg UpdateEventStatusParams) (Event, error) {
-	row := q.db.QueryRow(ctx, updateEventStatus, arg.BusinessID, arg.ID, arg.Status)
+func (q *Queries) UpdateStatus(ctx context.Context, arg UpdateStatusParams) (Event, error) {
+	row := q.db.QueryRow(ctx, updateStatus, arg.BusinessID, arg.ID, arg.Status)
 	var i Event
 	err := row.Scan(
 		&i.ID,
