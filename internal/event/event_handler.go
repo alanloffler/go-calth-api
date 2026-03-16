@@ -113,7 +113,7 @@ func (h *EventHandler) GetByBusinessID(c *gin.Context) {
 		return
 	}
 
-	rawEvents, err := h.repo.GetEventsByBusinessID(c.Request.Context(), sqlc.GetEventsByBusinessIDParams{BusinessID: businessID, Limit: int32(limit)})
+	rawEvents, err := h.repo.GetByBusinessID(c.Request.Context(), sqlc.GetByBusinessIDParams{BusinessID: businessID, Limit: int32(limit)})
 	if err != nil {
 		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Eventos no encontrados", err))
 		return
