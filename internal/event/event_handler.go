@@ -526,7 +526,7 @@ func (h *EventHandler) GetByID(c *gin.Context) {
 		return
 	}
 
-	rawEvent, err := h.repo.GetByID(c.Request.Context(), sqlc.GetEventByIDParams{
+	rawEvent, err := h.repo.GetByID(c.Request.Context(), sqlc.GetByIDParams{
 		BusinessID: businessID,
 		ID:         id,
 	})
