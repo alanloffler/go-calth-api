@@ -516,6 +516,53 @@ func (q *Queries) GetByProfessionalDay(ctx context.Context, arg GetByProfessiona
 	return items, nil
 }
 
+const getByProfessionalDayArray = `-- name: GetByProfessionalDayArray :many
+SELECT
+  e.start_date
+FROM
+  events e
+WHERE
+  e.business_id = $1
+  AND e.professional_id = $2
+  AND e.start_date >= $3
+  AND e.start_date <= $4
+  AND e.deleted_at IS NULL
+ORDER BY
+  e.start_date
+`
+
+type GetByProfessionalDayArrayParams struct {
+	BusinessID     pgtype.UUID        `json:"businessId"`
+	ProfessionalID pgtype.UUID        `json:"professionalId"`
+	StartDate      pgtype.Timestamptz `json:"startDate"`
+	StartDate_2    pgtype.Timestamptz `json:"startDate2"`
+}
+
+func (q *Queries) GetByProfessionalDayArray(ctx context.Context, arg GetByProfessionalDayArrayParams) ([]pgtype.Timestamptz, error) {
+	rows, err := q.db.Query(ctx, getByProfessionalDayArray,
+		arg.BusinessID,
+		arg.ProfessionalID,
+		arg.StartDate,
+		arg.StartDate_2,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.Timestamptz
+	for rows.Next() {
+		var start_date pgtype.Timestamptz
+		if err := rows.Scan(&start_date); err != nil {
+			return nil, err
+		}
+		items = append(items, start_date)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getByProfessionalID = `-- name: GetByProfessionalID :many
 SELECT
   jsonb_build_object(
@@ -898,53 +945,6 @@ func (q *Queries) GetFilteredCount(ctx context.Context, arg GetFilteredCountPara
 	var total int32
 	err := row.Scan(&total)
 	return total, err
-}
-
-const getProfessionalEventsByDayArray = `-- name: GetProfessionalEventsByDayArray :many
-SELECT
-  e.start_date
-FROM
-  events e
-WHERE
-  e.business_id = $1
-  AND e.professional_id = $2
-  AND e.start_date >= $3
-  AND e.start_date <= $4
-  AND e.deleted_at IS NULL
-ORDER BY
-  e.start_date
-`
-
-type GetProfessionalEventsByDayArrayParams struct {
-	BusinessID     pgtype.UUID        `json:"businessId"`
-	ProfessionalID pgtype.UUID        `json:"professionalId"`
-	StartDate      pgtype.Timestamptz `json:"startDate"`
-	StartDate_2    pgtype.Timestamptz `json:"startDate2"`
-}
-
-func (q *Queries) GetProfessionalEventsByDayArray(ctx context.Context, arg GetProfessionalEventsByDayArrayParams) ([]pgtype.Timestamptz, error) {
-	rows, err := q.db.Query(ctx, getProfessionalEventsByDayArray,
-		arg.BusinessID,
-		arg.ProfessionalID,
-		arg.StartDate,
-		arg.StartDate_2,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []pgtype.Timestamptz
-	for rows.Next() {
-		var start_date pgtype.Timestamptz
-		if err := rows.Scan(&start_date); err != nil {
-			return nil, err
-		}
-		items = append(items, start_date)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const update = `-- name: Update :one
