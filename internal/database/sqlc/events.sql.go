@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const create = `-- name: Create :one
+const createEvent = `-- name: CreateEvent :one
 INSERT INTO
   events (
     title,
@@ -27,7 +27,7 @@ RETURNING
   id, title, start_date, end_date, business_id, professional_id, user_id, status, created_at, updated_at, deleted_at
 `
 
-type CreateParams struct {
+type CreateEventParams struct {
 	Title          string             `json:"title"`
 	StartDate      pgtype.Timestamptz `json:"startDate"`
 	EndDate        pgtype.Timestamptz `json:"endDate"`
@@ -36,8 +36,8 @@ type CreateParams struct {
 	UserID         pgtype.UUID        `json:"userId"`
 }
 
-func (q *Queries) Create(ctx context.Context, arg CreateParams) (Event, error) {
-	row := q.db.QueryRow(ctx, create,
+func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error) {
+	row := q.db.QueryRow(ctx, createEvent,
 		arg.Title,
 		arg.StartDate,
 		arg.EndDate,
