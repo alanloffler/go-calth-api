@@ -62,3 +62,7 @@ func (r *EventRepository) Update(ctx context.Context, arg sqlc.UpdateParams) (sq
 func (r *EventRepository) UpdateStatus(ctx context.Context, arg sqlc.UpdateStatusParams) (sqlc.Event, error) {
 	return r.q.UpdateStatus(ctx, arg)
 }
+
+func (r *EventRepository) Delete(ctx context.Context, arg sqlc.DeleteEventParams) (int64, error) {
+	return r.q.DeleteEvent(ctx, arg)
+}
