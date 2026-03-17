@@ -14,7 +14,7 @@ func NewMedicalHistoryRepository(q *sqlc.Queries) *MedicalHistoryRepository {
 	return &MedicalHistoryRepository{q: q}
 }
 
-func (r *MedicalHistoryRepository) CreateMedicaHistory(ctx context.Context, arg sqlc.CreateMedicalHistoryParams) (sqlc.MedicalHistory, error) {
+func (r *MedicalHistoryRepository) Create(ctx context.Context, arg sqlc.CreateMedicalHistoryParams) (sqlc.MedicalHistory, error) {
 	return r.q.CreateMedicalHistory(ctx, arg)
 }
 
