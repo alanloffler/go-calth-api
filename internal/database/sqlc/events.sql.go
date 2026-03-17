@@ -62,6 +62,26 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 	return i, err
 }
 
+const deleteEvent = `-- name: DeleteEvent :execrows
+DELETE FROM events
+WHERE
+  business_id = $1
+  AND id = $2
+`
+
+type DeleteEventParams struct {
+	BusinessID pgtype.UUID `json:"businessId"`
+	ID         pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) DeleteEvent(ctx context.Context, arg DeleteEventParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteEvent, arg.BusinessID, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const getByBusinessID = `-- name: GetByBusinessID :many
 SELECT
   jsonb_build_object(
