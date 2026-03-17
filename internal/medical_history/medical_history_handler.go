@@ -73,7 +73,7 @@ func NewMedicalHistoryHandler(repo *MedicalHistoryRepository) *MedicalHistoryHan
 	return &MedicalHistoryHandler{repo: repo}
 }
 
-func (h *MedicalHistoryHandler) CreateMedicalHistory(c *gin.Context) {
+func (h *MedicalHistoryHandler) Create(c *gin.Context) {
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
 		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
@@ -112,7 +112,7 @@ func (h *MedicalHistoryHandler) CreateMedicalHistory(c *gin.Context) {
 		}
 	}
 
-	mh, err := h.repo.CreateMedicaHistory(c.Request.Context(), sqlc.CreateMedicalHistoryParams{
+	mh, err := h.repo.Create(c.Request.Context(), sqlc.CreateMedicalHistoryParams{
 		BusinessID:     businessID,
 		UserID:         userID,
 		ProfessionalID: professionalID,
@@ -123,7 +123,7 @@ func (h *MedicalHistoryHandler) CreateMedicalHistory(c *gin.Context) {
 		Comments:       req.Comments,
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al crear el historial médico", err))
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al crear la historia médica", err))
 		return
 	}
 
