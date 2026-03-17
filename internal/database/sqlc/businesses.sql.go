@@ -108,15 +108,18 @@ func (q *Queries) CreateBusiness(ctx context.Context, arg CreateBusinessParams) 
 	return i, err
 }
 
-const deleteBusiness = `-- name: DeleteBusiness :exec
+const deleteBusiness = `-- name: DeleteBusiness :execrows
 DELETE FROM businesses
 WHERE
   id = $1
 `
 
-func (q *Queries) DeleteBusiness(ctx context.Context, id pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, deleteBusiness, id)
-	return err
+func (q *Queries) DeleteBusiness(ctx context.Context, id pgtype.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteBusiness, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const getBusiness = `-- name: GetBusiness :one
