@@ -1,4 +1,4 @@
--- name: Create :one
+-- name: CreateEvent :one
 INSERT INTO
   events (
     title,
