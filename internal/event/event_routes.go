@@ -24,4 +24,6 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries) {
 
 	events.PATCH("/:id/status", middleware.PermissionMiddleware(q, "events-update"), handler.UpdateStatus)
 	events.PATCH("/:id", middleware.PermissionMiddleware(q, "events-update"), handler.Update)
+
+	events.DELETE("/:id", middleware.PermissionMiddleware(q, "events-delete-hard"), handler.Delete)
 }
