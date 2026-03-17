@@ -32,13 +32,13 @@ func (h *RolePermissionHandler) Create(c *gin.Context) {
 
 	roleID, err := uuid.Parse(req.RoleID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de UUID inválido", err))
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID de rol inválido", err))
 		return
 	}
 
 	permissionID, err := uuid.Parse(req.PermissionID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de UUID inválido", err))
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID de permiso inválido", err))
 		return
 	}
 
