@@ -12,13 +12,12 @@ import (
 )
 
 const createRolePermission = `-- name: CreateRolePermission :one
-INSERT INTO role_permissions (
-    role_id, permission_id
-)
-VALUES (
-    $1, $2
-)
-RETURNING role_id, permission_id, created_at, updated_at
+INSERT INTO
+  role_permissions (role_id, permission_id)
+VALUES
+  ($1, $2)
+RETURNING
+  role_id, permission_id, created_at, updated_at
 `
 
 type CreateRolePermissionParams struct {
@@ -39,7 +38,9 @@ func (q *Queries) CreateRolePermission(ctx context.Context, arg CreateRolePermis
 }
 
 const deleteRolePermissionsByRoleID = `-- name: DeleteRolePermissionsByRoleID :exec
-DELETE FROM role_permissions WHERE role_id = $1
+DELETE FROM role_permissions
+WHERE
+  role_id = $1
 `
 
 func (q *Queries) DeleteRolePermissionsByRoleID(ctx context.Context, roleID pgtype.UUID) error {
@@ -48,11 +49,17 @@ func (q *Queries) DeleteRolePermissionsByRoleID(ctx context.Context, roleID pgty
 }
 
 const hasPermission = `-- name: HasPermission :one
-SELECT EXISTS (
-    SELECT 1 FROM role_permissions rp
-    JOIN permissions p ON p.id = rp.permission_id
-    WHERE rp.role_id = $1 AND p.action_key = $2
-) AS has_permission
+SELECT
+  EXISTS (
+    SELECT
+      1
+    FROM
+      role_permissions rp
+      JOIN permissions p ON p.id = rp.permission_id
+    WHERE
+      rp.role_id = $1
+      AND p.action_key = $2
+  ) AS has_permission
 `
 
 type HasPermissionParams struct {
