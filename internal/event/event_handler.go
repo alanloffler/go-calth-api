@@ -663,3 +663,32 @@ func (h *EventHandler) UpdateStatus(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.Success("Estado del evento actualizado", &event))
 }
+
+func (h *EventHandler) Delete(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	var id pgtype.UUID
+	if err := id.Scan(c.Param("id")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID de turno inválido", err))
+		return
+	}
+
+	rows, err := h.repo.Delete(c.Request.Context(), sqlc.DeleteEventParams{
+		BusinessID: businessID,
+		ID:         id,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al eliminar el turno", err))
+		return
+	}
+	if rows == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Turno no encontrado"))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success[any]("Turno eliminado", nil))
+}
