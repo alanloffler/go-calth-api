@@ -679,3 +679,9 @@ RETURNING
   created_at,
   updated_at,
   deleted_at;
+
+-- name: DeleteEvent :execrows
+DELETE FROM events
+WHERE
+  business_id = $1
+  AND id = $2;
