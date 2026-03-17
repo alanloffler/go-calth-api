@@ -238,6 +238,10 @@ func (h *BusinessHandler) Delete(c *gin.Context) {
 	// 	c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al eliminar negocio", err))
 	// 	return
 	// }
+	// if rows == 0 {
+	// 	c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Negocio no encontrado", nil))
+	// 	return
+	// }
 
 	c.JSON(http.StatusOK, response.Success[any]("Negocio eliminado", nil))
 }
