@@ -31,6 +31,6 @@ func (r *BusinessRepository) Update(ctx context.Context, arg sqlc.UpdateBusiness
 	return r.q.UpdateBusiness(ctx, arg)
 }
 
-func (r *BusinessRepository) Delete(ctx context.Context, id pgtype.UUID) error {
+func (r *BusinessRepository) Delete(ctx context.Context, id pgtype.UUID) (int64, error) {
 	return r.q.DeleteBusiness(ctx, id)
 }
