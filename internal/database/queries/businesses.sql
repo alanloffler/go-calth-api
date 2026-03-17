@@ -80,7 +80,7 @@ WHERE
 RETURNING
   *;
 
--- name: DeleteBusiness :exec
+-- name: DeleteBusiness :execrows
 DELETE FROM businesses
 WHERE
   id = $1;
