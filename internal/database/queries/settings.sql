@@ -1,3 +1,11 @@
+-- name: GetSettingsByModule :many
+SELECT
+  *
+FROM
+  settings
+WHERE
+  module = $1;
+
 -- name: UpdateSetting :execrows
 UPDATE settings
 SET
