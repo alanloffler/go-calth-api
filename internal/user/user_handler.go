@@ -280,6 +280,12 @@ func (h *UserHandler) GetByIDWithSoftDeleted(c *gin.Context) {
 }
 
 func (h *UserHandler) Update(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
 	var id pgtype.UUID
 	if err := id.Scan(c.Param("id")); err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID inválido", err))
@@ -303,6 +309,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 	}
 
 	user, err := h.repo.Update(c.Request.Context(), sqlc.UpdateUserParams{
+		BusinessID:  businessID,
 		ID:          id,
 		Ic:          utils.ToPgText(req.User.Ic),
 		UserName:    utils.ToPgText(req.User.UserName),
