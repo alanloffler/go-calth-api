@@ -34,6 +34,6 @@ func (r *MedicalHistoryRepository) Restore(ctx context.Context, arg sqlc.Restore
 	return r.q.RestoreMedicalHistory(ctx, arg)
 }
 
-func (r *MedicalHistoryRepository) Delete(ctx context.Context, arg sqlc.DeleteMedicalHistoryParams) error {
+func (r *MedicalHistoryRepository) Delete(ctx context.Context, arg sqlc.DeleteMedicalHistoryParams) (int64, error) {
 	return r.q.DeleteMedicalHistory(ctx, arg)
 }
