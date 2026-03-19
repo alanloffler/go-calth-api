@@ -168,6 +168,17 @@ type RolePermission struct {
 	UpdatedAt    pgtype.Timestamptz `json:"updatedAt"`
 }
 
+type Setting struct {
+	ID        pgtype.UUID        `json:"id"`
+	Module    string             `json:"module"`
+	Submodule pgtype.Text        `json:"submodule"`
+	Key       string             `json:"key"`
+	Value     string             `json:"value"`
+	Title     string             `json:"title"`
+	CreatedAt pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt pgtype.Timestamptz `json:"updatedAt"`
+}
+
 type User struct {
 	ID           pgtype.UUID        `json:"id"`
 	Ic           string             `json:"ic"`
