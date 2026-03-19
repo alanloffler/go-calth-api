@@ -6,11 +6,6 @@ VALUES
 RETURNING
   *;
 
--- name: DeleteRolePermissionsByRoleID :execrows
-DELETE FROM role_permissions
-WHERE
-  role_id = $1;
-
 -- name: HasPermission :one
 SELECT
   EXISTS (
@@ -23,3 +18,8 @@ SELECT
       rp.role_id = $1
       AND p.action_key = $2
   ) AS has_permission;
+
+-- name: DeleteRolePermissionsByRoleID :execrows
+DELETE FROM role_permissions
+WHERE
+  role_id = $1;
