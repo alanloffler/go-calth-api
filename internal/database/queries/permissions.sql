@@ -46,12 +46,6 @@ WHERE
 RETURNING
   *;
 
--- name: DeletePermission :exec
-DELETE FROM permissions
-WHERE
-  id = $1
-  AND deleted_at IS NULL;
-
 -- name: SoftDeletePermission :execrows
 UPDATE permissions
 SET
@@ -71,3 +65,9 @@ WHERE
   AND deleted_at IS NOT NULL
 RETURNING
   *;
+
+-- name: DeletePermission :exec
+DELETE FROM permissions
+WHERE
+  id = $1
+  AND deleted_at IS NULL;
