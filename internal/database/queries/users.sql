@@ -213,10 +213,11 @@ WHERE
 RETURNING
   *;
 
--- name: DeleteUser :exec
+-- name: DeleteUser :execrows
 DELETE FROM users
 WHERE
-  id = $1
+  business_id = $1
+  AND id = $2
   AND deleted_at IS NULL;
 
 -- name: SoftDeleteUser :execrows
