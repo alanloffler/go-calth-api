@@ -53,11 +53,13 @@ CREATE TABLE users (
   UNIQUE (business_id, user_name)
 );
 
-CREATE INDEX idx_users_business ON users (business_id);
+CREATE INDEX IF NOT EXISTS idx_users_business ON users (business_id);
 
-CREATE INDEX idx_users_business_email ON users (business_id, email);
+CREATE INDEX IF NOT EXISTS idx_users_business_id_id ON users (business_id, id);
 
-CREATE INDEX idx_users_business_role ON users (business_id, role_id);
+CREATE INDEX IF NOT EXISTS idx_users_business_email ON users (business_id, email);
+
+CREATE INDEX IF NOT EXISTS idx_users_business_role ON users (business_id, role_id);
 
 CREATE TABLE patient_profile (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
