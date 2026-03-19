@@ -66,7 +66,7 @@ WHERE
 RETURNING
   *;
 
--- name: DeletePermission :exec
+-- name: DeletePermission :execrows
 DELETE FROM permissions
 WHERE
   id = $1
