@@ -918,22 +918,24 @@ func (q *Queries) UpdateRefreshToken(ctx context.Context, arg UpdateRefreshToken
 const updateUser = `-- name: UpdateUser :one
 UPDATE users
 SET
-  ic = COALESCE($2, ic),
-  user_name = COALESCE($3, user_name),
-  first_name = COALESCE($4, first_name),
-  last_name = COALESCE($5, last_name),
-  email = COALESCE($6, email),
-  password = COALESCE($7, password),
-  phone_number = COALESCE($8, phone_number),
+  ic = COALESCE($3, ic),
+  user_name = COALESCE($4, user_name),
+  first_name = COALESCE($5, first_name),
+  last_name = COALESCE($6, last_name),
+  email = COALESCE($7, email),
+  password = COALESCE($8, password),
+  phone_number = COALESCE($9, phone_number),
   updated_at = now()
 WHERE
-  id = $1
+  business_id = $1
+  AND id = $2
   AND deleted_at IS NULL
 RETURNING
   id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
 `
 
 type UpdateUserParams struct {
+	BusinessID  pgtype.UUID `json:"businessId"`
 	ID          pgtype.UUID `json:"id"`
 	Ic          pgtype.Text `json:"ic"`
 	UserName    pgtype.Text `json:"userName"`
@@ -946,6 +948,7 @@ type UpdateUserParams struct {
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
 	row := q.db.QueryRow(ctx, updateUser,
+		arg.BusinessID,
 		arg.ID,
 		arg.Ic,
 		arg.UserName,
