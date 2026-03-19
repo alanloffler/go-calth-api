@@ -12,13 +12,12 @@ import (
 )
 
 const createRole = `-- name: CreateRole :one
-INSERT INTO roles (
-    name, value, description
-)
-VALUES (
-    $1, $2, $3
-)
-RETURNING id, name, value, description, created_at, updated_at, deleted_at
+INSERT INTO
+  roles (name, value, description)
+VALUES
+  ($1, $2, $3)
+RETURNING
+  id, name, value, description, created_at, updated_at, deleted_at
 `
 
 type CreateRoleParams struct {
@@ -42,19 +41,29 @@ func (q *Queries) CreateRole(ctx context.Context, arg CreateRoleParams) (Role, e
 	return i, err
 }
 
-const deleteRole = `-- name: DeleteRole :exec
+const deleteRole = `-- name: DeleteRole :execrows
 DELETE FROM roles
-WHERE id = $1 AND deleted_at IS NULL
+WHERE
+  id = $1
+  AND deleted_at IS NULL
 `
 
-func (q *Queries) DeleteRole(ctx context.Context, id pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, deleteRole, id)
-	return err
+func (q *Queries) DeleteRole(ctx context.Context, id pgtype.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteRole, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const getRoleByID = `-- name: GetRoleByID :one
-SELECT id, name, value, description, created_at, updated_at, deleted_at FROM roles
-WHERE id = $1 AND deleted_at IS NULL
+SELECT
+  id, name, value, description, created_at, updated_at, deleted_at
+FROM
+  roles
+WHERE
+  id = $1
+  AND deleted_at IS NULL
 `
 
 func (q *Queries) GetRoleByID(ctx context.Context, id pgtype.UUID) (Role, error) {
@@ -73,8 +82,12 @@ func (q *Queries) GetRoleByID(ctx context.Context, id pgtype.UUID) (Role, error)
 }
 
 const getRoleByValue = `-- name: GetRoleByValue :one
-SELECT id, name, value, description, created_at, updated_at, deleted_at FROM roles
-WHERE value = $1
+SELECT
+  id, name, value, description, created_at, updated_at, deleted_at
+FROM
+  roles
+WHERE
+  value = $1
 `
 
 func (q *Queries) GetRoleByValue(ctx context.Context, value string) (Role, error) {
@@ -94,15 +107,32 @@ func (q *Queries) GetRoleByValue(ctx context.Context, value string) (Role, error
 
 const getRoleWithPermissions = `-- name: GetRoleWithPermissions :many
 SELECT
-   r.id, r.name, r.value, r.description, r.created_at, r.updated_at, r.deleted_at,
-   rp.role_id, rp.permission_id, rp.created_at AS rp_created_at, rp.updated_at AS rp_updated_at,
-   p.id AS p_id, p.name AS p_name, p.category AS p_category, p.action_key AS p_action_key,
-   p.description AS p_description, p.created_at AS p_created_at, p.updated_at AS p_updated_at,
-   p.deleted_at AS p_deleted_at
-FROM roles r
-LEFT JOIN role_permissions rp ON rp.role_id = r.id
-LEFT JOIN permissions p ON p.id = rp.permission_id
-WHERE r.id = $1 AND r.deleted_at IS NULL
+  r.id,
+  r.name,
+  r.value,
+  r.description,
+  r.created_at,
+  r.updated_at,
+  r.deleted_at,
+  rp.role_id,
+  rp.permission_id,
+  rp.created_at AS rp_created_at,
+  rp.updated_at AS rp_updated_at,
+  p.id AS p_id,
+  p.name AS p_name,
+  p.category AS p_category,
+  p.action_key AS p_action_key,
+  p.description AS p_description,
+  p.created_at AS p_created_at,
+  p.updated_at AS p_updated_at,
+  p.deleted_at AS p_deleted_at
+FROM
+  roles r
+  LEFT JOIN role_permissions rp ON rp.role_id = r.id
+  LEFT JOIN permissions p ON p.id = rp.permission_id
+WHERE
+  r.id = $1
+  AND r.deleted_at IS NULL
 `
 
 type GetRoleWithPermissionsRow struct {
@@ -169,15 +199,31 @@ func (q *Queries) GetRoleWithPermissions(ctx context.Context, id pgtype.UUID) ([
 
 const getRoleWithPermissionsWithSoftDeleted = `-- name: GetRoleWithPermissionsWithSoftDeleted :many
 SELECT
-   r.id, r.name, r.value, r.description, r.created_at, r.updated_at, r.deleted_at,
-   rp.role_id, rp.permission_id, rp.created_at AS rp_created_at, rp.updated_at AS rp_updated_at,
-   p.id AS p_id, p.name AS p_name, p.category AS p_category, p.action_key AS p_action_key,
-   p.description AS p_description, p.created_at AS p_created_at, p.updated_at AS p_updated_at,
-   p.deleted_at AS p_deleted_at
-FROM roles r
-LEFT JOIN role_permissions rp ON rp.role_id = r.id
-LEFT JOIN permissions p ON p.id = rp.permission_id
-WHERE r.id = $1
+  r.id,
+  r.name,
+  r.value,
+  r.description,
+  r.created_at,
+  r.updated_at,
+  r.deleted_at,
+  rp.role_id,
+  rp.permission_id,
+  rp.created_at AS rp_created_at,
+  rp.updated_at AS rp_updated_at,
+  p.id AS p_id,
+  p.name AS p_name,
+  p.category AS p_category,
+  p.action_key AS p_action_key,
+  p.description AS p_description,
+  p.created_at AS p_created_at,
+  p.updated_at AS p_updated_at,
+  p.deleted_at AS p_deleted_at
+FROM
+  roles r
+  LEFT JOIN role_permissions rp ON rp.role_id = r.id
+  LEFT JOIN permissions p ON p.id = rp.permission_id
+WHERE
+  r.id = $1
 `
 
 type GetRoleWithPermissionsWithSoftDeletedRow struct {
@@ -243,9 +289,14 @@ func (q *Queries) GetRoleWithPermissionsWithSoftDeleted(ctx context.Context, id 
 }
 
 const getRoles = `-- name: GetRoles :many
-SELECT id, name, value, description, created_at, updated_at, deleted_at FROM roles
-WHERE deleted_at IS NULL
-ORDER BY value ASC
+SELECT
+  id, name, value, description, created_at, updated_at, deleted_at
+FROM
+  roles
+WHERE
+  deleted_at IS NULL
+ORDER BY
+  value ASC
 `
 
 func (q *Queries) GetRoles(ctx context.Context) ([]Role, error) {
@@ -277,8 +328,12 @@ func (q *Queries) GetRoles(ctx context.Context) ([]Role, error) {
 }
 
 const getRolesWithSoftDeleted = `-- name: GetRolesWithSoftDeleted :many
-SELECT id, name, value, description, created_at, updated_at, deleted_at FROM roles
-ORDER BY value ASC
+SELECT
+  id, name, value, description, created_at, updated_at, deleted_at
+FROM
+  roles
+ORDER BY
+  value ASC
 `
 
 func (q *Queries) GetRolesWithSoftDeleted(ctx context.Context) ([]Role, error) {
@@ -310,9 +365,14 @@ func (q *Queries) GetRolesWithSoftDeleted(ctx context.Context) ([]Role, error) {
 }
 
 const restoreRole = `-- name: RestoreRole :execrows
-UPDATE roles SET deleted_at = NULL
-WHERE id = $1 AND deleted_at IS NOT NULL
-RETURNING id, name, value, description, created_at, updated_at, deleted_at
+UPDATE roles
+SET
+  deleted_at = NULL
+WHERE
+  id = $1
+  AND deleted_at IS NOT NULL
+RETURNING
+  id, name, value, description, created_at, updated_at, deleted_at
 `
 
 func (q *Queries) RestoreRole(ctx context.Context, id pgtype.UUID) (int64, error) {
@@ -324,9 +384,14 @@ func (q *Queries) RestoreRole(ctx context.Context, id pgtype.UUID) (int64, error
 }
 
 const softDeleteRole = `-- name: SoftDeleteRole :execrows
-UPDATE roles SET deleted_at = now()
-WHERE id = $1 AND deleted_at IS NULL
-RETURNING id, name, value, description, created_at, updated_at, deleted_at
+UPDATE roles
+SET
+  deleted_at = now()
+WHERE
+  id = $1
+  AND deleted_at IS NULL
+RETURNING
+  id, name, value, description, created_at, updated_at, deleted_at
 `
 
 func (q *Queries) SoftDeleteRole(ctx context.Context, id pgtype.UUID) (int64, error) {
@@ -338,13 +403,17 @@ func (q *Queries) SoftDeleteRole(ctx context.Context, id pgtype.UUID) (int64, er
 }
 
 const updateRole = `-- name: UpdateRole :one
-UPDATE roles SET
-    name = COALESCE($2, name),
-    value = COALESCE($3, value),
-    description = COALESCE($4, description),
-    updated_at = now()
-WHERE id = $1 AND deleted_at IS NULL
-RETURNING id, name, value, description, created_at, updated_at, deleted_at
+UPDATE roles
+SET
+  name = COALESCE($2, name),
+  value = COALESCE($3, value),
+  description = COALESCE($4, description),
+  updated_at = now()
+WHERE
+  id = $1
+  AND deleted_at IS NULL
+RETURNING
+  id, name, value, description, created_at, updated_at, deleted_at
 `
 
 type UpdateRoleParams struct {
