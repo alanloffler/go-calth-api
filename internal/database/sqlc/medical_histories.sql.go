@@ -69,7 +69,7 @@ func (q *Queries) CreateMedicalHistory(ctx context.Context, arg CreateMedicalHis
 	return i, err
 }
 
-const deleteMedicalHistory = `-- name: DeleteMedicalHistory :exec
+const deleteMedicalHistory = `-- name: DeleteMedicalHistory :execrows
 DELETE FROM medical_histories
 WHERE
   business_id = $1
@@ -82,9 +82,12 @@ type DeleteMedicalHistoryParams struct {
 	ID         pgtype.UUID `json:"id"`
 }
 
-func (q *Queries) DeleteMedicalHistory(ctx context.Context, arg DeleteMedicalHistoryParams) error {
-	_, err := q.db.Exec(ctx, deleteMedicalHistory, arg.BusinessID, arg.ID)
-	return err
+func (q *Queries) DeleteMedicalHistory(ctx context.Context, arg DeleteMedicalHistoryParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteMedicalHistory, arg.BusinessID, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const getMedicalHistoriesByPatientIDWithSoftDeleted = `-- name: GetMedicalHistoriesByPatientIDWithSoftDeleted :many
