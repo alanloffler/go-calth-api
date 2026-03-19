@@ -197,3 +197,15 @@ CREATE INDEX idx_mh_business_user ON medical_histories (business_id, user_id);
 CREATE INDEX idx_mh_business_event ON medical_histories (business_id, event_id);
 
 CREATE INDEX idx_mh_business_user_created ON medical_histories (business_id, user_id, created_at);
+
+-- // Settings //
+CREATE TABLE settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  module VARCHAR(50) NOT NULL,
+  submodule VARCHAR(50),
+  key VARCHAR(50) NOT NULL,
+  value VARCHAR(255) NOT NULL,
+  title VARCHAR(100) NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
