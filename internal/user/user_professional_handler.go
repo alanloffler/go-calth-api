@@ -314,6 +314,7 @@ func (h *UserHandler) UpdateProfessional(c *gin.Context) {
 	qtx := sqlc.New(tx)
 
 	updatedUser, err := qtx.UpdateUser(ctx, sqlc.UpdateUserParams{
+		BusinessID:  businessID,
 		ID:          id,
 		Ic:          utils.ToPgText(req.User.Ic),
 		UserName:    utils.ToPgText(req.User.UserName),
