@@ -26,6 +26,22 @@ type UpdateSettingRequest struct {
 	Title     *string `json:"title" binding:"omitempty,min=2,max=100"`
 }
 
+func (h *SettingHandler) GetByModule(c *gin.Context) {
+	module := c.Param("module")
+	if module == "" {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Módulo requerido"))
+		return
+	}
+
+	result, err := h.repo.GetByModule(c.Request.Context(), module)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al obtener configuraciones", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Configuraciones encontradas", &result))
+}
+
 func (h *SettingHandler) Update(c *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(c.Param("id")); err != nil {
