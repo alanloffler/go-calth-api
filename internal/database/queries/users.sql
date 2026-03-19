@@ -208,7 +208,8 @@ SET
   phone_number = COALESCE(sqlc.narg ('phone_number'), phone_number),
   updated_at = now()
 WHERE
-  id = $1
+  business_id = $1
+  AND id = $2
   AND deleted_at IS NULL
 RETURNING
   *;
