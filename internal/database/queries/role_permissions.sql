@@ -6,7 +6,7 @@ VALUES
 RETURNING
   *;
 
--- name: DeleteRolePermissionsByRoleID :exec
+-- name: DeleteRolePermissionsByRoleID :execrows
 DELETE FROM role_permissions
 WHERE
   role_id = $1;
