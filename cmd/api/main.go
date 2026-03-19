@@ -15,6 +15,7 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/middleware"
 	"github.com/alanloffler/go-calth-api/internal/permission"
 	"github.com/alanloffler/go-calth-api/internal/role"
+	"github.com/alanloffler/go-calth-api/internal/setting"
 	"github.com/alanloffler/go-calth-api/internal/user"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -66,6 +67,7 @@ func main() {
 	medical_history.RegisterRoutes(protected, queries)
 	permission.RegisterRoutes(protected, queries)
 	role.RegisterRoutes(protected, queries, pool)
+	setting.RegisterRoutes(protected, queries)
 	user.RegisterRoutes(protected, queries, pool)
 
 	// Mixed routes (public/protected)
