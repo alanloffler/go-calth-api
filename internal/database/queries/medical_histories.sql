@@ -76,7 +76,7 @@ WHERE
 RETURNING
   *;
 
--- name: DeleteMedicalHistory :exec
+-- name: DeleteMedicalHistory :execrows
 DELETE FROM medical_histories
 WHERE
   business_id = $1
