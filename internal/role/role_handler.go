@@ -348,9 +348,13 @@ func (h *RoleHandler) Update(c *gin.Context) {
 		return
 	}
 
-	err = qtx.DeleteRolePermissionsByRoleID(ctx, id)
+	affected, err := qtx.DeleteRolePermissionsByRoleID(ctx, id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al eliminar permisos del rol", err))
+		return
+	}
+	if affected == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Permiso de rol no encontrado"))
 		return
 	}
 
