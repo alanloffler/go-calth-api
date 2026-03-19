@@ -62,9 +62,9 @@ func (m *MockUserRepository) Update(ctx context.Context, arg sqlc.UpdateUserPara
 	return args.Get(0).(sqlc.User), args.Error(1)
 }
 
-func (m *MockUserRepository) Delete(ctx context.Context, id pgtype.UUID) error {
-	args := m.Called(ctx, id)
-	return args.Error(0)
+func (m *MockUserRepository) Delete(ctx context.Context, arg sqlc.DeleteUserParams) (int64, error) {
+	args := m.Called(ctx, arg)
+	return args.Get(0).(int64), args.Error(1)
 }
 
 func (m *MockUserRepository) SoftDelete(ctx context.Context, id pgtype.UUID) (int64, error) {
