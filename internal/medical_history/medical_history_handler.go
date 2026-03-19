@@ -334,12 +334,16 @@ func (h *MedicalHistoryHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	err := h.repo.Delete(c.Request.Context(), sqlc.DeleteMedicalHistoryParams{
+	rows, err := h.repo.Delete(c.Request.Context(), sqlc.DeleteMedicalHistoryParams{
 		BusinessID: businessID,
 		ID:         id,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error eliminando historia médica", err))
+		return
+	}
+	if rows == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Historia médica no encontrada"))
 		return
 	}
 
