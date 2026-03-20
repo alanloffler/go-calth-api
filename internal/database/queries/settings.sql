@@ -12,7 +12,7 @@ FROM
 WHERE
   module = $1;
 
--- name: UpdateSetting :execrows
+-- name: UpdateSetting :one
 UPDATE settings
 SET
   module = COALESCE(sqlc.narg ('module'), module),
@@ -22,4 +22,6 @@ SET
   title = COALESCE(sqlc.narg ('title'), title),
   updated_at = now()
 WHERE
-  id = $1;
+  id = $1
+RETURNING
+  *;
