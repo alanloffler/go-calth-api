@@ -13,5 +13,6 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries) {
 
 	settings.PATCH("/:id", middleware.PermissionMiddleware(q, "settings-update"), handler.Update)
 
+	settings.GET("", middleware.PermissionMiddleware(q, "settings-view"), handler.GetAll)
 	settings.GET("/by-module/:module", middleware.PermissionMiddleware(q, "settings-view"), handler.GetByModule)
 }
