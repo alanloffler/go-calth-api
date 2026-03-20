@@ -11,6 +11,42 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const getSettings = `-- name: GetSettings :many
+SELECT
+  id, module, submodule, key, value, title, created_at, updated_at
+FROM
+  settings
+`
+
+func (q *Queries) GetSettings(ctx context.Context) ([]Setting, error) {
+	rows, err := q.db.Query(ctx, getSettings)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Setting
+	for rows.Next() {
+		var i Setting
+		if err := rows.Scan(
+			&i.ID,
+			&i.Module,
+			&i.Submodule,
+			&i.Key,
+			&i.Value,
+			&i.Title,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getSettingsByModule = `-- name: GetSettingsByModule :many
 SELECT
   id, module, submodule, key, value, title, created_at, updated_at
