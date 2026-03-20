@@ -26,6 +26,16 @@ type UpdateSettingRequest struct {
 	Title     *string `json:"title" binding:"omitempty,min=2,max=100"`
 }
 
+func (h *SettingHandler) GetAll(c *gin.Context) {
+	settings, err := h.repo.GetAll(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al obtener configuraciones", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Configuraciones encontradas", &settings))
+}
+
 func (h *SettingHandler) GetByModule(c *gin.Context) {
 	module := c.Param("module")
 	if module == "" {
