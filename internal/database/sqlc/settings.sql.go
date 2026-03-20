@@ -85,7 +85,7 @@ func (q *Queries) GetSettingsByModule(ctx context.Context, module string) ([]Set
 	return items, nil
 }
 
-const updateSetting = `-- name: UpdateSetting :execrows
+const updateSetting = `-- name: UpdateSetting :one
 UPDATE settings
 SET
   module = COALESCE($2, module),
@@ -96,6 +96,8 @@ SET
   updated_at = now()
 WHERE
   id = $1
+RETURNING
+  id, module, submodule, key, value, title, created_at, updated_at
 `
 
 type UpdateSettingParams struct {
@@ -107,8 +109,8 @@ type UpdateSettingParams struct {
 	Title     pgtype.Text `json:"title"`
 }
 
-func (q *Queries) UpdateSetting(ctx context.Context, arg UpdateSettingParams) (int64, error) {
-	result, err := q.db.Exec(ctx, updateSetting,
+func (q *Queries) UpdateSetting(ctx context.Context, arg UpdateSettingParams) (Setting, error) {
+	row := q.db.QueryRow(ctx, updateSetting,
 		arg.ID,
 		arg.Module,
 		arg.Submodule,
@@ -116,8 +118,16 @@ func (q *Queries) UpdateSetting(ctx context.Context, arg UpdateSettingParams) (i
 		arg.Value,
 		arg.Title,
 	)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected(), nil
+	var i Setting
+	err := row.Scan(
+		&i.ID,
+		&i.Module,
+		&i.Submodule,
+		&i.Key,
+		&i.Value,
+		&i.Title,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
