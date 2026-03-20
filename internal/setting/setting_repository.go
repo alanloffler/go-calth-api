@@ -14,6 +14,10 @@ func NewSettingRepository(q *sqlc.Queries) *SettingRepository {
 	return &SettingRepository{q: q}
 }
 
+func (r *SettingRepository) GetAll(ctx context.Context) ([]sqlc.Setting, error) {
+	return r.q.GetSettings(ctx)
+}
+
 func (r *SettingRepository) GetByModule(ctx context.Context, module string) ([]sqlc.Setting, error) {
 	return r.q.GetSettingsByModule(ctx, module)
 }
