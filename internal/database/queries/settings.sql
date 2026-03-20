@@ -1,3 +1,9 @@
+-- name: GetSettings :many
+SELECT
+  *
+FROM
+  settings;
+
 -- name: GetSettingsByModule :many
 SELECT
   *
