@@ -651,7 +651,7 @@ func (h *EventHandler) UpdateStatus(c *gin.Context) {
 		return
 	}
 
-	event, err := h.repo.UpdateStatus(c.Request.Context(), sqlc.UpdateStatusParams{
+	affected, err := h.repo.UpdateStatus(c.Request.Context(), sqlc.UpdateStatusParams{
 		BusinessID: businessID,
 		ID:         id,
 		Status:     status,
@@ -660,8 +660,12 @@ func (h *EventHandler) UpdateStatus(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar estado del evento", err))
 		return
 	}
+	if affected == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Evento no encontrado"))
+		return
+	}
 
-	c.JSON(http.StatusOK, response.Success("Estado del evento actualizado", &event))
+	c.JSON(http.StatusOK, response.Success[any]("Estado del evento actualizado", nil))
 }
 
 func (h *EventHandler) Delete(c *gin.Context) {
