@@ -25,7 +25,7 @@ WHERE
   business_id = $1
   AND user_id = $2;
 
--- name: UpdatePatientProfile :one
+-- name: UpdatePatientProfile :execrows
 UPDATE patient_profile
 SET
   gender = COALESCE(sqlc.narg ('gender'), gender),
@@ -45,6 +45,4 @@ SET
 WHERE
   business_id = $1
   AND user_id = $2
-  AND deleted_at IS NULL
-RETURNING
-  *;
+  AND deleted_at IS NULL;
