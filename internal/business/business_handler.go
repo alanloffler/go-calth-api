@@ -195,7 +195,7 @@ func (h *BusinessHandler) Update(c *gin.Context) {
 		return
 	}
 
-	business, err := h.repo.Update(c.Request.Context(), sqlc.UpdateBusinessParams{
+	affected, err := h.repo.Update(c.Request.Context(), sqlc.UpdateBusinessParams{
 		ID:             id,
 		Slug:           utils.ToPgText(req.Slug),
 		TaxID:          utils.ToPgText(req.TaxId),
@@ -216,8 +216,12 @@ func (h *BusinessHandler) Update(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar negocio", err))
 		return
 	}
+	if affected == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Negocio no encontrado"))
+		return
+	}
 
-	c.JSON(http.StatusOK, response.Success("Negocio actualizado", &business))
+	c.JSON(http.StatusOK, response.Success[any]("Negocio actualizado", nil))
 }
 
 func (h *BusinessHandler) Delete(c *gin.Context) {
