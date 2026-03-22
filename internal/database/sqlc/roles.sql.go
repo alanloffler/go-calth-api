@@ -402,7 +402,7 @@ func (q *Queries) SoftDeleteRole(ctx context.Context, id pgtype.UUID) (int64, er
 	return result.RowsAffected(), nil
 }
 
-const updateRole = `-- name: UpdateRole :one
+const updateRole = `-- name: UpdateRole :execrows
 UPDATE roles
 SET
   name = COALESCE($2, name),
@@ -412,8 +412,6 @@ SET
 WHERE
   id = $1
   AND deleted_at IS NULL
-RETURNING
-  id, name, value, description, created_at, updated_at, deleted_at
 `
 
 type UpdateRoleParams struct {
@@ -423,22 +421,15 @@ type UpdateRoleParams struct {
 	Description pgtype.Text `json:"description"`
 }
 
-func (q *Queries) UpdateRole(ctx context.Context, arg UpdateRoleParams) (Role, error) {
-	row := q.db.QueryRow(ctx, updateRole,
+func (q *Queries) UpdateRole(ctx context.Context, arg UpdateRoleParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateRole,
 		arg.ID,
 		arg.Name,
 		arg.Value,
 		arg.Description,
 	)
-	var i Role
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Value,
-		&i.Description,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-	)
-	return i, err
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
