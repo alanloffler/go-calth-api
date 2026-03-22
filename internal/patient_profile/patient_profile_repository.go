@@ -22,6 +22,6 @@ func (r *PatientProfileRepository) GetPatientProfileByUserID(ctx context.Context
 	return r.q.GetPatientProfileByUserID(ctx, arg)
 }
 
-func (r *PatientProfileRepository) Update(ctx context.Context, arg sqlc.UpdatePatientProfileParams) (sqlc.PatientProfile, error) {
+func (r *PatientProfileRepository) Update(ctx context.Context, arg sqlc.UpdatePatientProfileParams) (int64, error) {
 	return r.q.UpdatePatientProfile(ctx, arg)
 }
