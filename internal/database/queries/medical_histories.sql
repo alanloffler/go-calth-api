@@ -35,7 +35,7 @@ WHERE
 ORDER BY
   mh.date DESC;
 
--- name: UpdateMedicalHistory :one
+-- name: UpdateMedicalHistory :execrows
 UPDATE medical_histories
 SET
   business_id = COALESCE(sqlc.narg ('business_id'), business_id),
@@ -50,9 +50,7 @@ SET
 WHERE
   business_id = sqlc.arg ('business_id_filter')
   AND id = sqlc.arg ('id')
-  AND deleted_at IS NULL
-RETURNING
-  *;
+  AND deleted_at IS NULL;
 
 -- name: SoftDeleteMedicalHistory :execrows
 UPDATE medical_histories
