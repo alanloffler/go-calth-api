@@ -37,7 +37,7 @@ WHERE
   business_id = $1
   AND user_id = $2;
 
--- name: UpdateProfessionalProfile :one
+-- name: UpdateProfessionalProfile :execrows
 UPDATE professional_profile
 SET
   license_id = COALESCE(sqlc.narg ('license_id'), license_id),
@@ -62,6 +62,4 @@ SET
 WHERE
   business_id = $1
   AND user_id = $2
-  AND deleted_at IS NULL
-RETURNING
-  *;
+  AND deleted_at IS NULL;
