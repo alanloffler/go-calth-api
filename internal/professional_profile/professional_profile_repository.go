@@ -26,6 +26,6 @@ func (r *ProfessionalProfileRepository) GetProfessionalProfileByUserIDWithSoftDe
 	return r.q.GetProfessionalProfileByUserIDWithSoftDeleted(ctx, arg)
 }
 
-func (r *ProfessionalProfileRepository) Update(ctx context.Context, arg sqlc.UpdateProfessionalProfileParams) (sqlc.ProfessionalProfile, error) {
+func (r *ProfessionalProfileRepository) Update(ctx context.Context, arg sqlc.UpdateProfessionalProfileParams) (int64, error) {
 	return r.q.UpdateProfessionalProfile(ctx, arg)
 }
