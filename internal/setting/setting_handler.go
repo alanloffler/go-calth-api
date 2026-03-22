@@ -65,7 +65,7 @@ func (h *SettingHandler) Update(c *gin.Context) {
 		return
 	}
 
-	setting, err := h.repo.Update(c.Request.Context(), sqlc.UpdateSettingParams{
+	affected, err := h.repo.Update(c.Request.Context(), sqlc.UpdateSettingParams{
 		ID:        id,
 		Module:    utils.ToPgText(req.Module),
 		Submodule: utils.ToPgText(req.Submodule),
@@ -77,6 +77,10 @@ func (h *SettingHandler) Update(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar configuraciones", err))
 		return
 	}
+	if affected == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Configuraciones no encontradas"))
+		return
+	}
 
-	c.JSON(http.StatusOK, response.Success("Configuraciones actualizadas", &setting))
+	c.JSON(http.StatusOK, response.Success[any]("Configuraciones actualizadas", nil))
 }
