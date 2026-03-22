@@ -98,7 +98,7 @@ FROM
 WHERE
   r.id = $1;
 
--- name: UpdateRole :one
+-- name: UpdateRole :execrows
 UPDATE roles
 SET
   name = COALESCE(sqlc.narg ('name'), name),
@@ -107,9 +107,7 @@ SET
   updated_at = now()
 WHERE
   id = $1
-  AND deleted_at IS NULL
-RETURNING
-  *;
+  AND deleted_at IS NULL;
 
 -- name: SoftDeleteRole :execrows
 UPDATE roles
