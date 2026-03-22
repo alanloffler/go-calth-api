@@ -226,7 +226,7 @@ func (q *Queries) SoftDeleteMedicalHistory(ctx context.Context, arg SoftDeleteMe
 	return result.RowsAffected(), nil
 }
 
-const updateMedicalHistory = `-- name: UpdateMedicalHistory :one
+const updateMedicalHistory = `-- name: UpdateMedicalHistory :execrows
 UPDATE medical_histories
 SET
   business_id = COALESCE($1, business_id),
@@ -242,8 +242,6 @@ WHERE
   business_id = $9
   AND id = $10
   AND deleted_at IS NULL
-RETURNING
-  id, business_id, user_id, professional_id, event_id, date, reason, recipe, comments, created_at, updated_at, deleted_at
 `
 
 type UpdateMedicalHistoryParams struct {
@@ -259,8 +257,8 @@ type UpdateMedicalHistoryParams struct {
 	ID               pgtype.UUID        `json:"id"`
 }
 
-func (q *Queries) UpdateMedicalHistory(ctx context.Context, arg UpdateMedicalHistoryParams) (MedicalHistory, error) {
-	row := q.db.QueryRow(ctx, updateMedicalHistory,
+func (q *Queries) UpdateMedicalHistory(ctx context.Context, arg UpdateMedicalHistoryParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateMedicalHistory,
 		arg.BusinessID,
 		arg.UserID,
 		arg.ProfessionalID,
@@ -272,20 +270,8 @@ func (q *Queries) UpdateMedicalHistory(ctx context.Context, arg UpdateMedicalHis
 		arg.BusinessIDFilter,
 		arg.ID,
 	)
-	var i MedicalHistory
-	err := row.Scan(
-		&i.ID,
-		&i.BusinessID,
-		&i.UserID,
-		&i.ProfessionalID,
-		&i.EventID,
-		&i.Date,
-		&i.Reason,
-		&i.Recipe,
-		&i.Comments,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-	)
-	return i, err
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
