@@ -313,7 +313,7 @@ func (h *UserHandler) UpdateProfessional(c *gin.Context) {
 
 	qtx := sqlc.New(tx)
 
-	updatedUser, err := qtx.UpdateUser(ctx, sqlc.UpdateUserParams{
+	_, err = qtx.UpdateUser(ctx, sqlc.UpdateUserParams{
 		BusinessID:  businessID,
 		ID:          id,
 		Ic:          utils.ToPgText(req.User.Ic),
@@ -339,7 +339,7 @@ func (h *UserHandler) UpdateProfessional(c *gin.Context) {
 		workingDaysStr = &s
 	}
 
-	updatedProfile, err := qtx.UpdateProfessionalProfile(ctx, sqlc.UpdateProfessionalProfileParams{
+	affected, err := qtx.UpdateProfessionalProfile(ctx, sqlc.UpdateProfessionalProfileParams{
 		BusinessID:          businessID,
 		UserID:              id,
 		LicenseID:           utils.ToPgText(req.Profile.LicenseID),
@@ -356,14 +356,15 @@ func (h *UserHandler) UpdateProfessional(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar el perfil", err))
 		return
 	}
+	if affected == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Perfil de profesional no encontrado"))
+		return
+	}
 
 	if err := tx.Commit(ctx); err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al confirmar la transacción", err))
 		return
 	}
 
-	c.JSON(http.StatusOK, response.Success("Profesional actualizado", &UpdateProfessionalResponse{
-		User:    updatedUser,
-		Profile: updatedProfile,
-	}))
+	c.JSON(http.StatusOK, response.Success[any]("Profesional actualizado", nil))
 }
