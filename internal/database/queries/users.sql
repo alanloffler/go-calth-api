@@ -196,7 +196,7 @@ WHERE
   "user"."business_id" = $1
   AND "user"."id" = $2;
 
--- name: UpdateUser :one
+-- name: UpdateUser :execrows
 UPDATE users
 SET
   ic = COALESCE(sqlc.narg ('ic'), ic),
@@ -210,9 +210,7 @@ SET
 WHERE
   business_id = $1
   AND id = $2
-  AND deleted_at IS NULL
-RETURNING
-  *;
+  AND deleted_at IS NULL;
 
 -- name: DeleteUser :execrows
 DELETE FROM users
