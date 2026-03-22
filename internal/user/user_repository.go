@@ -17,7 +17,7 @@ type UserRepositoryInterface interface {
 	GetByID(ctx context.Context, arg sqlc.GetUserByIDParams) (sqlc.GetUserByIDRow, error)
 	GetByIDWithSoftDeleted(ctx context.Context, arg sqlc.GetUserByIDWithSoftDeletedParams) (sqlc.GetUserByIDWithSoftDeletedRow, error)
 	GetByBusinessID(ctx context.Context, businessID pgtype.UUID) ([]sqlc.GetUsersByBusinessIDRow, error)
-	Update(ctx context.Context, arg sqlc.UpdateUserParams) (sqlc.User, error)
+	Update(ctx context.Context, arg sqlc.UpdateUserParams) (int64, error)
 	Delete(ctx context.Context, arg sqlc.DeleteUserParams) (int64, error)
 	SoftDelete(ctx context.Context, id pgtype.UUID) (int64, error)
 	Restore(ctx context.Context, id pgtype.UUID) (int64, error)
@@ -70,7 +70,7 @@ func (r *UserRepository) GetByBusinessID(ctx context.Context, businessID pgtype.
 	return r.q.GetUsersByBusinessID(ctx, businessID)
 }
 
-func (r *UserRepository) Update(ctx context.Context, arg sqlc.UpdateUserParams) (sqlc.User, error) {
+func (r *UserRepository) Update(ctx context.Context, arg sqlc.UpdateUserParams) (int64, error) {
 	return r.q.UpdateUser(ctx, arg)
 }
 
