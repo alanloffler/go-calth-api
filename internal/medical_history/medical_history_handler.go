@@ -254,13 +254,17 @@ func (h *MedicalHistoryHandler) Update(c *gin.Context) {
 		params.Date = pgtype.Timestamptz{Time: date, Valid: true}
 	}
 
-	mh, err := h.repo.Update(c.Request.Context(), params)
+	affected, err := h.repo.Update(c.Request.Context(), params)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar la historia médica", err))
 		return
 	}
+	if affected == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Historia médica no encontrada"))
+		return
+	}
 
-	c.JSON(http.StatusOK, response.Success("Historia médica actualizada", &mh))
+	c.JSON(http.StatusOK, response.Success[any]("Historia médica actualizada", nil))
 }
 
 func (h *MedicalHistoryHandler) SoftDelete(c *gin.Context) {
