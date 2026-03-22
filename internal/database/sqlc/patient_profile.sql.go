@@ -109,7 +109,7 @@ func (q *Queries) GetPatientProfileByUserID(ctx context.Context, arg GetPatientP
 	return i, err
 }
 
-const updatePatientProfile = `-- name: UpdatePatientProfile :one
+const updatePatientProfile = `-- name: UpdatePatientProfile :execrows
 UPDATE patient_profile
 SET
   gender = COALESCE($3, gender),
@@ -130,8 +130,6 @@ WHERE
   business_id = $1
   AND user_id = $2
   AND deleted_at IS NULL
-RETURNING
-  id, business_id, user_id, gender, birth_day, blood_type, weight, height, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at
 `
 
 type UpdatePatientProfileParams struct {
@@ -146,8 +144,8 @@ type UpdatePatientProfileParams struct {
 	EmergencyContactPhone pgtype.Text    `json:"emergencyContactPhone"`
 }
 
-func (q *Queries) UpdatePatientProfile(ctx context.Context, arg UpdatePatientProfileParams) (PatientProfile, error) {
-	row := q.db.QueryRow(ctx, updatePatientProfile,
+func (q *Queries) UpdatePatientProfile(ctx context.Context, arg UpdatePatientProfileParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updatePatientProfile,
 		arg.BusinessID,
 		arg.UserID,
 		arg.Gender,
@@ -158,21 +156,8 @@ func (q *Queries) UpdatePatientProfile(ctx context.Context, arg UpdatePatientPro
 		arg.EmergencyContactName,
 		arg.EmergencyContactPhone,
 	)
-	var i PatientProfile
-	err := row.Scan(
-		&i.ID,
-		&i.BusinessID,
-		&i.UserID,
-		&i.Gender,
-		&i.BirthDay,
-		&i.BloodType,
-		&i.Weight,
-		&i.Height,
-		&i.EmergencyContactName,
-		&i.EmergencyContactPhone,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-	)
-	return i, err
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
