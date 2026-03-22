@@ -308,7 +308,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 		passwordHash = pgtype.Text{String: string(hashed), Valid: true}
 	}
 
-	user, err := h.repo.Update(c.Request.Context(), sqlc.UpdateUserParams{
+	affected, err := h.repo.Update(c.Request.Context(), sqlc.UpdateUserParams{
 		BusinessID:  businessID,
 		ID:          id,
 		Ic:          utils.ToPgText(req.User.Ic),
@@ -323,8 +323,12 @@ func (h *UserHandler) Update(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar usuario", err))
 		return
 	}
+	if affected == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado"))
+		return
+	}
 
-	c.JSON(http.StatusOK, response.Success("Usuario actualizado", &user))
+	c.JSON(http.StatusOK, response.Success[any]("Usuario actualizado", nil))
 }
 
 func (h *UserHandler) Delete(c *gin.Context) {
