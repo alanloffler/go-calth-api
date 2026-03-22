@@ -915,7 +915,7 @@ func (q *Queries) UpdateRefreshToken(ctx context.Context, arg UpdateRefreshToken
 	return i, err
 }
 
-const updateUser = `-- name: UpdateUser :one
+const updateUser = `-- name: UpdateUser :execrows
 UPDATE users
 SET
   ic = COALESCE($3, ic),
@@ -930,8 +930,6 @@ WHERE
   business_id = $1
   AND id = $2
   AND deleted_at IS NULL
-RETURNING
-  id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
 `
 
 type UpdateUserParams struct {
@@ -946,8 +944,8 @@ type UpdateUserParams struct {
 	PhoneNumber pgtype.Text `json:"phoneNumber"`
 }
 
-func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
-	row := q.db.QueryRow(ctx, updateUser,
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateUser,
 		arg.BusinessID,
 		arg.ID,
 		arg.Ic,
@@ -958,22 +956,8 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		arg.Password,
 		arg.PhoneNumber,
 	)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.Ic,
-		&i.UserName,
-		&i.FirstName,
-		&i.LastName,
-		&i.Email,
-		&i.Password,
-		&i.PhoneNumber,
-		&i.RoleID,
-		&i.BusinessID,
-		&i.RefreshToken,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-	)
-	return i, err
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
