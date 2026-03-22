@@ -57,9 +57,9 @@ func (m *MockUserRepository) GetByBusinessID(ctx context.Context, businessID pgt
 	return args.Get(0).([]sqlc.GetUsersByBusinessIDRow), args.Error(1)
 }
 
-func (m *MockUserRepository) Update(ctx context.Context, arg sqlc.UpdateUserParams) (sqlc.User, error) {
+func (m *MockUserRepository) Update(ctx context.Context, arg sqlc.UpdateUserParams) (int64, error) {
 	args := m.Called(ctx, arg)
-	return args.Get(0).(sqlc.User), args.Error(1)
+	return args.Get(0).(int64), args.Error(1)
 }
 
 func (m *MockUserRepository) Delete(ctx context.Context, arg sqlc.DeleteUserParams) (int64, error) {
