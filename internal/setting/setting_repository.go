@@ -22,6 +22,6 @@ func (r *SettingRepository) GetByModule(ctx context.Context, module string) ([]s
 	return r.q.GetSettingsByModule(ctx, module)
 }
 
-func (r *SettingRepository) Update(ctx context.Context, arg sqlc.UpdateSettingParams) (sqlc.Setting, error) {
+func (r *SettingRepository) Update(ctx context.Context, arg sqlc.UpdateSettingParams) (int64, error) {
 	return r.q.UpdateSetting(ctx, arg)
 }
