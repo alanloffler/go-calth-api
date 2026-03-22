@@ -32,7 +32,7 @@ FROM
 WHERE
   id = $1;
 
--- name: UpdatePermission :one
+-- name: UpdatePermission :execrows
 UPDATE permissions
 SET
   name = COALESCE(sqlc.narg ('name'), name),
@@ -42,9 +42,7 @@ SET
   updated_at = now()
 WHERE
   id = $1
-  AND deleted_at IS NULL
-RETURNING
-  *;
+  AND deleted_at IS NULL;
 
 -- name: SoftDeletePermission :execrows
 UPDATE permissions
