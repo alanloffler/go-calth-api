@@ -238,7 +238,7 @@ func (q *Queries) GetBusinesses(ctx context.Context) ([]Business, error) {
 	return items, nil
 }
 
-const updateBusiness = `-- name: UpdateBusiness :one
+const updateBusiness = `-- name: UpdateBusiness :execrows
 UPDATE businesses
 SET
   slug = COALESCE($2, slug),
@@ -257,8 +257,6 @@ SET
   website = COALESCE($15, website)
 WHERE
   id = $1
-RETURNING
-  id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at
 `
 
 type UpdateBusinessParams struct {
@@ -279,8 +277,8 @@ type UpdateBusinessParams struct {
 	Website        pgtype.Text `json:"website"`
 }
 
-func (q *Queries) UpdateBusiness(ctx context.Context, arg UpdateBusinessParams) (Business, error) {
-	row := q.db.QueryRow(ctx, updateBusiness,
+func (q *Queries) UpdateBusiness(ctx context.Context, arg UpdateBusinessParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateBusiness,
 		arg.ID,
 		arg.Slug,
 		arg.TaxID,
@@ -297,26 +295,8 @@ func (q *Queries) UpdateBusiness(ctx context.Context, arg UpdateBusinessParams) 
 		arg.WhatsappNumber,
 		arg.Website,
 	)
-	var i Business
-	err := row.Scan(
-		&i.ID,
-		&i.Slug,
-		&i.TaxID,
-		&i.CompanyName,
-		&i.TradeName,
-		&i.Description,
-		&i.Street,
-		&i.City,
-		&i.Province,
-		&i.Country,
-		&i.ZipCode,
-		&i.Email,
-		&i.PhoneNumber,
-		&i.WhatsappNumber,
-		&i.Website,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-	)
-	return i, err
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
