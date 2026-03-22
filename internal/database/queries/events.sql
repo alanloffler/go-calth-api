@@ -631,7 +631,7 @@ WHERE
   AND e.id = $2
   AND e.deleted_at IS NULL;
 
--- name: UpdateStatus :one
+-- name: UpdateStatus :execrows
 UPDATE events
 SET
   status = $3,
@@ -639,19 +639,7 @@ SET
 WHERE
   business_id = $1
   AND id = $2
-  AND deleted_at IS NULL
-RETURNING
-  id,
-  title,
-  start_date,
-  end_date,
-  business_id,
-  professional_id,
-  user_id,
-  status,
-  created_at,
-  updated_at,
-  deleted_at;
+  AND deleted_at IS NULL;
 
 -- name: Update :one
 UPDATE events
