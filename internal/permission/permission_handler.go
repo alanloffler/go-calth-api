@@ -181,7 +181,7 @@ func (h *PermissionHandler) Update(c *gin.Context) {
 		return
 	}
 
-	permission, err := h.repo.Update(c.Request.Context(), sqlc.UpdatePermissionParams{
+	affected, err := h.repo.Update(c.Request.Context(), sqlc.UpdatePermissionParams{
 		ID:          id,
 		Name:        utils.ToPgText(req.Name),
 		Category:    utils.ToPgText(req.Category),
@@ -192,8 +192,12 @@ func (h *PermissionHandler) Update(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar permiso", err))
 		return
 	}
+	if affected == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Permiso no encontrado"))
+		return
+	}
 
-	c.JSON(http.StatusOK, response.Success("Permiso actualizado", &permission))
+	c.JSON(http.StatusOK, response.Success[any]("Permiso actualizado", nil))
 }
 
 func (h *PermissionHandler) Delete(c *gin.Context) {
