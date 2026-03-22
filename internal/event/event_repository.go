@@ -59,7 +59,7 @@ func (r *EventRepository) Update(ctx context.Context, arg sqlc.UpdateParams) (sq
 	return r.q.Update(ctx, arg)
 }
 
-func (r *EventRepository) UpdateStatus(ctx context.Context, arg sqlc.UpdateStatusParams) (sqlc.Event, error) {
+func (r *EventRepository) UpdateStatus(ctx context.Context, arg sqlc.UpdateStatusParams) (int64, error) {
 	return r.q.UpdateStatus(ctx, arg)
 }
 
