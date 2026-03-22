@@ -158,7 +158,7 @@ func (q *Queries) GetProfessionalProfileByUserIDWithSoftDeleted(ctx context.Cont
 	return i, err
 }
 
-const updateProfessionalProfile = `-- name: UpdateProfessionalProfile :one
+const updateProfessionalProfile = `-- name: UpdateProfessionalProfile :execrows
 UPDATE professional_profile
 SET
   license_id = COALESCE($3, license_id),
@@ -184,8 +184,6 @@ WHERE
   business_id = $1
   AND user_id = $2
   AND deleted_at IS NULL
-RETURNING
-  id, business_id, user_id, license_id, professional_prefix, specialty, working_days, start_hour, end_hour, slot_duration, daily_exception_start, daily_exception_end, created_at, updated_at, deleted_at
 `
 
 type UpdateProfessionalProfileParams struct {
@@ -202,8 +200,8 @@ type UpdateProfessionalProfileParams struct {
 	DailyExceptionEnd   pgtype.Text `json:"dailyExceptionEnd"`
 }
 
-func (q *Queries) UpdateProfessionalProfile(ctx context.Context, arg UpdateProfessionalProfileParams) (ProfessionalProfile, error) {
-	row := q.db.QueryRow(ctx, updateProfessionalProfile,
+func (q *Queries) UpdateProfessionalProfile(ctx context.Context, arg UpdateProfessionalProfileParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateProfessionalProfile,
 		arg.BusinessID,
 		arg.UserID,
 		arg.LicenseID,
@@ -216,23 +214,8 @@ func (q *Queries) UpdateProfessionalProfile(ctx context.Context, arg UpdateProfe
 		arg.DailyExceptionStart,
 		arg.DailyExceptionEnd,
 	)
-	var i ProfessionalProfile
-	err := row.Scan(
-		&i.ID,
-		&i.BusinessID,
-		&i.UserID,
-		&i.LicenseID,
-		&i.ProfessionalPrefix,
-		&i.Specialty,
-		&i.WorkingDays,
-		&i.StartHour,
-		&i.EndHour,
-		&i.SlotDuration,
-		&i.DailyExceptionStart,
-		&i.DailyExceptionEnd,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-	)
-	return i, err
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
