@@ -58,7 +58,7 @@ FROM
 WHERE
   slug = $1;
 
--- name: UpdateBusiness :one
+-- name: UpdateBusiness :execrows
 UPDATE businesses
 SET
   slug = COALESCE(sqlc.narg ('slug'), slug),
@@ -76,9 +76,7 @@ SET
   whatsapp_number = COALESCE(sqlc.narg ('whatsapp_number'), whatsapp_number),
   website = COALESCE(sqlc.narg ('website'), website)
 WHERE
-  id = $1
-RETURNING
-  *;
+  id = $1;
 
 -- name: DeleteBusiness :execrows
 DELETE FROM businesses
