@@ -361,7 +361,7 @@ func (h *UserHandler) UpdatePatient(c *gin.Context) {
 
 	qtx := sqlc.New(tx)
 
-	updatedUser, err := qtx.UpdateUser(ctx, sqlc.UpdateUserParams{
+	_, err = qtx.UpdateUser(ctx, sqlc.UpdateUserParams{
 		BusinessID:  businessID,
 		ID:          id,
 		Ic:          utils.ToPgText(req.User.Ic),
@@ -377,7 +377,7 @@ func (h *UserHandler) UpdatePatient(c *gin.Context) {
 		return
 	}
 
-	updatedProfile, err := qtx.UpdatePatientProfile(ctx, sqlc.UpdatePatientProfileParams{
+	affected, err := qtx.UpdatePatientProfile(ctx, sqlc.UpdatePatientProfileParams{
 		BusinessID:            businessID,
 		UserID:                id,
 		Gender:                utils.ToPgText(req.Profile.Gender),
@@ -392,14 +392,15 @@ func (h *UserHandler) UpdatePatient(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar perfil", err))
 		return
 	}
+	if affected == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Perfil de paciente no encontrado"))
+		return
+	}
 
 	if err := tx.Commit(ctx); err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al confirmar transacción", err))
 		return
 	}
 
-	c.JSON(http.StatusOK, response.Success("Paciente actualizado", &UpdatePatientResponse{
-		User:    updatedUser,
-		Profile: updatedProfile,
-	}))
+	c.JSON(http.StatusOK, response.Success[any]("Paciente actualizado", nil))
 }
