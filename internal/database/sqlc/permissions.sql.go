@@ -204,7 +204,7 @@ func (q *Queries) SoftDeletePermission(ctx context.Context, id pgtype.UUID) (int
 	return result.RowsAffected(), nil
 }
 
-const updatePermission = `-- name: UpdatePermission :one
+const updatePermission = `-- name: UpdatePermission :execrows
 UPDATE permissions
 SET
   name = COALESCE($2, name),
@@ -215,8 +215,6 @@ SET
 WHERE
   id = $1
   AND deleted_at IS NULL
-RETURNING
-  id, name, category, action_key, description, created_at, updated_at, deleted_at
 `
 
 type UpdatePermissionParams struct {
@@ -227,24 +225,16 @@ type UpdatePermissionParams struct {
 	Description pgtype.Text `json:"description"`
 }
 
-func (q *Queries) UpdatePermission(ctx context.Context, arg UpdatePermissionParams) (Permission, error) {
-	row := q.db.QueryRow(ctx, updatePermission,
+func (q *Queries) UpdatePermission(ctx context.Context, arg UpdatePermissionParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updatePermission,
 		arg.ID,
 		arg.Name,
 		arg.Category,
 		arg.ActionKey,
 		arg.Description,
 	)
-	var i Permission
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Category,
-		&i.ActionKey,
-		&i.Description,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-	)
-	return i, err
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
