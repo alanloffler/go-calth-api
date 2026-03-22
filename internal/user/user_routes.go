@@ -30,6 +30,10 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool
 	users.GET("/:id/professional/profile", handler.GetProfessionalByID)
 	users.GET("/:id/professional/profile/soft", handler.GetProfessionalByIDWithSoftDeleted)
 
+	users.GET("/check/email/:email", handler.CheckEmailAvailability)
+	users.GET("/check/ic/:ic", handler.CheckIcAvailability)
+	users.GET("/check/username/:userName", handler.CheckUsernameAvailability)
+
 	users.PATCH("/:id/admin", handler.UpdateAdmin)
 	users.PATCH("/:id/patient", handler.UpdatePatient)
 	users.PATCH("/:id/professional", handler.UpdateProfessional)
@@ -43,8 +47,4 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool
 	users.DELETE("/:id/patient/soft", handler.SoftDelete)
 	users.DELETE("/:id/professional", handler.Delete)
 	users.DELETE("/:id/professional/soft", handler.SoftDelete)
-	// Checks
-	users.GET("/check/email/:email", handler.CheckEmailAvailability)
-	users.GET("/check/ic/:ic", handler.CheckIcAvailability)
-	users.GET("/check/username/:userName", handler.CheckUsernameAvailability)
 }
