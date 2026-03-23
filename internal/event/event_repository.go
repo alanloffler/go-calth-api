@@ -55,6 +55,10 @@ func (r *EventRepository) GetByID(ctx context.Context, arg sqlc.GetByIDParams) (
 	return r.q.GetByID(ctx, arg)
 }
 
+func (r *EventRepository) CheckRecurring(ctx context.Context, arg sqlc.CheckRecurringEventsParams) ([]sqlc.CheckRecurringEventsRow, error) {
+	return r.q.CheckRecurringEvents(ctx, arg)
+}
+
 func (r *EventRepository) Update(ctx context.Context, arg sqlc.UpdateParams) (sqlc.Event, error) {
 	return r.q.Update(ctx, arg)
 }
