@@ -631,6 +631,20 @@ WHERE
   AND e.id = $2
   AND e.deleted_at IS NULL;
 
+-- name: CheckRecurringEvents :many
+SELECT
+  id,
+  business_id,
+  professional_id,
+  start_date
+FROM
+  events
+WHERE
+  business_id = $1
+  AND professional_id = $2
+  AND start_date >= $3
+  AND start_date < ($3 + ($4 || ' days')::interval);
+
 -- name: UpdateStatus :execrows
 UPDATE events
 SET
