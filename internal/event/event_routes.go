@@ -13,9 +13,10 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries) {
 
 	events.POST("", middleware.PermissionMiddleware(q, "events-create"), handler.Create)
 
-	events.GET("/professional/:id", middleware.PermissionMiddleware(q, "events-view"), handler.GetByProfessionalID)
+	events.GET("/check-recurring", middleware.PermissionMiddleware(q, "events-view"), handler.CheckRecurring)
 	events.GET("/business", middleware.PermissionMiddleware(q, "events-view"), handler.GetByBusinessID)
 	events.GET("/filtered", middleware.PermissionMiddleware(q, "events-view"), handler.GetFiltered)
+	events.GET("/professional/:id", middleware.PermissionMiddleware(q, "events-view"), handler.GetByProfessionalID)
 	events.GET("/days-with-events/:id", middleware.PermissionMiddleware(q, "events-view"), handler.GetDaysWithEvents)
 	// events.GET("/professional/:id/date-array/:day", middleware.PermissionMiddleware(q, "events-view"), handler.GetByProfessionalDay)
 	events.GET("/patient/:patient_id", middleware.PermissionMiddleware(q, "events-view"), handler.GetByBusinessProfessionalPatient)
