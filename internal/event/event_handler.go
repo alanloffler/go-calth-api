@@ -540,6 +540,66 @@ func (h *EventHandler) GetByID(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Success("Evento encontrado", &event))
 }
 
+func (h *EventHandler) CheckRecurring(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	var professionalID pgtype.UUID
+	if err := professionalID.Scan(c.Query("professionalId")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID del profesional inválido", err))
+		return
+	}
+
+	startDateStr := c.Query("startDate")
+	parsedTime, err := time.Parse(time.RFC3339, startDateStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de fecha inválido", err))
+		return
+	}
+
+	occurrences, err := strconv.Atoi(c.Query("days"))
+	if err != nil || occurrences <= 0 {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Parámetro 'days' inválido"))
+		return
+	}
+
+	recurringDates := generateRecurringDates(parsedTime, int32(occurrences))
+
+	existingEvents, err := h.repo.CheckRecurring(c, sqlc.CheckRecurringEventsParams{
+		BusinessID:     businessID,
+		ProfessionalID: professionalID,
+		StartDate:      pgtype.Timestamptz{Time: parsedTime, Valid: true},
+		Column4:        pgtype.Text{String: strconv.Itoa(occurrences * 7), Valid: true},
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al verificar eventos recurrentes", err))
+		return
+	}
+
+	busySlots := make(map[string]bool, len(existingEvents))
+	for _, e := range existingEvents {
+		busySlots[e.StartDate.Time.UTC().Format("2006-01-02T15:04")] = true
+	}
+
+	type recurringResult struct {
+		Date      time.Time `json:"date"`
+		Available bool      `json:"available"`
+	}
+
+	results := make([]recurringResult, len(recurringDates))
+	for i, d := range recurringDates {
+		results[i] = recurringResult{
+			Date:      d,
+			Available: !busySlots[d.UTC().Format("2006-01-02T15:04")],
+		}
+	}
+
+	c.JSON(http.StatusOK, response.Success("Recurrencia verificada", &results))
+}
+
 func (h *EventHandler) Update(c *gin.Context) {
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
