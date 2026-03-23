@@ -11,6 +11,65 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const checkRecurringEvents = `-- name: CheckRecurringEvents :many
+SELECT
+  id,
+  business_id,
+  professional_id,
+  start_date
+FROM
+  events
+WHERE
+  business_id = $1
+  AND professional_id = $2
+  AND start_date >= $3
+  AND start_date < ($3 + ($4 || ' days')::interval)
+`
+
+type CheckRecurringEventsParams struct {
+	BusinessID     pgtype.UUID        `json:"businessId"`
+	ProfessionalID pgtype.UUID        `json:"professionalId"`
+	StartDate      pgtype.Timestamptz `json:"startDate"`
+	Column4        pgtype.Text        `json:"column4"`
+}
+
+type CheckRecurringEventsRow struct {
+	ID             pgtype.UUID        `json:"id"`
+	BusinessID     pgtype.UUID        `json:"businessId"`
+	ProfessionalID pgtype.UUID        `json:"professionalId"`
+	StartDate      pgtype.Timestamptz `json:"startDate"`
+}
+
+func (q *Queries) CheckRecurringEvents(ctx context.Context, arg CheckRecurringEventsParams) ([]CheckRecurringEventsRow, error) {
+	rows, err := q.db.Query(ctx, checkRecurringEvents,
+		arg.BusinessID,
+		arg.ProfessionalID,
+		arg.StartDate,
+		arg.Column4,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CheckRecurringEventsRow
+	for rows.Next() {
+		var i CheckRecurringEventsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.BusinessID,
+			&i.ProfessionalID,
+			&i.StartDate,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const createEvent = `-- name: CreateEvent :one
 INSERT INTO
   events (
