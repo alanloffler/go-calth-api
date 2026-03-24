@@ -314,7 +314,7 @@ ORDER BY
   e.start_date::date DESC,
   e.end_date::time DESC;
 
--- name: GetFiltered :many
+-- name: GetEventsFiltered :many
 SELECT
   jsonb_build_object(
     'id',
@@ -329,6 +329,8 @@ SELECT
     e.business_id,
     'userId',
     e.user_id,
+    'recurrentId',
+    e.recurrent_id,
     'status',
     e.status,
     'createdAt',
