@@ -83,7 +83,7 @@ INSERT INTO
 VALUES
   ($1, $2, $3, $4, $5, $6)
 RETURNING
-  id, title, start_date, end_date, business_id, professional_id, user_id, status, created_at, updated_at, deleted_at
+  id, title, start_date, end_date, business_id, professional_id, user_id, status, recurrent_id, created_at, updated_at, deleted_at
 `
 
 type CreateEventParams struct {
@@ -114,6 +114,7 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		&i.ProfessionalID,
 		&i.UserID,
 		&i.Status,
+		&i.RecurrentID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
@@ -1065,7 +1066,21 @@ type UpdateParams struct {
 	Status         NullEventStatus    `json:"status"`
 }
 
-func (q *Queries) Update(ctx context.Context, arg UpdateParams) (Event, error) {
+type UpdateRow struct {
+	ID             pgtype.UUID        `json:"id"`
+	Title          string             `json:"title"`
+	StartDate      pgtype.Timestamptz `json:"startDate"`
+	EndDate        pgtype.Timestamptz `json:"endDate"`
+	BusinessID     pgtype.UUID        `json:"businessId"`
+	ProfessionalID pgtype.UUID        `json:"professionalId"`
+	UserID         pgtype.UUID        `json:"userId"`
+	Status         EventStatus        `json:"status"`
+	CreatedAt      pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt      pgtype.Timestamptz `json:"updatedAt"`
+	DeletedAt      pgtype.Timestamptz `json:"deletedAt"`
+}
+
+func (q *Queries) Update(ctx context.Context, arg UpdateParams) (UpdateRow, error) {
 	row := q.db.QueryRow(ctx, update,
 		arg.BusinessID,
 		arg.ID,
@@ -1076,7 +1091,7 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (Event, error) {
 		arg.UserID,
 		arg.Status,
 	)
-	var i Event
+	var i UpdateRow
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
