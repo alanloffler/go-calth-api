@@ -241,7 +241,7 @@ func (h *EventHandler) GetByProfessionalID(c *gin.Context) {
 		endDate = pgtype.Timestamptz{Time: parsedEndDate, Valid: true}
 	}
 
-	rawEvents, err := h.repo.GetByProfessionalID(c.Request.Context(), sqlc.GetByProfessionalIDParams{
+	rawEvents, err := h.repo.GetByProfessionalID(c.Request.Context(), sqlc.GetEventsByProfessionalIDParams{
 		BusinessID:     businessID,
 		ProfessionalID: id,
 		StartDate:      startDate,
