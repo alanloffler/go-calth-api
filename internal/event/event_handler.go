@@ -112,6 +112,56 @@ func (h *EventHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Created("Evento creado", &event))
 }
 
+func (h *EventHandler) createRecurring(c *gin.Context, req CreateEventRequest, startTime, endTime time.Time, businessID, professionalID, userID pgtype.UUID) {
+	ctx := c.Request.Context()
+	duration := endTime.Sub(startTime)
+
+	tx, err := h.pool.Begin(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al iniciar transacción", err))
+		return
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := sqlc.New(tx)
+	events := make([]sqlc.Event, 0, len(req.RecurringDates))
+
+	for _, dateStr := range req.RecurringDates {
+		recurringStart, err := time.Parse(time.RFC3339, dateStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de fecha recurrente inválido", err))
+			return
+		}
+		recurringEnd := recurringStart.Add(duration)
+
+		event, err := qtx.CreateEvent(ctx, sqlc.CreateEventParams{
+			Title:          req.Title,
+			StartDate:      pgtype.Timestamptz{Time: recurringStart, Valid: true},
+			EndDate:        pgtype.Timestamptz{Time: recurringEnd, Valid: true},
+			BusinessID:     businessID,
+			ProfessionalID: professionalID,
+			UserID:         userID,
+		})
+		if err != nil {
+			var pgErr pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+				c.JSON(http.StatusConflict, response.Error(http.StatusConflict, "Uno o más horarios ya están ocupados"))
+				return
+			}
+			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al crear turnos recurrentes", err))
+			return
+		}
+		events = append(events, event)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al confirmar transacción", err))
+		return
+	}
+
+	c.JSON(http.StatusCreated, response.Created("Turnos recurrentes creados", &events))
+}
+
 func (h *EventHandler) GetByBusinessID(c *gin.Context) {
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
