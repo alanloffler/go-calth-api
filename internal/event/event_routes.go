@@ -4,11 +4,12 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/alanloffler/go-calth-api/internal/middleware"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries) {
+func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool) {
 	var repo *EventRepository = NewEventRepository(q)
-	var handler *EventHandler = NewEventHandler(repo)
+	var handler *EventHandler = NewEventHandler(repo, pool)
 	var events *gin.RouterGroup = router.Group("/events")
 
 	events.POST("", middleware.PermissionMiddleware(q, "events-create"), handler.Create)
