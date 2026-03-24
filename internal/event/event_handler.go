@@ -404,7 +404,7 @@ func (h *EventHandler) GetFiltered(c *gin.Context) {
 		return
 	}
 
-	params := sqlc.GetFilteredParams{
+	params := sqlc.GetEventsFilteredParams{
 		BusinessID: businessID,
 	}
 
