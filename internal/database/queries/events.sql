@@ -6,10 +6,11 @@ INSERT INTO
     end_date,
     business_id,
     professional_id,
-    user_id
+    user_id,
+    recurrent_id
   )
 VALUES
-  ($1, $2, $3, $4, $5, $6)
+  ($1, $2, $3, $4, $5, $6, $7)
 RETURNING
   *;
 
