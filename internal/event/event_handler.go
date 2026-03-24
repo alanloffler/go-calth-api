@@ -40,6 +40,7 @@ type UpdateEventRequest struct {
 	ProfessionalID *string `json:"professionalId" binding:"omitempty,uuid"`
 	UserID         *string `json:"userId" binding:"omitempty,uuid"`
 	Status         *string `json:"status" binding:"omitempty"`
+	RecurrentID    *string `json:"recurrentId" binding:"omitempty,uuid"`
 }
 
 type UpdateEventStatusRequest struct {
@@ -689,7 +690,7 @@ func (h *EventHandler) Update(c *gin.Context) {
 		return
 	}
 
-	params := sqlc.UpdateParams{
+	params := sqlc.UpdateEventParams{
 		BusinessID: businessID,
 		ID:         id,
 	}
@@ -743,6 +744,15 @@ func (h *EventHandler) Update(c *gin.Context) {
 			return
 		}
 		params.Status = sqlc.NullEventStatus{EventStatus: status, Valid: true}
+	}
+
+	if req.RecurrentID != nil {
+		var recurrentID pgtype.UUID
+		if err := recurrentID.Scan(*req.RecurrentID); err != nil {
+			c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID de recurrente inválido", err))
+			return
+		}
+		params.RecurrentID = recurrentID
 	}
 
 	event, err := h.repo.Update(c.Request.Context(), params)
