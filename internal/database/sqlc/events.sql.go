@@ -805,7 +805,7 @@ func (q *Queries) GetEventsByProfessionalID(ctx context.Context, arg GetEventsBy
 	return items, nil
 }
 
-const getFiltered = `-- name: GetFiltered :many
+const getEventsFiltered = `-- name: GetEventsFiltered :many
 SELECT
   jsonb_build_object(
     'id',
@@ -820,6 +820,8 @@ SELECT
     e.business_id,
     'userId',
     e.user_id,
+    'recurrentId',
+    e.recurrent_id,
     'status',
     e.status,
     'createdAt',
@@ -934,7 +936,7 @@ OFFSET
   $9
 `
 
-type GetFilteredParams struct {
+type GetEventsFilteredParams struct {
 	BusinessID     pgtype.UUID      `json:"businessId"`
 	StartOfDay     pgtype.Timestamp `json:"startOfDay"`
 	EndOfDay       pgtype.Timestamp `json:"endOfDay"`
@@ -947,8 +949,8 @@ type GetFilteredParams struct {
 	QueryLimit     int32            `json:"queryLimit"`
 }
 
-func (q *Queries) GetFiltered(ctx context.Context, arg GetFilteredParams) ([][]byte, error) {
-	rows, err := q.db.Query(ctx, getFiltered,
+func (q *Queries) GetEventsFiltered(ctx context.Context, arg GetEventsFilteredParams) ([][]byte, error) {
+	rows, err := q.db.Query(ctx, getEventsFiltered,
 		arg.BusinessID,
 		arg.StartOfDay,
 		arg.EndOfDay,
