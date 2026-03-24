@@ -143,7 +143,7 @@ func (h *EventHandler) createRecurring(c *gin.Context, req CreateEventRequest, s
 			UserID:         userID,
 		})
 		if err != nil {
-			var pgErr pgconn.PgError
+			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && pgErr.Code == "23505" {
 				c.JSON(http.StatusConflict, response.Error(http.StatusConflict, "Uno o más horarios ya están ocupados"))
 				return
