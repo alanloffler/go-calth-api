@@ -86,6 +86,7 @@ type Event struct {
 	ProfessionalID pgtype.UUID        `json:"professionalId"`
 	UserID         pgtype.UUID        `json:"userId"`
 	Status         EventStatus        `json:"status"`
+	RecurrentID    pgtype.UUID        `json:"recurrentId"`
 	CreatedAt      pgtype.Timestamptz `json:"createdAt"`
 	UpdatedAt      pgtype.Timestamptz `json:"updatedAt"`
 	DeletedAt      pgtype.Timestamptz `json:"deletedAt"`
