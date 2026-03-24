@@ -1030,7 +1030,7 @@ func (q *Queries) GetFilteredCount(ctx context.Context, arg GetFilteredCountPara
 	return total, err
 }
 
-const update = `-- name: Update :one
+const updateEvent = `-- name: UpdateEvent :one
 UPDATE events
 SET
   title = COALESCE($3, title),
@@ -1039,6 +1039,7 @@ SET
   professional_id = COALESCE($6, professional_id),
   user_id = COALESCE($7, user_id),
   status = COALESCE($8, status),
+  recurrent_id = COALESCE($9, recurrent_id),
   updated_at = now()
 WHERE
   business_id = $1
@@ -1052,13 +1053,14 @@ RETURNING
   business_id,
   professional_id,
   user_id,
+  recurrent_id,
   status,
   created_at,
   updated_at,
   deleted_at
 `
 
-type UpdateParams struct {
+type UpdateEventParams struct {
 	BusinessID     pgtype.UUID        `json:"businessId"`
 	ID             pgtype.UUID        `json:"id"`
 	Title          pgtype.Text        `json:"title"`
@@ -1067,9 +1069,10 @@ type UpdateParams struct {
 	ProfessionalID pgtype.UUID        `json:"professionalId"`
 	UserID         pgtype.UUID        `json:"userId"`
 	Status         NullEventStatus    `json:"status"`
+	RecurrentID    pgtype.UUID        `json:"recurrentId"`
 }
 
-type UpdateRow struct {
+type UpdateEventRow struct {
 	ID             pgtype.UUID        `json:"id"`
 	Title          string             `json:"title"`
 	StartDate      pgtype.Timestamptz `json:"startDate"`
@@ -1077,14 +1080,15 @@ type UpdateRow struct {
 	BusinessID     pgtype.UUID        `json:"businessId"`
 	ProfessionalID pgtype.UUID        `json:"professionalId"`
 	UserID         pgtype.UUID        `json:"userId"`
+	RecurrentID    pgtype.UUID        `json:"recurrentId"`
 	Status         EventStatus        `json:"status"`
 	CreatedAt      pgtype.Timestamptz `json:"createdAt"`
 	UpdatedAt      pgtype.Timestamptz `json:"updatedAt"`
 	DeletedAt      pgtype.Timestamptz `json:"deletedAt"`
 }
 
-func (q *Queries) Update(ctx context.Context, arg UpdateParams) (UpdateRow, error) {
-	row := q.db.QueryRow(ctx, update,
+func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (UpdateEventRow, error) {
+	row := q.db.QueryRow(ctx, updateEvent,
 		arg.BusinessID,
 		arg.ID,
 		arg.Title,
@@ -1093,8 +1097,9 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (UpdateRow, erro
 		arg.ProfessionalID,
 		arg.UserID,
 		arg.Status,
+		arg.RecurrentID,
 	)
-	var i UpdateRow
+	var i UpdateEventRow
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
@@ -1103,6 +1108,7 @@ func (q *Queries) Update(ctx context.Context, arg UpdateParams) (UpdateRow, erro
 		&i.BusinessID,
 		&i.ProfessionalID,
 		&i.UserID,
+		&i.RecurrentID,
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
