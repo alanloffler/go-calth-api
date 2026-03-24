@@ -2,6 +2,7 @@ package event
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/common/response"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -72,9 +74,6 @@ func (h *EventHandler) Create(c *gin.Context) {
 		return
 	}
 
-	startDate := pgtype.Timestamptz{Time: startTime, Valid: true}
-	endDate := pgtype.Timestamptz{Time: endTime, Valid: true}
-
 	var professionalID pgtype.UUID
 	if err := professionalID.Scan(req.ProfessionalID); err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID del profesional inválido", err))
@@ -87,15 +86,25 @@ func (h *EventHandler) Create(c *gin.Context) {
 		return
 	}
 
+	if len(req.RecurringDates) > 0 {
+		h.createRecurring(c, req, startTime, endTime, businessID, professionalID, userID)
+		return
+	}
+
 	event, err := h.repo.Create(c.Request.Context(), sqlc.CreateEventParams{
 		Title:          req.Title,
-		StartDate:      startDate,
-		EndDate:        endDate,
+		StartDate:      pgtype.Timestamptz{Time: startTime, Valid: true},
+		EndDate:        pgtype.Timestamptz{Time: endTime, Valid: true},
 		BusinessID:     businessID,
 		ProfessionalID: professionalID,
 		UserID:         userID,
 	})
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			c.JSON(http.StatusConflict, response.Error(http.StatusConflict, "El horario ya fue ocupado por otro usuario"))
+			return
+		}
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al crear evento", err))
 		return
 	}
