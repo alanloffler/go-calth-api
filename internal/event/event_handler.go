@@ -29,7 +29,7 @@ type CreateEventRequest struct {
 	EndDate        string   `json:"endDate" binding:"required,datetime=2006-01-02T15:04:05Z07:00"`
 	ProfessionalID string   `json:"professionalId" binding:"required,uuid"`
 	UserID         string   `json:"userId" binding:"required,uuid"`
-	RecurringDates []string `json:"recurringDates" binding="omitempty,dive,datetime="2006-01-02T15:04:05Z07:00"`
+	RecurringDates []string `json:"recurringDates" binding:"omitempty,dive,datetime=2006-01-02T15:04:05Z07:00"`
 }
 
 type UpdateEventRequest struct {
