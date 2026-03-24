@@ -78,10 +78,11 @@ INSERT INTO
     end_date,
     business_id,
     professional_id,
-    user_id
+    user_id,
+    recurrent_id
   )
 VALUES
-  ($1, $2, $3, $4, $5, $6)
+  ($1, $2, $3, $4, $5, $6, $7)
 RETURNING
   id, title, start_date, end_date, business_id, professional_id, user_id, status, recurrent_id, created_at, updated_at, deleted_at
 `
@@ -93,6 +94,7 @@ type CreateEventParams struct {
 	BusinessID     pgtype.UUID        `json:"businessId"`
 	ProfessionalID pgtype.UUID        `json:"professionalId"`
 	UserID         pgtype.UUID        `json:"userId"`
+	RecurrentID    pgtype.UUID        `json:"recurrentId"`
 }
 
 func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error) {
@@ -103,6 +105,7 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		arg.BusinessID,
 		arg.ProfessionalID,
 		arg.UserID,
+		arg.RecurrentID,
 	)
 	var i Event
 	err := row.Scan(
