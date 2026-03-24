@@ -13,18 +13,21 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type EventHandler struct {
 	repo *EventRepository
+	pool *pgxpool.Pool
 }
 
 type CreateEventRequest struct {
-	Title          string `json:"title" binding:"required,min=3,max=255"`
-	StartDate      string `json:"startDate" binding:"required,datetime=2006-01-02T15:04:05Z07:00"`
-	EndDate        string `json:"endDate" binding:"required,datetime=2006-01-02T15:04:05Z07:00"`
-	ProfessionalID string `json:"professionalId" binding:"required,uuid"`
-	UserID         string `json:"userId" binding:"required,uuid"`
+	Title          string   `json:"title" binding:"required,min=3,max=255"`
+	StartDate      string   `json:"startDate" binding:"required,datetime=2006-01-02T15:04:05Z07:00"`
+	EndDate        string   `json:"endDate" binding:"required,datetime=2006-01-02T15:04:05Z07:00"`
+	ProfessionalID string   `json:"professionalId" binding:"required,uuid"`
+	UserID         string   `json:"userId" binding:"required,uuid"`
+	RecurringDates []string `json:"recurringDates" binding="omitempty,dive,datetime="2006-01-02T15:04:05Z07:00"`
 }
 
 type UpdateEventRequest struct {
@@ -40,8 +43,8 @@ type UpdateEventStatusRequest struct {
 	Status string `json:"status" binding:"required"`
 }
 
-func NewEventHandler(repo *EventRepository) *EventHandler {
-	return &EventHandler{repo: repo}
+func NewEventHandler(repo *EventRepository, pool *pgxpool.Pool) *EventHandler {
+	return &EventHandler{repo: repo, pool: pool}
 }
 
 func (h *EventHandler) Create(c *gin.Context) {
