@@ -14,7 +14,7 @@ VALUES
 RETURNING
   *;
 
--- name: GetByProfessionalID :many
+-- name: GetEventsByProfessionalID :many
 SELECT
   jsonb_build_object(
     'id',
@@ -31,6 +31,8 @@ SELECT
     e.professional_id,
     'userId',
     e.user_id,
+    'recurrentId',
+    e.recurrent_id,
     'status',
     e.status,
     'createdAt',
