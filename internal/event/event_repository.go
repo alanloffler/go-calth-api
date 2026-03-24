@@ -59,8 +59,8 @@ func (r *EventRepository) CheckRecurring(ctx context.Context, arg sqlc.CheckRecu
 	return r.q.CheckRecurringEvents(ctx, arg)
 }
 
-func (r *EventRepository) Update(ctx context.Context, arg sqlc.UpdateParams) (sqlc.Event, error) {
-	return r.q.Update(ctx, arg)
+func (r *EventRepository) Update(ctx context.Context, arg sqlc.UpdateEventParams) (sqlc.UpdateEventRow, error) {
+	return r.q.UpdateEvent(ctx, arg)
 }
 
 func (r *EventRepository) UpdateStatus(ctx context.Context, arg sqlc.UpdateStatusParams) (int64, error) {
