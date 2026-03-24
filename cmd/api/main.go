@@ -63,7 +63,7 @@ func main() {
 	protected := router.Group("/")
 	protected.Use(middleware.AuthMiddleware(authService))
 	business.RegisterRoutes(protected, queries)
-	event.RegisterRoutes(protected, queries)
+	event.RegisterRoutes(protected, queries, pool)
 	medical_history.RegisterRoutes(protected, queries)
 	permission.RegisterRoutes(protected, queries)
 	role.RegisterRoutes(protected, queries, pool)
