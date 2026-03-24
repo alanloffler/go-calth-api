@@ -149,6 +149,7 @@ CREATE TABLE events (
   professional_id UUID NOT NULL,
   user_id UUID NOT NULL,
   status event_status NOT NULL DEFAULT 'pending',
+  recurrent_id UUID,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   deleted_at TIMESTAMPTZ,
@@ -172,6 +173,10 @@ WHERE
   deleted_at IS NULL;
 
 CREATE INDEX idx_users_first_name ON users (first_name);
+
+CREATE INDEX idx_events_recurrent_id ON events (business_id, recurrent_id)
+WHERE
+  recurrent_id IS NOT NULL;
 
 -- // Medical Histories //
 CREATE TABLE medical_histories (
