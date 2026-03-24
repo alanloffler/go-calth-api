@@ -656,7 +656,7 @@ WHERE
   AND id = $2
   AND deleted_at IS NULL;
 
--- name: Update :one
+-- name: UpdateEvent :one
 UPDATE events
 SET
   title = COALESCE(sqlc.narg ('title'), title),
@@ -665,6 +665,7 @@ SET
   professional_id = COALESCE(sqlc.narg ('professional_id'), professional_id),
   user_id = COALESCE(sqlc.narg ('user_id'), user_id),
   status = COALESCE(sqlc.narg ('status'), status),
+  recurrent_id = COALESCE(sqlc.narg ('recurrent_id'), recurrent_id),
   updated_at = now()
 WHERE
   business_id = $1
@@ -678,6 +679,7 @@ RETURNING
   business_id,
   professional_id,
   user_id,
+  recurrent_id,
   status,
   created_at,
   updated_at,
