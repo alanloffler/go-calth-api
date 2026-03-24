@@ -13,6 +13,7 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/common/response"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -116,6 +117,12 @@ func (h *EventHandler) createRecurring(c *gin.Context, req CreateEventRequest, s
 	ctx := c.Request.Context()
 	duration := endTime.Sub(startTime)
 
+	var recurrentID pgtype.UUID
+	if err := recurrentID.Scan(uuid.New().String()); err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al generar ID de recurrente", err))
+		return
+	}
+
 	tx, err := h.pool.Begin(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al iniciar transacción", err))
@@ -141,6 +148,7 @@ func (h *EventHandler) createRecurring(c *gin.Context, req CreateEventRequest, s
 			BusinessID:     businessID,
 			ProfessionalID: professionalID,
 			UserID:         userID,
+			RecurrentID:    recurrentID,
 		})
 		if err != nil {
 			var pgErr *pgconn.PgError
