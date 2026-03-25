@@ -873,6 +873,8 @@ SELECT
               'status',
               s.status
             )
+            ORDER BY
+              s.start_date ASC
           ),
           '[]'::jsonb
         )
