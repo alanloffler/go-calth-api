@@ -70,6 +70,33 @@ SELECT
       u.ic,
       'role',
       jsonb_build_object('name', ur.name, 'value', ur.value)
+    ),
+    'siblings',
+    (
+      SELECT
+        COALESCE(
+          jsonb_agg(
+            jsonb_build_object(
+              'id',
+              s.id,
+              'startDate',
+              s.start_date,
+              'endDate',
+              s.end_date,
+              'status',
+              s.status
+            )
+            ORDER BY
+              s.start_date ASC
+          ),
+          '[]'::jsonb
+        )
+      FROM
+        events s
+      WHERE
+        s.recurrent_id = e.recurrent_id
+        AND s.recurrent_id IS NOT NULL
+        AND s.deleted_at IS NULL
     )
   ) AS event
 FROM
