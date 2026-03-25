@@ -366,6 +366,31 @@ SELECT
       p.ic,
       'professionalProfile',
       jsonb_build_object('professionalPrefix', pp.professional_prefix)
+    ),
+    'siblings',
+    (
+      SELECT
+        COALESCE(
+          jsonb_agg(
+            jsonb_build_object(
+              'id',
+              s.id,
+              'startDate',
+              s.start_date,
+              'endDate',
+              s.end_date,
+              'status',
+              s.status
+            )
+          ),
+          '[]'::jsonb
+        )
+      FROM
+        events s
+      WHERE
+        s.recurrent_id = e.recurrent_id
+        AND s.recurrent_id IS NOT NULL
+        AND s.deleted_at IS NULL
     )
   ) AS event
 FROM
