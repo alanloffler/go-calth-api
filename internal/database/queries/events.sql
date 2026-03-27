@@ -550,6 +550,17 @@ WHERE
   AND (
     sqlc.narg (status)::text IS NULL
     OR e.status::text = sqlc.narg (status)
+  )
+  AND (
+    sqlc.narg (recurrent)::text IS NULL
+    OR (
+      sqlc.narg (recurrent)::text = 'true'
+      AND e.recurrent_id IS NOT NULL
+    )
+    OR (
+      sqlc.narg (recurrent)::text = 'false'
+      AND e.recurrent_id IS NULL
+    )
   );
 
 -- name: GetByID :one
