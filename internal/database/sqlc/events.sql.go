@@ -1076,6 +1076,17 @@ WHERE
     $6::text IS NULL
     OR e.status::text = $6
   )
+  AND (
+    $7::text IS NULL
+    OR (
+      $7::text = 'true'
+      AND e.recurrent_id IS NOT NULL
+    )
+    OR (
+      $7::text = 'false'
+      AND e.recurrent_id IS NULL
+    )
+  )
 `
 
 type GetFilteredCountParams struct {
@@ -1085,6 +1096,7 @@ type GetFilteredCountParams struct {
 	PatientID      pgtype.UUID      `json:"patientId"`
 	ProfessionalID pgtype.UUID      `json:"professionalId"`
 	Status         pgtype.Text      `json:"status"`
+	Recurrent      pgtype.Text      `json:"recurrent"`
 }
 
 func (q *Queries) GetFilteredCount(ctx context.Context, arg GetFilteredCountParams) (int32, error) {
@@ -1095,6 +1107,7 @@ func (q *Queries) GetFilteredCount(ctx context.Context, arg GetFilteredCountPara
 		arg.PatientID,
 		arg.ProfessionalID,
 		arg.Status,
+		arg.Recurrent,
 	)
 	var total int32
 	err := row.Scan(&total)
