@@ -70,6 +70,30 @@ func (q *Queries) CheckRecurringEvents(ctx context.Context, arg CheckRecurringEv
 	return items, nil
 }
 
+const clearRecurrentID = `-- name: ClearRecurrentID :execrows
+UPDATE events
+SET
+  recurrent_id = NULL,
+  updated_at = now()
+WHERE
+  business_id = $1
+  AND id = $2
+  AND deleted_at IS NULL
+`
+
+type ClearRecurrentIDParams struct {
+	BusinessID pgtype.UUID `json:"businessId"`
+	ID         pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) ClearRecurrentID(ctx context.Context, arg ClearRecurrentIDParams) (int64, error) {
+	result, err := q.db.Exec(ctx, clearRecurrentID, arg.BusinessID, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const createEvent = `-- name: CreateEvent :one
 INSERT INTO
   events (
