@@ -895,6 +895,8 @@ SELECT
     e.business_id,
     'userId',
     e.user_id,
+    'professionalId',
+    e.professional_id,
     'recurrentId',
     e.recurrent_id,
     'status',
