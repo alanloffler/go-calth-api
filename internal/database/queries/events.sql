@@ -770,3 +770,14 @@ DELETE FROM events
 WHERE
   business_id = $1
   AND id = $2;
+
+-- / Recurrent event queries / --
+-- name: GetEventRecurrentID :one
+SELECT
+  recurrent_id
+FROM
+  events
+WHERE
+  business_id = $1
+  AND id = $2
+  AND deleted_at IS NULL;
