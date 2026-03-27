@@ -791,3 +791,13 @@ WHERE
   recurrent_id = $1
   AND business_id = $2
   AND deleted_at IS NULL;
+
+-- name: ClearRecurrentID :execrows
+UPDATE events
+SET
+  recurrent_id = NULL,
+  updated_at = now()
+WHERE
+  business_id = $1
+  AND id = $2
+  AND deleted_at IS NULL;
