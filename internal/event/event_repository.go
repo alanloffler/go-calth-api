@@ -80,3 +80,7 @@ func (r *EventRepository) GetEventRecurrentID(ctx context.Context, arg sqlc.GetE
 func (r *EventRepository) GetIDsByRecurrentID(ctx context.Context, arg sqlc.GetIDsByRecurrentIDParams) ([]pgtype.UUID, error) {
 	return r.q.GetIDsByRecurrentID(ctx, arg)
 }
+
+func (r *EventRepository) ClearRecurrentID(ctx context.Context, arg sqlc.ClearRecurrentIDParams) (int64, error) {
+	return r.q.ClearRecurrentID(ctx, arg)
+}
