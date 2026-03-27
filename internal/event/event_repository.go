@@ -70,3 +70,9 @@ func (r *EventRepository) UpdateStatus(ctx context.Context, arg sqlc.UpdateStatu
 func (r *EventRepository) Delete(ctx context.Context, arg sqlc.DeleteEventParams) (int64, error) {
 	return r.q.DeleteEvent(ctx, arg)
 }
+
+// Recurrent event repositories
+
+func (r *EventRepository) GetEventRecurrentID(ctx context.Context, arg sqlc.GetEventRecurrentIDParams) (pgtype.UUID, error) {
+	return r.q.GetEventRecurrentID(ctx, arg)
+}
