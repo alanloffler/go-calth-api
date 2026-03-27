@@ -1138,6 +1138,42 @@ func (q *Queries) GetFilteredCount(ctx context.Context, arg GetFilteredCountPara
 	return total, err
 }
 
+const getIDsByRecurrentID = `-- name: GetIDsByRecurrentID :many
+SELECT
+  id
+FROM
+  events
+WHERE
+  recurrent_id = $1
+  AND business_id = $2
+  AND deleted_at IS NULL
+`
+
+type GetIDsByRecurrentIDParams struct {
+	RecurrentID pgtype.UUID `json:"recurrentId"`
+	BusinessID  pgtype.UUID `json:"businessId"`
+}
+
+func (q *Queries) GetIDsByRecurrentID(ctx context.Context, arg GetIDsByRecurrentIDParams) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, getIDsByRecurrentID, arg.RecurrentID, arg.BusinessID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var id pgtype.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateEvent = `-- name: UpdateEvent :one
 UPDATE events
 SET
