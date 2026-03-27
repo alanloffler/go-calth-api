@@ -692,6 +692,30 @@ func (q *Queries) GetDaysWithEvents(ctx context.Context, arg GetDaysWithEventsPa
 	return items, nil
 }
 
+const getEventRecurrentID = `-- name: GetEventRecurrentID :one
+SELECT
+  recurrent_id
+FROM
+  events
+WHERE
+  business_id = $1
+  AND id = $2
+  AND deleted_at IS NULL
+`
+
+type GetEventRecurrentIDParams struct {
+	BusinessID pgtype.UUID `json:"businessId"`
+	ID         pgtype.UUID `json:"id"`
+}
+
+// / Recurrent event queries / --
+func (q *Queries) GetEventRecurrentID(ctx context.Context, arg GetEventRecurrentIDParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, getEventRecurrentID, arg.BusinessID, arg.ID)
+	var recurrent_id pgtype.UUID
+	err := row.Scan(&recurrent_id)
+	return recurrent_id, err
+}
+
 const getEventsByProfessionalID = `-- name: GetEventsByProfessionalID :many
 SELECT
   jsonb_build_object(
