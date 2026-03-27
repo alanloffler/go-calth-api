@@ -814,6 +814,8 @@ func (h *EventHandler) UpdateStatus(c *gin.Context) {
 }
 
 func (h *EventHandler) Delete(c *gin.Context) {
+	ctx := c.Request.Context()
+
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
 		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
@@ -826,7 +828,56 @@ func (h *EventHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	rows, err := h.repo.Delete(c.Request.Context(), sqlc.DeleteEventParams{
+	// PLAN:
+	// 1. Get the event's recurrent_id
+	recurrentID, err := h.repo.GetEventRecurrentID(ctx, sqlc.GetEventRecurrentIDParams{
+		BusinessID: businessID,
+		ID:         id,
+	})
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Turno no encontrado", err))
+		return
+	}
+
+	// 2. Not recurring: simple delete
+	if !recurrentID.Valid {
+		affected, err := h.repo.Delete(ctx, sqlc.DeleteEventParams{
+			BusinessID: businessID,
+			ID:         id,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al eliminar el turno", err))
+			return
+		}
+		if affected == 0 {
+			c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Turno no encontrado"))
+			return
+		}
+		c.JSON(http.StatusOK, response.Success[any]("Turno eliminado", nil))
+		return
+	}
+
+	// 3. Recurring: count siblings (including self)
+	siblingIDs, err := h.repo.GetIDsByRecurrentID(ctx, sqlc.GetIDsByRecurrentIDParams{
+		RecurrentID: recurrentID,
+		BusinessID:  businessID,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al obtener turnos recurrentes", err))
+		return
+	}
+
+	// 4. Transactional delete
+	tx, err := h.pool.Begin(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al iniciar transacción", err))
+		return
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := sqlc.New(tx)
+
+	affected, err := qtx.DeleteEvent(ctx, sqlc.DeleteEventParams{
 		BusinessID: businessID,
 		ID:         id,
 	})
@@ -834,8 +885,29 @@ func (h *EventHandler) Delete(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al eliminar el turno", err))
 		return
 	}
-	if rows == 0 {
-		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Turno no encontrado"))
+	if affected == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusInternalServerError, "Turno no encontrado"))
+		return
+	}
+
+	// 5. Only 1 sibling remains after deletion: clear its recurrent_id
+	if len(siblingIDs) == 2 {
+		for _, siblindID := range siblingIDs {
+			if siblindID == id {
+				continue
+			}
+			if _, err := qtx.ClearRecurrentID(ctx, sqlc.ClearRecurrentIDParams{
+				BusinessID: businessID,
+				ID:         siblindID,
+			}); err != nil {
+				c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar turno huérfano", err))
+				return
+			}
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al confirmar transacción", err))
 		return
 	}
 
