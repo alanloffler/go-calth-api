@@ -474,6 +474,10 @@ func (h *EventHandler) GetFiltered(c *gin.Context) {
 		params.PatientID = patientID
 	}
 
+	if recurrent := c.Query("recurrent"); recurrent != "" {
+		params.Recurrent = pgtype.Text{String: recurrent, Valid: true}
+	}
+
 	if statusStr := c.Query("status"); statusStr != "" {
 		params.Status = pgtype.Text{String: statusStr, Valid: true}
 	}
