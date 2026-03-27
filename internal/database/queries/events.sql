@@ -781,3 +781,13 @@ WHERE
   business_id = $1
   AND id = $2
   AND deleted_at IS NULL;
+
+-- name: GetIDsByRecurrentID :many
+SELECT
+  id
+FROM
+  events
+WHERE
+  recurrent_id = $1
+  AND business_id = $2
+  AND deleted_at IS NULL;
