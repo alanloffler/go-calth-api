@@ -941,53 +941,64 @@ WHERE
     $6::text IS NULL
     OR e.status::text = $6
   )
+  AND (
+    $7::text IS NULL
+    OR (
+      $7::text = 'true'
+      AND e.recurrent_id IS NOT NULL
+    )
+    OR (
+      $7::text = 'false'
+      AND e.recurrent_id IS NULL
+    )
+  )
 ORDER BY
   CASE
-    WHEN $7 = 'start_date'
-    AND $8 = 'asc' THEN e.start_date
+    WHEN $8 = 'start_date'
+    AND $9 = 'asc' THEN e.start_date
   END ASC,
   CASE
-    WHEN $7 = 'start_date'
-    AND $8 = 'desc' THEN e.start_date
+    WHEN $8 = 'start_date'
+    AND $9 = 'desc' THEN e.start_date
   END DESC,
   CASE
-    WHEN $7 = 'status'
-    AND $8 = 'asc' THEN e.status
+    WHEN $8 = 'status'
+    AND $9 = 'asc' THEN e.status
   END ASC,
   CASE
-    WHEN $7 = 'status'
-    AND $8 = 'desc' THEN e.status
+    WHEN $8 = 'status'
+    AND $9 = 'desc' THEN e.status
   END DESC,
   CASE
-    WHEN $7 = 'title'
-    AND $8 = 'asc' THEN e.title
+    WHEN $8 = 'title'
+    AND $9 = 'asc' THEN e.title
   END ASC,
   CASE
-    WHEN $7 = 'title'
-    AND $8 = 'desc' THEN e.title
+    WHEN $8 = 'title'
+    AND $9 = 'desc' THEN e.title
   END DESC,
   CASE
-    WHEN $7 = 'professional.firstName'
-    AND $8 = 'asc' THEN p.first_name
+    WHEN $8 = 'professional.firstName'
+    AND $9 = 'asc' THEN p.first_name
   END ASC,
   CASE
-    WHEN $7 = 'professional.firstName'
-    AND $8 = 'desc' THEN p.first_name
+    WHEN $8 = 'professional.firstName'
+    AND $9 = 'desc' THEN p.first_name
   END DESC,
   CASE
-    WHEN $7 = 'user.firstName'
-    AND $8 = 'asc' THEN u.first_name
+    WHEN $8 = 'user.firstName'
+    AND $9 = 'asc' THEN u.first_name
   END ASC,
   CASE
-    WHEN $7 = 'user.firstName'
-    AND $8 = 'desc' THEN u.first_name
+    WHEN $8 = 'user.firstName'
+    AND $9 = 'desc' THEN u.first_name
   END DESC,
   e.start_date::date DESC,
   e.start_date::time ASC
 LIMIT
-  $10
+  $11
 OFFSET
-  $9
+  $10
 `
 
 type GetEventsFilteredParams struct {
@@ -997,6 +1008,7 @@ type GetEventsFilteredParams struct {
 	PatientID      pgtype.UUID      `json:"patientId"`
 	ProfessionalID pgtype.UUID      `json:"professionalId"`
 	Status         pgtype.Text      `json:"status"`
+	Recurrent      pgtype.Text      `json:"recurrent"`
 	SortBy         interface{}      `json:"sortBy"`
 	SortOrder      interface{}      `json:"sortOrder"`
 	QueryOffset    int32            `json:"queryOffset"`
@@ -1011,6 +1023,7 @@ func (q *Queries) GetEventsFiltered(ctx context.Context, arg GetEventsFilteredPa
 		arg.PatientID,
 		arg.ProfessionalID,
 		arg.Status,
+		arg.Recurrent,
 		arg.SortBy,
 		arg.SortOrder,
 		arg.QueryOffset,
