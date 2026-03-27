@@ -503,6 +503,7 @@ func (h *EventHandler) GetFiltered(c *gin.Context) {
 		EndOfDay:       params.EndOfDay,
 		PatientID:      params.PatientID,
 		ProfessionalID: params.ProfessionalID,
+		Recurrent:      params.Recurrent,
 		Status:         params.Status,
 	}
 
