@@ -12,6 +12,7 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/common/ctxkeys"
 	"github.com/alanloffler/go-calth-api/internal/common/response"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
+	"github.com/alanloffler/go-calth-api/internal/professional_profile"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -20,8 +21,9 @@ import (
 )
 
 type EventHandler struct {
-	repo *EventRepository
-	pool *pgxpool.Pool
+	repo        *EventRepository
+	pool        *pgxpool.Pool
+	profileRepo *professional_profile.ProfessionalProfileRepository
 }
 
 type CreateEventRequest struct {
@@ -47,8 +49,8 @@ type UpdateEventStatusRequest struct {
 	Status string `json:"status" binding:"required"`
 }
 
-func NewEventHandler(repo *EventRepository, pool *pgxpool.Pool) *EventHandler {
-	return &EventHandler{repo: repo, pool: pool}
+func NewEventHandler(repo *EventRepository, pool *pgxpool.Pool, professionalRepo *professional_profile.ProfessionalProfileRepository) *EventHandler {
+	return &EventHandler{repo: repo, pool: pool, profileRepo: professionalRepo}
 }
 
 func (h *EventHandler) Create(c *gin.Context) {
@@ -642,9 +644,18 @@ func (h *EventHandler) CheckRecurring(c *gin.Context) {
 		return
 	}
 
+	profile, err := h.profileRepo.GetProfessionalProfileByUserID(c.Request.Context(), sqlc.GetProfessionalProfileByUserIDParams{
+		BusinessID: businessID,
+		UserID:     professionalID,
+	})
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Perfil profesional no encontrado", err))
+		return
+	}
+
 	recurringDates := generateRecurringDates(parsedTime, int32(occurrences))
 
-	existingEvents, err := h.repo.CheckRecurring(c, sqlc.CheckRecurringEventsParams{
+	existingEvents, err := h.repo.CheckRecurring(c.Request.Context(), sqlc.CheckRecurringEventsParams{
 		BusinessID:     businessID,
 		ProfessionalID: professionalID,
 		StartDate:      pgtype.Timestamptz{Time: parsedTime, Valid: true},
@@ -666,14 +677,36 @@ func (h *EventHandler) CheckRecurring(c *gin.Context) {
 	}
 
 	results := make([]recurringResult, len(recurringDates))
+	allAvailable := true
 	for i, d := range recurringDates {
+		available := !busySlots[d.UTC().Format("2006-01-02T15:04")]
 		results[i] = recurringResult{
 			Date:      d,
-			Available: !busySlots[d.UTC().Format("2006-01-02T15:04")],
+			Available: available,
+		}
+		if !available {
+			allAvailable = false
 		}
 	}
 
-	c.JSON(http.StatusOK, response.Success("Recurrencia verificada", &results))
+	type checkRecurringResponse struct {
+		Dates      []recurringResult `json:"dates"`
+		Suggestion *time.Time        `json:"suggestion"`
+	}
+
+	var suggestion *time.Time
+	if !allAvailable {
+		suggestion, err = findSuggestion(c.Request.Context(), h.repo, parsedTime, occurrences, profile, businessID, professionalID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al buscar sugerencia", err))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, response.Success("Recurrencia verificada", &checkRecurringResponse{
+		Dates:      results,
+		Suggestion: suggestion,
+	}))
 }
 
 func (h *EventHandler) Update(c *gin.Context) {
