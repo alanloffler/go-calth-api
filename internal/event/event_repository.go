@@ -84,3 +84,7 @@ func (r *EventRepository) GetIDsByRecurrentID(ctx context.Context, arg sqlc.GetI
 func (r *EventRepository) ClearRecurrentID(ctx context.Context, arg sqlc.ClearRecurrentIDParams) (int64, error) {
 	return r.q.ClearRecurrentID(ctx, arg)
 }
+
+func (r *EventRepository) ChechSlotConflict(ctx context.Context, arg sqlc.CheckSlotConflictParams) (pgtype.UUID, error) {
+	return r.q.CheckSlotConflict(ctx, arg)
+}
