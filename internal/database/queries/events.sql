@@ -803,3 +803,17 @@ WHERE
   business_id = $1
   AND id = $2
   AND deleted_at IS NULL;
+
+-- name: CheckSlotConflict :one
+SELECT
+  id
+FROM
+  events
+WHERE
+  business_id = $1
+  AND professional_id = $2
+  AND start_date < $4
+  AND end_date > $3
+  AND deleted_at IS NULL
+LIMIT
+  1;
