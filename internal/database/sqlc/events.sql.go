@@ -70,6 +70,40 @@ func (q *Queries) CheckRecurringEvents(ctx context.Context, arg CheckRecurringEv
 	return items, nil
 }
 
+const checkSlotConflict = `-- name: CheckSlotConflict :one
+SELECT
+  id
+FROM
+  events
+WHERE
+  business_id = $1
+  AND professional_id = $2
+  AND start_date < $4
+  AND end_date > $3
+  AND deleted_at IS NULL
+LIMIT
+  1
+`
+
+type CheckSlotConflictParams struct {
+	BusinessID     pgtype.UUID        `json:"businessId"`
+	ProfessionalID pgtype.UUID        `json:"professionalId"`
+	EndDate        pgtype.Timestamptz `json:"endDate"`
+	StartDate      pgtype.Timestamptz `json:"startDate"`
+}
+
+func (q *Queries) CheckSlotConflict(ctx context.Context, arg CheckSlotConflictParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, checkSlotConflict,
+		arg.BusinessID,
+		arg.ProfessionalID,
+		arg.EndDate,
+		arg.StartDate,
+	)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const clearRecurrentID = `-- name: ClearRecurrentID :execrows
 UPDATE events
 SET
