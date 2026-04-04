@@ -11,6 +11,25 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const checkSlugAvailability = `-- name: CheckSlugAvailability :one
+SELECT
+  EXISTS (
+    SELECT
+      1
+    FROM
+      businesses
+    WHERE
+      slug = $1
+  ) AS slug_exists
+`
+
+func (q *Queries) CheckSlugAvailability(ctx context.Context, slug string) (bool, error) {
+	row := q.db.QueryRow(ctx, checkSlugAvailability, slug)
+	var slug_exists bool
+	err := row.Scan(&slug_exists)
+	return slug_exists, err
+}
+
 const checkTaxIDAvailability = `-- name: CheckTaxIDAvailability :one
 SELECT
   EXISTS (
