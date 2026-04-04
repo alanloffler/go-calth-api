@@ -51,6 +51,7 @@ type createAdminData struct {
 	Email       string `json:"email" binding:"required,email,max=100"`
 	Password    string `json:"password" binding:"required,min=8,max=100"`
 	PhoneNumber string `json:"phoneNumber" binding:"required,len=10,numeric"`
+	RoleId      string `json:"roleId" binding:"required,uuid"`
 }
 
 type CreateBusinessWithAdminRequest struct {
