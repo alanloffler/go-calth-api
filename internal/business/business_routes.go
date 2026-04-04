@@ -13,7 +13,7 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries) {
 	var handler *BusinessHandler = NewBusinessHandler(repo, userRepo)
 	var businesses *gin.RouterGroup = router.Group("/businesses")
 
-	businesses.POST("", middleware.PermissionMiddleware(q, "business-create"), handler.Create)
+	businesses.POST("", handler.Create)
 
 	businesses.GET("", middleware.PermissionMiddleware(q, "business-view"), handler.GetAll)
 	businesses.GET("/:id", middleware.PermissionMiddleware(q, "business-view"), handler.GetOneByID)
