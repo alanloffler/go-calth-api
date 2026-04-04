@@ -22,7 +22,7 @@ func NewBusinessHandler(repo *BusinessRepository, userRepo *user.UserRepository,
 	return &BusinessHandler{repo: repo, userRepo: userRepo, pool: pool}
 }
 
-type CreateBusinessRequest struct {
+type createBusinessData struct {
 	Slug           string  `json:"slug" binding:"required,min=3,max=50"`
 	TaxId          string  `json:"taxId" binding:"required,len=11,numeric"`
 	CompanyName    string  `json:"companyName" binding:"required,min=3,max=100"`
@@ -37,6 +37,21 @@ type CreateBusinessRequest struct {
 	PhoneNumber    string  `json:"phoneNumber" binding:"required,len=10,numeric"`
 	WhatsappNumber *string `json:"whatsappNumber" binding:"omitempty,len=10,numeric"`
 	Website        *string `json:"website" binding:"omitempty,min=6"`
+}
+
+type createAdminData struct {
+	Ic          string `json:"ic" binding:"required,len=8"`
+	UserName    string `json:"userName" binding:"required,min=3,max=100"`
+	FirstName   string `json:"firstName" binding:"required,min=3,max=100"`
+	LastName    string `json:"lastName" binding:"required,min=3,max=100"`
+	Email       string `json:"email" binding:"required,email,max=100"`
+	Password    string `json:"password" binding:"required,min=8,max=100"`
+	PhoneNumber string `json:"phoneNumber" binding:"required,len=10,numeric"`
+}
+
+type CreateBusinessWithAdminRequest struct {
+	Business createBusinessData `json:"business" binding:"required"`
+	Admin    createAdminData    `json:"admin" binding:"required"`
 }
 
 type UpdateBusinessRequest struct {
