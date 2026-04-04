@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type BusinessHandler struct {
@@ -23,20 +24,16 @@ func NewBusinessHandler(repo *BusinessRepository, userRepo *user.UserRepository,
 }
 
 type createBusinessData struct {
-	Slug           string  `json:"slug" binding:"required,min=3,max=50"`
-	TaxId          string  `json:"taxId" binding:"required,len=11,numeric"`
-	CompanyName    string  `json:"companyName" binding:"required,min=3,max=100"`
-	TradeName      string  `json:"tradeName" binding:"required,min=3,max=100"`
-	Description    string  `json:"description" binding:"required,min=3,max=100"`
-	Street         string  `json:"street" binding:"required,min=3,max=50"`
-	City           string  `json:"city" binding:"required,min=3,max=50"`
-	Province       string  `json:"province" binding:"required,min=3,max=50"`
-	Country        string  `json:"country" binding:"required,min=3,max=50"`
-	ZipCode        string  `json:"zipCode" binding:"required,min=4,max=10"`
-	Email          string  `json:"email" binding:"required,email"`
-	PhoneNumber    string  `json:"phoneNumber" binding:"required,len=10,numeric"`
-	WhatsappNumber *string `json:"whatsappNumber" binding:"omitempty,len=10,numeric"`
-	Website        *string `json:"website" binding:"omitempty,min=6"`
+	Slug        string `json:"slug" binding:"required,min=3,max=50"`
+	TaxId       string `json:"taxId" binding:"required,len=11,numeric"`
+	CompanyName string `json:"companyName" binding:"required,min=3,max=100"`
+	TradeName   string `json:"tradeName" binding:"required,min=3,max=100"`
+	Description string `json:"description" binding:"required,min=3,max=100"`
+	Street      string `json:"street" binding:"required,min=3,max=50"`
+	City        string `json:"city" binding:"required,min=3,max=50"`
+	Province    string `json:"province" binding:"required,min=3,max=50"`
+	Country     string `json:"country" binding:"required,min=3,max=50"`
+	ZipCode     string `json:"zipCode" binding:"required,min=4,max=10"`
 }
 
 type createContactData struct {
@@ -107,40 +104,104 @@ type businessUserRole struct {
 }
 
 func (h *BusinessHandler) Create(c *gin.Context) {
-	var req CreateBusinessRequest
+	var req CreateBusinessWithAdminRequest
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error al crear negocio", err))
 		return
 	}
 
+	ctx := c.Request.Context()
+
+	taxIdExists, err := h.repo.CheckTaxIDAvailability(ctx, req.Business.TaxId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al verificar CUIT", err))
+		return
+	}
+	if taxIdExists {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "CUIT no disponible, debes elegir un CUIT diferente"))
+		return
+	}
+
+	slugExists, err := h.repo.CheckSlugAvailability(ctx, req.Business.Slug)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al verificar subdominio", err))
+		return
+	}
+	if slugExists {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Subdominio no disponible, debes elegir un subdominio diferente"))
+		return
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Admin.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al procesar contraseña", err))
+		return
+	}
+
+	tx, err := h.pool.Begin(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al iniciar transacción", err))
+		return
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := sqlc.New(tx)
+
 	var whatsappNumber pgtype.Text
-	if req.WhatsappNumber != nil {
-		whatsappNumber = pgtype.Text{String: *req.WhatsappNumber, Valid: true}
+	if req.Contact.WhatsAppNumber != nil {
+		whatsappNumber = pgtype.Text{String: *req.Contact.WhatsAppNumber, Valid: true}
 	}
 
 	var website pgtype.Text
-	if req.Website != nil {
-		website = pgtype.Text{String: *req.Website, Valid: true}
+	if req.Contact.Website != nil {
+		website = pgtype.Text{String: *req.Contact.Website, Valid: true}
 	}
 
-	business, err := h.repo.Create(c.Request.Context(), sqlc.CreateBusinessParams{
-		Slug:           req.Slug,
-		TaxID:          req.TaxId,
-		CompanyName:    req.CompanyName,
-		TradeName:      req.TradeName,
-		Description:    req.Description,
-		Street:         req.Street,
-		City:           req.City,
-		Province:       req.Province,
-		Country:        req.Country,
-		ZipCode:        req.ZipCode,
-		Email:          req.Email,
-		PhoneNumber:    req.PhoneNumber,
+	business, err := qtx.CreateBusiness(ctx, sqlc.CreateBusinessParams{
+		Slug:           req.Business.Slug,
+		TaxID:          req.Business.TaxId,
+		CompanyName:    req.Business.CompanyName,
+		TradeName:      req.Business.TradeName,
+		Description:    req.Business.Description,
+		Street:         req.Business.Street,
+		City:           req.Business.City,
+		Province:       req.Business.Province,
+		Country:        req.Business.Country,
+		ZipCode:        req.Business.ZipCode,
+		Email:          req.Contact.Email,
+		PhoneNumber:    req.Contact.PhoneNumber,
 		WhatsappNumber: whatsappNumber,
 		Website:        website,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al crear negocio", err))
+		return
+	}
+
+	var roleID pgtype.UUID
+	if err := roleID.Scan(req.Admin.RoleId); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de roleId inválido", err))
+		return
+	}
+
+	_, err = qtx.CreateUser(ctx, sqlc.CreateUserParams{
+		Ic:          req.Admin.Ic,
+		UserName:    req.Admin.UserName,
+		FirstName:   req.Admin.FirstName,
+		LastName:    req.Admin.LastName,
+		Email:       req.Admin.Email,
+		Password:    string(hashedPassword),
+		PhoneNumber: req.Admin.PhoneNumber,
+		RoleID:      roleID,
+		BusinessID:  business.ID,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al crear administrador", err))
+		return
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al confirmar transacción", err))
 		return
 	}
 
