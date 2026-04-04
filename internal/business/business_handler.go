@@ -9,15 +9,17 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/user"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type BusinessHandler struct {
 	repo     *BusinessRepository
 	userRepo *user.UserRepository
+	pool     *pgxpool.Pool
 }
 
-func NewBusinessHandler(repo *BusinessRepository, userRepo *user.UserRepository) *BusinessHandler {
-	return &BusinessHandler{repo: repo, userRepo: userRepo}
+func NewBusinessHandler(repo *BusinessRepository, userRepo *user.UserRepository, pool *pgxpool.Pool) *BusinessHandler {
+	return &BusinessHandler{repo: repo, userRepo: userRepo, pool: pool}
 }
 
 type CreateBusinessRequest struct {
