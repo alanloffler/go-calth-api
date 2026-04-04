@@ -38,3 +38,7 @@ func (r *BusinessRepository) Delete(ctx context.Context, id pgtype.UUID) (int64,
 func (r *BusinessRepository) CheckTaxIDAvailability(ctx context.Context, taxID string) (bool, error) {
 	return r.q.CheckTaxIDAvailability(ctx, taxID)
 }
+
+func (r *BusinessRepository) CheckSlugAvailability(ctx context.Context, slug string) (bool, error) {
+	return r.q.CheckSlugAvailability(ctx, slug)
+}
