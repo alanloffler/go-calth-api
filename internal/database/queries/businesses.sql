@@ -93,3 +93,14 @@ SELECT
     WHERE
       tax_id = $1
   ) AS tax_id_exists;
+
+-- name: CheckSlugAvailability :one
+SELECT
+  EXISTS (
+    SELECT
+      1
+    FROM
+      businesses
+    WHERE
+      slug = $1
+  ) AS slug_exists;
