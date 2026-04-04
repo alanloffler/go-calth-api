@@ -11,6 +11,25 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const checkTaxIDAvailability = `-- name: CheckTaxIDAvailability :one
+SELECT
+  EXISTS (
+    SELECT
+      1
+    FROM
+      businesses
+    WHERE
+      tax_id = $1
+  ) AS tax_id_exists
+`
+
+func (q *Queries) CheckTaxIDAvailability(ctx context.Context, taxID string) (bool, error) {
+	row := q.db.QueryRow(ctx, checkTaxIDAvailability, taxID)
+	var tax_id_exists bool
+	err := row.Scan(&tax_id_exists)
+	return tax_id_exists, err
+}
+
 const createBusiness = `-- name: CreateBusiness :one
 INSERT INTO
   businesses (
