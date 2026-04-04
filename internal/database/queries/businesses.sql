@@ -82,3 +82,14 @@ WHERE
 DELETE FROM businesses
 WHERE
   id = $1;
+
+-- name: CheckTaxIDAvailability :one
+SELECT
+  EXISTS (
+    SELECT
+      1
+    FROM
+      businesses
+    WHERE
+      tax_id = $1
+  ) AS tax_id_exists;
