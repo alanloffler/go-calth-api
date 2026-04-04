@@ -34,3 +34,7 @@ func (r *BusinessRepository) Update(ctx context.Context, arg sqlc.UpdateBusiness
 func (r *BusinessRepository) Delete(ctx context.Context, id pgtype.UUID) (int64, error) {
 	return r.q.DeleteBusiness(ctx, id)
 }
+
+func (r *BusinessRepository) CheckTaxIDAvailability(ctx context.Context, taxID string) (bool, error) {
+	return r.q.CheckTaxIDAvailability(ctx, taxID)
+}
