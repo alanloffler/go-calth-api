@@ -39,6 +39,13 @@ type createBusinessData struct {
 	Website        *string `json:"website" binding:"omitempty,min=6"`
 }
 
+type createContactData struct {
+	Email          string  `json:"email" binding:"required,email"`
+	PhoneNumber    string  `json:"phoneNumber" binding:"required,len=10,numeric"`
+	WhatsAppNumber *string `json:"whatsAppNumber" binding:"omitempty,len=10,numeric"`
+	Website        *string `json:"website" binding:"omitempty,min=6"`
+}
+
 type createAdminData struct {
 	Ic          string `json:"ic" binding:"required,len=8"`
 	UserName    string `json:"userName" binding:"required,min=3,max=100"`
@@ -51,6 +58,7 @@ type createAdminData struct {
 
 type CreateBusinessWithAdminRequest struct {
 	Business createBusinessData `json:"business" binding:"required"`
+	Contact  createContactData  `json:"contact" binding:"required"`
 	Admin    createAdminData    `json:"admin" binding:"required"`
 }
 
