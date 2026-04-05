@@ -14,6 +14,7 @@ func RegisterRoutes(public *gin.Engine, protected *gin.RouterGroup, q *sqlc.Quer
 	var handler *BusinessHandler = NewBusinessHandler(repo, userRepo, pool)
 
 	public.POST("/businesses", handler.Create)
+	public.GET("/businesses/availability/tax-id/:taxId", handler.CheckTaxIDAvailability)
 
 	var businesses *gin.RouterGroup = protected.Group("/businesses")
 
