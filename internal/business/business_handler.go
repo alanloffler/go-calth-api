@@ -363,3 +363,30 @@ func (h *BusinessHandler) CheckTaxIDAvailability(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.Success(message, &available))
 }
+
+func (h *BusinessHandler) CheckSlugAvailability(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	slug := c.Param("slug")
+	if slug == "" || len(slug) < 3 {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de subdominio inválido"))
+		return
+	}
+
+	available, err := h.repo.CheckSlugAvailability(ctx, slug)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al verificar subdominio", err))
+		return
+	}
+
+	available = !available
+
+	var message string
+	if available {
+		message = "Subdominio disponible"
+	} else {
+		message = "Subdominio no disponible"
+	}
+
+	c.JSON(http.StatusOK, response.Success(message, &available))
+}
