@@ -354,5 +354,12 @@ func (h *BusinessHandler) CheckTaxIDAvailability(c *gin.Context) {
 
 	available = !available
 
-	c.JSON(http.StatusOK, response.Success("Verificación de CUIT completada", &available))
+	var message string
+	if available {
+		message = "CUIT disponible"
+	} else {
+		message = "CUIT no disponible"
+	}
+
+	c.JSON(http.StatusOK, response.Success(message, &available))
 }
