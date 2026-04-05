@@ -336,3 +336,23 @@ func (h *BusinessHandler) Delete(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.Success[any]("Negocio eliminado", nil))
 }
+
+func (h *BusinessHandler) CheckTaxIDAvailability(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	taxId := c.Param("taxId")
+	if taxId == "" || len(taxId) != 11 {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de CUIT inválido"))
+		return
+	}
+
+	available, err := h.repo.CheckTaxIDAvailability(ctx, taxId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al verificar el CUIT", err))
+		return
+	}
+
+	available = !available
+
+	c.JSON(http.StatusOK, response.Success("Verificación de CUIT completada", &available))
+}
