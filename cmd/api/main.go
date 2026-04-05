@@ -50,6 +50,9 @@ func main() {
 	router.SetTrustedProxies(nil)
 	router.Use(cors.New(cors.Config{
 		AllowOriginFunc: func(origin string) bool {
+			if rootSuffix, ok := strings.CutPrefix(cfg.CorsOrigin, "."); ok {
+				return strings.HasSuffix(origin, cfg.CorsOrigin) || strings.HasSuffix(origin, "://"+rootSuffix)
+			}
 			return strings.HasSuffix(origin, cfg.CorsOrigin)
 		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -62,7 +65,6 @@ func main() {
 	// Protected routes
 	protected := router.Group("/")
 	protected.Use(middleware.AuthMiddleware(authService))
-	business.RegisterRoutes(protected, queries, pool)
 	event.RegisterRoutes(protected, queries, pool)
 	medical_history.RegisterRoutes(protected, queries)
 	permission.RegisterRoutes(protected, queries)
@@ -72,6 +74,7 @@ func main() {
 
 	// Mixed routes (public/protected)
 	auth.RegisterRoutes(router, protected, queries, cfg)
+	business.RegisterRoutes(router, protected, queries, pool)
 
 	// Public routes
 	health.RegisterRoutes(router, pool)
