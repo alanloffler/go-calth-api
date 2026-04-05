@@ -8,13 +8,14 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool) {
+func RegisterRoutes(public *gin.Engine, protected *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool) {
 	var repo *BusinessRepository = NewBusinessRepository(q)
 	var userRepo *user.UserRepository = user.NewUserRepository(q)
 	var handler *BusinessHandler = NewBusinessHandler(repo, userRepo, pool)
-	var businesses *gin.RouterGroup = router.Group("/businesses")
 
-	businesses.POST("", handler.Create)
+	public.POST("/businesses", handler.Create)
+
+	var businesses *gin.RouterGroup = protected.Group("/businesses")
 
 	businesses.GET("", middleware.PermissionMiddleware(q, "business-view"), handler.GetAll)
 	businesses.GET("/:id", middleware.PermissionMiddleware(q, "business-view"), handler.GetOneByID)
