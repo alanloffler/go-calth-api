@@ -15,6 +15,7 @@ func RegisterRoutes(public *gin.Engine, protected *gin.RouterGroup, q *sqlc.Quer
 
 	public.POST("/businesses", handler.Create)
 	public.GET("/businesses/availability/tax-id/:taxId", handler.CheckTaxIDAvailability)
+	public.GET("/businesses/availability/slug/:slug", handler.CheckSlugAvailability)
 
 	var businesses *gin.RouterGroup = protected.Group("/businesses")
 
