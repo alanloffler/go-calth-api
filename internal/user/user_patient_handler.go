@@ -17,6 +17,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type Gender string
+
+const (
+	GenderMale   Gender = "male"
+	GenderFemale Gender = "female"
+)
+
 type CreatePatientRequest struct {
 	User    CreateUserData           `json:"user" binding:"required"`
 	Profile CreatePatientProfileData `json:"profile" binding:"required"`
@@ -33,7 +40,7 @@ type UpdatePatientResponse struct {
 }
 
 type CreatePatientProfileData struct {
-	Gender                string  `json:"gender" binding:"required"`
+	Gender                Gender  `json:"gender" binding:"required"`
 	BirthDay              string  `json:"birthDay" binding:"required"`
 	BloodType             string  `json:"bloodType" binding:"required"`
 	Weight                float64 `json:"weight" binding:"required,gt=0,lt=999.99"`
@@ -43,7 +50,7 @@ type CreatePatientProfileData struct {
 }
 
 type UpdatePatientProfileData struct {
-	Gender                *string  `json:"gender" binding:"omitempty"`
+	Gender                *Gender  `json:"gender" binding:"omitempty"`
 	BirthDay              *string  `json:"birthDay" binding:"omitempty"`
 	BloodType             *string  `json:"bloodType" binding:"omitempty"`
 	Weight                *float64 `json:"weight" binding:"omitempty,gt=0,lt=999.99"`
@@ -129,6 +136,11 @@ func (h *UserHandler) CreatePatient(c *gin.Context) {
 		return
 	}
 
+	if !req.Profile.Gender.isValid() {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Género inválido"))
+		return
+	}
+
 	tx, err := h.pool.Begin(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al iniciar transacción", err))
@@ -157,7 +169,7 @@ func (h *UserHandler) CreatePatient(c *gin.Context) {
 	_, err = qtx.CreatePatientProfile(ctx, sqlc.CreatePatientProfileParams{
 		BusinessID:            businessID,
 		UserID:                user.ID,
-		Gender:                req.Profile.Gender,
+		Gender:                string(req.Profile.Gender),
 		BirthDay:              pgBirthDay,
 		BloodType:             req.Profile.BloodType,
 		Weight:                weight,
@@ -352,6 +364,11 @@ func (h *UserHandler) UpdatePatient(c *gin.Context) {
 		}
 	}
 
+	if req.Profile.Gender != nil && !req.Profile.Gender.isValid() {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Género inválido"))
+		return
+	}
+
 	tx, err := h.pool.Begin(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al iniciar transacción", err))
@@ -380,7 +397,7 @@ func (h *UserHandler) UpdatePatient(c *gin.Context) {
 	affected, err := qtx.UpdatePatientProfile(ctx, sqlc.UpdatePatientProfileParams{
 		BusinessID:            businessID,
 		UserID:                id,
-		Gender:                utils.ToPgText(req.Profile.Gender),
+		Gender:                utils.ToPgText((*string)(req.Profile.Gender)),
 		BirthDay:              pgBirthDay,
 		BloodType:             utils.ToPgText(req.Profile.BloodType),
 		Weight:                weight,
@@ -403,4 +420,9 @@ func (h *UserHandler) UpdatePatient(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response.Success[any]("Paciente actualizado", nil))
+}
+
+// Validations
+func (g Gender) isValid() bool {
+	return g == GenderMale || g == GenderFemale
 }
