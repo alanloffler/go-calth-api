@@ -11,6 +11,7 @@ INSERT INTO
     province,
     country,
     zip_code,
+    timezone,
     email,
     phone_number,
     whatsapp_number,
@@ -31,7 +32,8 @@ VALUES
     $11,
     $12,
     $13,
-    $14
+    $14,
+    $15
   )
 RETURNING
   *;
@@ -71,6 +73,7 @@ SET
   province = COALESCE(sqlc.narg ('province'), province),
   country = COALESCE(sqlc.narg ('country'), country),
   zip_code = COALESCE(sqlc.narg ('zip_code'), zip_code),
+  timezone = COALESCE(sqlc.narg ('timezone'), timezone),
   email = COALESCE(sqlc.narg ('email'), email),
   phone_number = COALESCE(sqlc.narg ('phone_number'), phone_number),
   whatsapp_number = COALESCE(sqlc.narg ('whatsapp_number'), whatsapp_number),
