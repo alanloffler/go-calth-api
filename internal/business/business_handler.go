@@ -32,7 +32,7 @@ type createBusinessData struct {
 	Street      string `json:"street" binding:"required,min=3,max=50"`
 	City        string `json:"city" binding:"required,min=3,max=50"`
 	Province    string `json:"province" binding:"required,min=3,max=50"`
-	Country     string `json:"country" binding:"required,min=3,max=50"`
+	Country     string `json:"country" binding:"required,min=2,max=50"`
 	ZipCode     string `json:"zipCode" binding:"required,min=4,max=10"`
 }
 
@@ -69,7 +69,7 @@ type UpdateBusinessRequest struct {
 	Street         *string `json:"street" binding:"omitempty,min=3,max=50"`
 	City           *string `json:"city" binding:"omitempty,min=3,max=50"`
 	Province       *string `json:"province" binding:"omitempty,min=3,max=50"`
-	Country        *string `json:"country" binding:"omitempty,min=3,max=50"`
+	Country        *string `json:"country" binding:"omitempty,min=2,max=50"`
 	ZipCode        *string `json:"zipCode" binding:"omitempty,min=4,max=10"`
 	Email          *string `json:"email" binding:"omitempty,email"`
 	PhoneNumber    *string `json:"phoneNumber" binding:"omitempty,len=10,numeric"`
