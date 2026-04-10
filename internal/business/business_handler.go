@@ -297,6 +297,7 @@ func (h *BusinessHandler) Update(c *gin.Context) {
 		Province:       utils.ToPgText(req.Province),
 		Country:        utils.ToPgText(req.Country),
 		ZipCode:        utils.ToPgText(req.ZipCode),
+		Timezone:       utils.ToPgText(req.Timezone),
 		Email:          utils.ToPgText(req.Email),
 		PhoneNumber:    utils.ToPgText(req.PhoneNumber),
 		WhatsappNumber: utils.ToPgText(req.WhatsappNumber),
