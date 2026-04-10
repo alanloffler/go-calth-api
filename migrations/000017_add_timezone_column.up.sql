@@ -1,0 +1,2 @@
+ALTER TABLE businesses
+ADD COLUMN timezone VARCHAR(100) NOT NULL;
