@@ -62,6 +62,7 @@ INSERT INTO
     province,
     country,
     zip_code,
+    timezone,
     email,
     phone_number,
     whatsapp_number,
@@ -82,10 +83,11 @@ VALUES
     $11,
     $12,
     $13,
-    $14
+    $14,
+    $15
   )
 RETURNING
-  id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at
+  id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, timezone, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at
 `
 
 type CreateBusinessParams struct {
@@ -99,6 +101,7 @@ type CreateBusinessParams struct {
 	Province       string      `json:"province"`
 	Country        string      `json:"country"`
 	ZipCode        string      `json:"zipCode"`
+	Timezone       string      `json:"timezone"`
 	Email          string      `json:"email"`
 	PhoneNumber    string      `json:"phoneNumber"`
 	WhatsappNumber pgtype.Text `json:"whatsappNumber"`
@@ -117,6 +120,7 @@ func (q *Queries) CreateBusiness(ctx context.Context, arg CreateBusinessParams) 
 		arg.Province,
 		arg.Country,
 		arg.ZipCode,
+		arg.Timezone,
 		arg.Email,
 		arg.PhoneNumber,
 		arg.WhatsappNumber,
@@ -135,6 +139,7 @@ func (q *Queries) CreateBusiness(ctx context.Context, arg CreateBusinessParams) 
 		&i.Province,
 		&i.Country,
 		&i.ZipCode,
+		&i.Timezone,
 		&i.Email,
 		&i.PhoneNumber,
 		&i.WhatsappNumber,
@@ -162,7 +167,7 @@ func (q *Queries) DeleteBusiness(ctx context.Context, id pgtype.UUID) (int64, er
 
 const getBusiness = `-- name: GetBusiness :one
 SELECT
-  id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at
+  id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, timezone, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at
 FROM
   businesses
 WHERE
@@ -184,6 +189,7 @@ func (q *Queries) GetBusiness(ctx context.Context, id pgtype.UUID) (Business, er
 		&i.Province,
 		&i.Country,
 		&i.ZipCode,
+		&i.Timezone,
 		&i.Email,
 		&i.PhoneNumber,
 		&i.WhatsappNumber,
@@ -197,7 +203,7 @@ func (q *Queries) GetBusiness(ctx context.Context, id pgtype.UUID) (Business, er
 
 const getBusinessBySlug = `-- name: GetBusinessBySlug :one
 SELECT
-  id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at
+  id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, timezone, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at
 FROM
   businesses
 WHERE
@@ -219,6 +225,7 @@ func (q *Queries) GetBusinessBySlug(ctx context.Context, slug string) (Business,
 		&i.Province,
 		&i.Country,
 		&i.ZipCode,
+		&i.Timezone,
 		&i.Email,
 		&i.PhoneNumber,
 		&i.WhatsappNumber,
@@ -232,7 +239,7 @@ func (q *Queries) GetBusinessBySlug(ctx context.Context, slug string) (Business,
 
 const getBusinesses = `-- name: GetBusinesses :many
 SELECT
-  id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at
+  id, slug, tax_id, company_name, trade_name, description, street, city, province, country, zip_code, timezone, email, phone_number, whatsapp_number, website, created_at, updated_at, deleted_at
 FROM
   businesses
 `
@@ -258,6 +265,7 @@ func (q *Queries) GetBusinesses(ctx context.Context) ([]Business, error) {
 			&i.Province,
 			&i.Country,
 			&i.ZipCode,
+			&i.Timezone,
 			&i.Email,
 			&i.PhoneNumber,
 			&i.WhatsappNumber,
@@ -289,10 +297,11 @@ SET
   province = COALESCE($9, province),
   country = COALESCE($10, country),
   zip_code = COALESCE($11, zip_code),
-  email = COALESCE($12, email),
-  phone_number = COALESCE($13, phone_number),
-  whatsapp_number = COALESCE($14, whatsapp_number),
-  website = COALESCE($15, website)
+  timezone = COALESCE($12, timezone),
+  email = COALESCE($13, email),
+  phone_number = COALESCE($14, phone_number),
+  whatsapp_number = COALESCE($15, whatsapp_number),
+  website = COALESCE($16, website)
 WHERE
   id = $1
 `
@@ -309,6 +318,7 @@ type UpdateBusinessParams struct {
 	Province       pgtype.Text `json:"province"`
 	Country        pgtype.Text `json:"country"`
 	ZipCode        pgtype.Text `json:"zipCode"`
+	Timezone       pgtype.Text `json:"timezone"`
 	Email          pgtype.Text `json:"email"`
 	PhoneNumber    pgtype.Text `json:"phoneNumber"`
 	WhatsappNumber pgtype.Text `json:"whatsappNumber"`
@@ -328,6 +338,7 @@ func (q *Queries) UpdateBusiness(ctx context.Context, arg UpdateBusinessParams) 
 		arg.Province,
 		arg.Country,
 		arg.ZipCode,
+		arg.Timezone,
 		arg.Email,
 		arg.PhoneNumber,
 		arg.WhatsappNumber,
