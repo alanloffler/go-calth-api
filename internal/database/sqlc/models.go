@@ -68,6 +68,7 @@ type Business struct {
 	Province       string             `json:"province"`
 	Country        string             `json:"country"`
 	ZipCode        string             `json:"zipCode"`
+	Timezone       string             `json:"timezone"`
 	Email          string             `json:"email"`
 	PhoneNumber    string             `json:"phoneNumber"`
 	WhatsappNumber pgtype.Text        `json:"whatsappNumber"`
