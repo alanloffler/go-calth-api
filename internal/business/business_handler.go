@@ -34,6 +34,7 @@ type createBusinessData struct {
 	Province    string `json:"province" binding:"required,min=3,max=50"`
 	Country     string `json:"country" binding:"required,min=2,max=50"`
 	ZipCode     string `json:"zipCode" binding:"required,min=4,max=10"`
+	Timezone    string `json:"timezone" binding:"required,min=2,max=100"`
 }
 
 type createContactData struct {
@@ -71,6 +72,7 @@ type UpdateBusinessRequest struct {
 	Province       *string `json:"province" binding:"omitempty,min=3,max=50"`
 	Country        *string `json:"country" binding:"omitempty,min=2,max=50"`
 	ZipCode        *string `json:"zipCode" binding:"omitempty,min=4,max=10"`
+	Timezone       *string `json:"timezone" binding:"omitempty,min=2,max=100"`
 	Email          *string `json:"email" binding:"omitempty,email"`
 	PhoneNumber    *string `json:"phoneNumber" binding:"omitempty,len=10,numeric"`
 	WhatsappNumber *string `json:"whatsappNumber" binding:"omitempty,len=10,numeric"`
@@ -169,6 +171,7 @@ func (h *BusinessHandler) Create(c *gin.Context) {
 		Province:       req.Business.Province,
 		Country:        req.Business.Country,
 		ZipCode:        req.Business.ZipCode,
+		Timezone:       req.Business.Timezone,
 		Email:          req.Contact.Email,
 		PhoneNumber:    req.Contact.PhoneNumber,
 		WhatsappNumber: whatsappNumber,
