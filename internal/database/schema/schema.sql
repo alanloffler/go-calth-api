@@ -24,6 +24,7 @@ CREATE TABLE businesses (
   province VARCHAR(50) NOT NULL,
   country VARCHAR(50) NOT NULL,
   zip_code VARCHAR(10) NOT NULL,
+  timezone VARCHAR(100) NOT NULL,
   email VARCHAR(100) NOT NULL,
   phone_number VARCHAR(10) NOT NULL,
   whatsapp_number VARCHAR(10),
