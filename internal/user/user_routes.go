@@ -35,6 +35,7 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool
 	users.GET("/check/ic/:ic", handler.CheckIcAvailability)
 	users.GET("/check/username/:userName", handler.CheckUsernameAvailability)
 
+	users.PATCH("/profile", handler.UpdateProfile)
 	users.PATCH("/:id/admin", handler.UpdateAdmin)
 	users.PATCH("/:id/patient", handler.UpdatePatient)
 	users.PATCH("/:id/professional", handler.UpdateProfessional)
