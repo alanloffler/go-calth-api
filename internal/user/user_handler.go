@@ -235,6 +235,50 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Success("Usuario encontrado", &user))
 }
 
+func (h *UserHandler) GetProfile(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	userID, ok := ctxkeys.UserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	row, err := h.repo.GetByID(c.Request.Context(), sqlc.GetUserByIDParams{BusinessID: businessID, ID: userID})
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado", err))
+		return
+	}
+
+	profile := userByRoleResponse{
+		ID:          row.ID,
+		Ic:          row.Ic,
+		UserName:    row.UserName,
+		FirstName:   row.FirstName,
+		LastName:    row.LastName,
+		Email:       row.Email,
+		PhoneNumber: row.PhoneNumber,
+		BusinessID:  row.BusinessID,
+		CreatedAt:   row.CreatedAt,
+		UpdatedAt:   row.UpdatedAt,
+		DeletedAt:   row.DeletedAt,
+	}
+	if row.RoleID.Valid {
+		profile.Role = &userRole{
+			ID:          row.RoleID,
+			Name:        row.RoleName.String,
+			Value:       row.RoleValue.String,
+			Description: row.RoleDescription.String,
+		}
+	}
+
+	c.JSON(http.StatusOK, response.Success("Usuario encontrado", &profile))
+}
+
 func (h *UserHandler) GetByIDWithSoftDeleted(c *gin.Context) {
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
