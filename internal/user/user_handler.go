@@ -375,6 +375,53 @@ func (h *UserHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, response.Success[any]("Usuario actualizado", nil))
 }
 
+func (h *UserHandler) UpdateProfile(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	userID, ok := ctxkeys.UserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	var req UpdateRequest
+	var passwordHash pgtype.Text
+	if req.User.Password != nil {
+		hashed, err := bcrypt.GenerateFromPassword([]byte(*req.User.Password), bcrypt.DefaultCost)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al procesar contraseña", err))
+			return
+		}
+		passwordHash = pgtype.Text{String: string(hashed), Valid: true}
+	}
+
+	affected, err := h.repo.Update(c.Request.Context(), sqlc.UpdateUserParams{
+		BusinessID:  businessID,
+		ID:          userID,
+		Ic:          utils.ToPgText(req.User.Ic),
+		UserName:    utils.ToPgText(req.User.UserName),
+		FirstName:   utils.ToPgText(req.User.FirstName),
+		LastName:    utils.ToPgText(req.User.LastName),
+		Email:       utils.ToPgText(req.User.Email),
+		Password:    passwordHash,
+		PhoneNumber: utils.ToPgText(req.User.PhoneNumber),
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar usuario", err))
+		return
+	}
+	if affected == 0 {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado"))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success[any]("Usuario actualizado", nil))
+}
+
 func (h *UserHandler) Delete(c *gin.Context) {
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
