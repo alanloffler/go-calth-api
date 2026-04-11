@@ -20,6 +20,7 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool
 	users.POST("/professional", handler.CreateProfessional)
 
 	users.GET("", handler.GetAll)
+	users.GET("/profile", handler.GetProfile)
 	users.GET("/soft", handler.GetAllWithSoftDeleted)
 	users.GET("/role/:role", handler.GetAllByRole)
 	users.GET("/role/:role/soft", handler.GetAllByRoleWithSoftDeleted)
