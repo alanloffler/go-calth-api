@@ -19,6 +19,7 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/user"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -41,6 +42,14 @@ func main() {
 	}
 
 	defer pool.Close()
+
+	// Redis
+	redisArr := cfg.RedisAddr
+	if redisArr == "" {
+		redisArr = "127.0.0.1:6379"
+	}
+	redisClient := asynq.NewClient(asynq.RedisClientOpt{Addr: redisArr})
+	defer redisClient.Close()
 
 	// sqlc queries
 	var queries *sqlc.Queries = sqlc.New(pool)
@@ -74,10 +83,11 @@ func main() {
 
 	// Mixed routes (public/protected)
 	auth.RegisterRoutes(router, protected, queries, cfg)
-	business.RegisterRoutes(router, protected, queries, pool)
+	business.RegisterRoutes(router, protected, queries, pool, redisClient)
 
 	// Public routes
 	health.RegisterRoutes(router, pool)
 
 	router.Run(":" + cfg.Port)
+
 }
