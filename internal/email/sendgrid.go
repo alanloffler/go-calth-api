@@ -2,6 +2,7 @@ package email
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
@@ -29,6 +30,16 @@ func (s *SendGridService) SendBusinessCreated(to, businessName string) error {
 	message := mail.NewV3MailInit(from, subject, toEmail, content)
 
 	client := sendgrid.NewSendClient(s.apiKey)
-	_, err := client.Send(message)
-	return err
+	resp, err := client.Send(message)
+	if err != nil {
+		return fmt.Errorf("sendgrid send: %w", err)
+	}
+
+	log.Printf("sendgrid response: status=%d body=%s", resp.StatusCode, resp.Body)
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("sendgrid rejected email: status=%d body=%s", resp.StatusCode, resp.Body)
+	}
+
+	return nil
 }
