@@ -13,6 +13,8 @@ alias mv := migrate-version
 [group("dev")]
 air:
   air -c .air.toml
+worker:
+  go run ./cmd/worker/main.go
 
 # Create migration name = string
 [group("migration")]
