@@ -17,6 +17,7 @@ type Config struct {
 	CookieDomain     string
 	CookieSecure     bool
 	CorsOrigin       string
+	RedisAddr        string
 }
 
 func Load() (*Config, error) {
@@ -36,6 +37,7 @@ func Load() (*Config, error) {
 		CookieDomain:     os.Getenv("COOKIE_DOMAIN"),
 		CookieSecure:     os.Getenv("COOKIE_SECURE") == "true",
 		CorsOrigin:       os.Getenv("CORS_ORIGIN"),
+		RedisAddr:        os.Getenv("REDIS_ADDR"),
 	}
 
 	return config, nil
