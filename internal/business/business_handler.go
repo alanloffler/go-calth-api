@@ -1,26 +1,30 @@
 package business
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/alanloffler/go-calth-api/internal/common/response"
 	"github.com/alanloffler/go-calth-api/internal/common/utils"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
+	"github.com/alanloffler/go-calth-api/internal/queue"
 	"github.com/alanloffler/go-calth-api/internal/user"
 	"github.com/gin-gonic/gin"
+	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type BusinessHandler struct {
-	repo     *BusinessRepository
-	userRepo *user.UserRepository
-	pool     *pgxpool.Pool
+	repo        *BusinessRepository
+	userRepo    *user.UserRepository
+	pool        *pgxpool.Pool
+	queueClient *asynq.Client
 }
 
-func NewBusinessHandler(repo *BusinessRepository, userRepo *user.UserRepository, pool *pgxpool.Pool) *BusinessHandler {
-	return &BusinessHandler{repo: repo, userRepo: userRepo, pool: pool}
+func NewBusinessHandler(repo *BusinessRepository, userRepo *user.UserRepository, pool *pgxpool.Pool, queueClient *asynq.Client) *BusinessHandler {
+	return &BusinessHandler{repo: repo, userRepo: userRepo, pool: pool, queueClient: queueClient}
 }
 
 type createBusinessData struct {
@@ -207,6 +211,14 @@ func (h *BusinessHandler) Create(c *gin.Context) {
 	if err := tx.Commit(ctx); err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al confirmar transacción", err))
 		return
+	}
+
+	// queue send email
+	if err := queue.EnqueueBusinessCreated(h.queueClient, queue.BusinessCreatedPayload{
+		Email:        req.Contact.Email,
+		BusinessName: req.Business.TradeName,
+	}); err != nil {
+		log.Printf("failed to enqueue business_created email: %v", err)
 	}
 
 	c.JSON(http.StatusCreated, response.Created("Negocio creado", &business))
