@@ -5,13 +5,14 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/middleware"
 	"github.com/alanloffler/go-calth-api/internal/user"
 	"github.com/gin-gonic/gin"
+	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func RegisterRoutes(public *gin.Engine, protected *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool) {
+func RegisterRoutes(public *gin.Engine, protected *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool, queueClient *asynq.Client) {
 	var repo *BusinessRepository = NewBusinessRepository(q)
 	var userRepo *user.UserRepository = user.NewUserRepository(q)
-	var handler *BusinessHandler = NewBusinessHandler(repo, userRepo, pool)
+	var handler *BusinessHandler = NewBusinessHandler(repo, userRepo, pool, queueClient)
 
 	public.POST("/businesses", handler.Create)
 	public.GET("/businesses/availability/tax-id/:taxId", handler.CheckTaxIDAvailability)
