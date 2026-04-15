@@ -33,7 +33,7 @@ func (s *SendGridService) SendBusinessCreated(to, companyName, companyLink strin
 
 	from := mail.NewEmail(s.fromName, s.fromEmail)
 	toEmail := mail.NewEmail("", to)
-	subject := "Clínica creada"
+	subject := "Calth - Alta de negocio"
 	content := mail.NewContent("text/html", html)
 	message := mail.NewV3MailInit(from, subject, toEmail, content)
 
