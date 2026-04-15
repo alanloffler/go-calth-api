@@ -48,11 +48,22 @@ func main() {
 
 func handleBusinessCreated(emailSvc *email.SendGridService) asynq.HandlerFunc {
 	return func(ctx context.Context, t *asynq.Task) error {
+		// log.Printf("[worker] handler called, payload: %s", string(t.Payload()))
+
 		var payload queue.BusinessCreatedPayload
 		if err := json.Unmarshal(t.Payload(), &payload); err != nil {
+			// log.Printf("[worker] unmarshal error: %v", err)
 			return fmt.Errorf("unmarshal business_created payload: %w", err)
 		}
 
-		return emailSvc.SendBusinessCreated(payload.Email, payload.BusinessName)
+		log.Printf("[worker] calling SendBusinessCreated")
+		if err := emailSvc.SendBusinessCreated(payload.Email, payload.BusinessName); err != nil {
+			// log.Printf("[worker] SendBusinessCreated error: %v", err)
+			return err
+		}
+
+		// log.Printf("[worker] done")
+
+		return nil
 	}
 }
