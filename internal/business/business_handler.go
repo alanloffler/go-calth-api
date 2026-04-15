@@ -21,10 +21,11 @@ type BusinessHandler struct {
 	userRepo    *user.UserRepository
 	pool        *pgxpool.Pool
 	queueClient *asynq.Client
+	appDomain   string
 }
 
-func NewBusinessHandler(repo *BusinessRepository, userRepo *user.UserRepository, pool *pgxpool.Pool, queueClient *asynq.Client) *BusinessHandler {
-	return &BusinessHandler{repo: repo, userRepo: userRepo, pool: pool, queueClient: queueClient}
+func NewBusinessHandler(repo *BusinessRepository, userRepo *user.UserRepository, pool *pgxpool.Pool, queueClient *asynq.Client, appDomain string) *BusinessHandler {
+	return &BusinessHandler{repo: repo, userRepo: userRepo, pool: pool, queueClient: queueClient, appDomain: appDomain}
 }
 
 type createBusinessData struct {
@@ -217,7 +218,7 @@ func (h *BusinessHandler) Create(c *gin.Context) {
 	if err := queue.EnqueueBusinessCreated(h.queueClient, queue.BusinessCreatedPayload{
 		Email:        req.Contact.Email,
 		BusinessName: req.Business.TradeName,
-		BusinessLink: "https://" + req.Business.Slug + ".calth.app",
+		BusinessLink: "https://" + req.Business.Slug + "." + h.appDomain,
 	}); err != nil {
 		log.Printf("failed to enqueue business_created email: %v", err)
 	}
