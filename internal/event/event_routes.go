@@ -5,13 +5,14 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/middleware"
 	"github.com/alanloffler/go-calth-api/internal/professional_profile"
 	"github.com/gin-gonic/gin"
+	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool) {
+func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool, queueClient *asynq.Client) {
 	var repo *EventRepository = NewEventRepository(q)
 	var profileRepo *professional_profile.ProfessionalProfileRepository = professional_profile.NewProfessionalProfileRepository(q)
-	var handler *EventHandler = NewEventHandler(repo, pool, profileRepo)
+	var handler *EventHandler = NewEventHandler(repo, pool, profileRepo, queueClient)
 	var events *gin.RouterGroup = router.Group("/events")
 
 	events.POST("", middleware.PermissionMiddleware(q, "events-create"), handler.Create)
