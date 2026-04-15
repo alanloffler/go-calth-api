@@ -52,11 +52,12 @@ func (s *SendGridService) SendBusinessCreated(to, companyName, companyLink strin
 	return nil
 }
 
-func (s *SendGridService) SendEventCreated(to, fullName, title, startDate string) error {
+func (s *SendGridService) SendEventCreated(to, companyName, fullName, title, startDate string) error {
 	html, err := renderTemplate("event-created", map[string]string{
-		"fullName":  fullName,
-		"title":     title,
-		"startDate": startDate,
+		"companyName": companyName,
+		"fullName":    fullName,
+		"title":       title,
+		"startDate":   startDate,
 	})
 	if err != nil {
 		return fmt.Errorf("render template: %w", err)
