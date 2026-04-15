@@ -57,7 +57,7 @@ func handleBusinessCreated(emailSvc *email.SendGridService) asynq.HandlerFunc {
 		}
 
 		log.Printf("[worker] calling SendBusinessCreated")
-		if err := emailSvc.SendBusinessCreated(payload.Email, payload.BusinessName); err != nil {
+		if err := emailSvc.SendBusinessCreated(payload.Email, payload.BusinessName, payload.BusinessLink); err != nil {
 			// log.Printf("[worker] SendBusinessCreated error: %v", err)
 			return err
 		}
