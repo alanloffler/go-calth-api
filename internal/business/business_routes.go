@@ -9,10 +9,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func RegisterRoutes(public *gin.Engine, protected *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool, queueClient *asynq.Client) {
+func RegisterRoutes(public *gin.Engine, protected *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool, queueClient *asynq.Client, appDomain string) {
 	var repo *BusinessRepository = NewBusinessRepository(q)
 	var userRepo *user.UserRepository = user.NewUserRepository(q)
-	var handler *BusinessHandler = NewBusinessHandler(repo, userRepo, pool, queueClient)
+	var handler *BusinessHandler = NewBusinessHandler(repo, userRepo, pool, queueClient, appDomain)
 
 	public.POST("/businesses", handler.Create)
 	public.GET("/businesses/availability/tax-id/:taxId", handler.CheckTaxIDAvailability)
