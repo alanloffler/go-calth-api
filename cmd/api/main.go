@@ -74,7 +74,7 @@ func main() {
 	// Protected routes
 	protected := router.Group("/")
 	protected.Use(middleware.AuthMiddleware(authService))
-	event.RegisterRoutes(protected, queries, pool)
+	event.RegisterRoutes(protected, queries, pool, redisClient)
 	medical_history.RegisterRoutes(protected, queries)
 	permission.RegisterRoutes(protected, queries)
 	role.RegisterRoutes(protected, queries, pool)
