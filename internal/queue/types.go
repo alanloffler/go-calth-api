@@ -7,8 +7,9 @@ type BusinessCreatedPayload struct {
 }
 
 type EventCreatedPayload struct {
-	Email     string `json:"email"`
-	FullName  string `json:"fullName"`
-	Title     string `json:"title"`
-	StartDate string `json:"startDate"`
+	Email       string `json:"email"`
+	CompanyName string `json:"companyName"`
+	FullName    string `json:"fullName"`
+	Title       string `json:"title"`
+	StartDate   string `json:"startDate"`
 }
