@@ -13,8 +13,10 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/common/response"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/alanloffler/go-calth-api/internal/professional_profile"
+	"github.com/alanloffler/go-calth-api/internal/queue"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -24,6 +26,7 @@ type EventHandler struct {
 	repo        *EventRepository
 	pool        *pgxpool.Pool
 	profileRepo *professional_profile.ProfessionalProfileRepository
+	queueClient *asynq.Client
 }
 
 type CreateEventRequest struct {
@@ -49,8 +52,8 @@ type UpdateEventStatusRequest struct {
 	Status string `json:"status" binding:"required"`
 }
 
-func NewEventHandler(repo *EventRepository, pool *pgxpool.Pool, professionalRepo *professional_profile.ProfessionalProfileRepository) *EventHandler {
-	return &EventHandler{repo: repo, pool: pool, profileRepo: professionalRepo}
+func NewEventHandler(repo *EventRepository, pool *pgxpool.Pool, professionalRepo *professional_profile.ProfessionalProfileRepository, queueClient *asynq.Client) *EventHandler {
+	return &EventHandler{repo: repo, pool: pool, profileRepo: professionalRepo, queueClient: queueClient}
 }
 
 func (h *EventHandler) Create(c *gin.Context) {
@@ -111,6 +114,25 @@ func (h *EventHandler) Create(c *gin.Context) {
 		}
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al crear evento", err))
 		return
+	}
+
+	// queue send email
+	queries := sqlc.New(h.pool)
+	userData, err := queries.GetUserByID(c.Request.Context(), sqlc.GetUserByIDParams{
+		BusinessID: businessID,
+		ID:         userID,
+	})
+	if err != nil {
+		log.Printf("failed to get user for event email: %v", err)
+	} else {
+		if err := queue.EnqueueEventCreated(h.queueClient, queue.EventCreatedPayload{
+			Email:     userData.Email,
+			FullName:  userData.FirstName + " " + userData.LastName,
+			Title:     req.Title,
+			StartDate: req.StartDate,
+		}); err != nil {
+			log.Printf("failed to enqueue event_created email: %v", err)
+		}
 	}
 
 	c.JSON(http.StatusOK, response.Created("Evento creado", &event))
