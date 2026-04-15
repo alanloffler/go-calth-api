@@ -40,6 +40,7 @@ func main() {
 
 	mux := asynq.NewServeMux()
 	mux.HandleFunc("email:business_created", handleBusinessCreated(emailSvc))
+	mux.HandleFunc("email:event_created", handleEventCreated(emailSvc))
 
 	if err := srv.Run(mux); err != nil {
 		log.Fatal(err)
@@ -63,6 +64,21 @@ func handleBusinessCreated(emailSvc *email.SendGridService) asynq.HandlerFunc {
 		}
 
 		// log.Printf("[worker] done")
+
+		return nil
+	}
+}
+
+func handleEventCreated(emailSvc *email.SendGridService) asynq.HandlerFunc {
+	return func(ctx context.Context, t *asynq.Task) error {
+		var payload queue.EventCreatedPayload
+		if err := json.Unmarshal(t.Payload(), &payload); err != nil {
+			return fmt.Errorf("unmarshal event_created payload: %w", err)
+		}
+
+		if err := emailSvc.SendEventCreated(payload.Email, payload.FullName, payload.Title, payload.StartDate); err != nil {
+			return err
+		}
 
 		return nil
 	}
