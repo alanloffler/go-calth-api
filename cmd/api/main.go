@@ -83,7 +83,7 @@ func main() {
 
 	// Mixed routes (public/protected)
 	auth.RegisterRoutes(router, protected, queries, cfg)
-	business.RegisterRoutes(router, protected, queries, pool, redisClient)
+	business.RegisterRoutes(router, protected, queries, pool, redisClient, cfg.AppDomain)
 
 	// Public routes
 	health.RegisterRoutes(router, pool)
