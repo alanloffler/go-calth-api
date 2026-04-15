@@ -51,3 +51,32 @@ func (s *SendGridService) SendBusinessCreated(to, companyName, companyLink strin
 
 	return nil
 }
+
+func (s *SendGridService) SendEventCreated(to, fullName, title, startDate string) error {
+	html, err := renderTemplate("event-created", map[string]string{
+		"fullName":  fullName,
+		"title":     title,
+		"startDate": startDate,
+	})
+	if err != nil {
+		return fmt.Errorf("render template: %w", err)
+	}
+
+	from := mail.NewEmail(s.fromName, s.fromEmail)
+	toEmail := mail.NewEmail("", to)
+	subject := "Calth - Turno creado"
+	content := mail.NewContent("text/html", html)
+	message := mail.NewV3MailInit(from, subject, toEmail, content)
+
+	client := sendgrid.NewSendClient(s.apiKey)
+	resp, err := client.Send(message)
+	if err != nil {
+		return fmt.Errorf("sendgrid send: %w", err)
+	}
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("sendgrid rejected email: status=%d body=%s", resp.StatusCode, resp.Body)
+	}
+
+	return nil
+}
