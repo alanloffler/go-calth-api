@@ -217,6 +217,7 @@ func (h *BusinessHandler) Create(c *gin.Context) {
 	if err := queue.EnqueueBusinessCreated(h.queueClient, queue.BusinessCreatedPayload{
 		Email:        req.Contact.Email,
 		BusinessName: req.Business.TradeName,
+		BusinessLink: "https://" + req.Business.Slug + ".calth.app",
 	}); err != nil {
 		log.Printf("failed to enqueue business_created email: %v", err)
 	}
