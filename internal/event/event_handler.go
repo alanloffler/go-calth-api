@@ -125,10 +125,12 @@ func (h *EventHandler) Create(c *gin.Context) {
 	if err != nil {
 		log.Printf("failed to get user for event email: %v", err)
 	} else {
-		// TODO: GET COMPANY NAME
-		if err := queue.EnqueueEventCreated(h.queueClient, queue.EventCreatedPayload{
+		businessData, err := queries.GetBusiness(c.Request.Context(), businessID)
+		if err != nil {
+			log.Printf("failed to get business for event email: %v", err)
+		} else if err := queue.EnqueueEventCreated(h.queueClient, queue.EventCreatedPayload{
 			Email:       userData.Email,
-			CompanyName: uuid.UUID(businessID.Bytes).String(),
+			CompanyName: businessData.TradeName,
 			FullName:    userData.FirstName + " " + userData.LastName,
 			Title:       req.Title,
 			StartDate:   req.StartDate,
