@@ -22,9 +22,10 @@ func NewSendGridService(apiKey, fromEmail, fromName string) *SendGridService {
 	}
 }
 
-func (s *SendGridService) SendBusinessCreated(to, companyName string) error {
+func (s *SendGridService) SendBusinessCreated(to, companyName, companyLink string) error {
 	html, err := renderTemplate("business-created", map[string]string{
 		"companyName": companyName,
+		"companyLink": companyLink,
 	})
 	if err != nil {
 		return fmt.Errorf("render template: %w", err)
