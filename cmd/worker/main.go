@@ -76,7 +76,7 @@ func handleEventCreated(emailSvc *email.SendGridService) asynq.HandlerFunc {
 			return fmt.Errorf("unmarshal event_created payload: %w", err)
 		}
 
-		if err := emailSvc.SendEventCreated(payload.Email, payload.FullName, payload.Title, payload.StartDate); err != nil {
+		if err := emailSvc.SendEventCreated(payload.Email, payload.CompanyName, payload.FullName, payload.Title, payload.StartDate); err != nil {
 			return err
 		}
 
