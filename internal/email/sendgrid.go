@@ -22,11 +22,18 @@ func NewSendGridService(apiKey, fromEmail, fromName string) *SendGridService {
 	}
 }
 
-func (s *SendGridService) SendBusinessCreated(to, businessName string) error {
+func (s *SendGridService) SendBusinessCreated(to, companyName string) error {
+	html, err := renderTemplate("business-created", map[string]string{
+		"companyName": companyName,
+	})
+	if err != nil {
+		return fmt.Errorf("render template: %w", err)
+	}
+
 	from := mail.NewEmail(s.fromName, s.fromEmail)
 	toEmail := mail.NewEmail("", to)
 	subject := "Clínica creada"
-	content := mail.NewContent("text/html", fmt.Sprintf("<h1>Tu clínica %s fue creada</h1>", businessName))
+	content := mail.NewContent("text/html", html)
 	message := mail.NewV3MailInit(from, subject, toEmail, content)
 
 	client := sendgrid.NewSendClient(s.apiKey)
