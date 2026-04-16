@@ -61,5 +61,5 @@ func (h *BlockedDayHandler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, response.Success("Día bloqueado creado", &bd))
+	c.JSON(http.StatusOK, response.Created("Día bloqueado creado", &bd))
 }
