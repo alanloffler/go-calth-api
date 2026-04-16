@@ -56,6 +56,16 @@ func (ns NullEventStatus) Value() (driver.Value, error) {
 	return string(ns.EventStatus), nil
 }
 
+type BlockedDay struct {
+	ID             pgtype.UUID        `json:"id"`
+	Date           pgtype.Timestamptz `json:"date"`
+	Reason         string             `json:"reason"`
+	BusinessID     pgtype.UUID        `json:"businessId"`
+	ProfessionalID pgtype.UUID        `json:"professionalId"`
+	CreatedAt      pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt      pgtype.Timestamptz `json:"updatedAt"`
+}
+
 type Business struct {
 	ID             pgtype.UUID        `json:"id"`
 	Slug           string             `json:"slug"`
