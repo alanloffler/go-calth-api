@@ -63,3 +63,28 @@ func (h *BlockedDayHandler) Create(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response.Created("Día bloqueado creado", &bd))
 }
+
+func (h *BlockedDayHandler) GetByProfessionalID(c *gin.Context) {
+	businessID, ok := ctxkeys.BusinessID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	var professionalID pgtype.UUID
+	if err := professionalID.Scan(c.Param("professionalId")); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de ID del profesional inválido", err))
+		return
+	}
+
+	bd, err := h.repo.GetByProfessionalID(c.Request.Context(), sqlc.GetBlockedDaysProfessionalIDParams{
+		BusinessID:     businessID,
+		ProfessionalID: professionalID,
+	})
+	if err != nil {
+		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Dias bloqueados no encontrados", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, response.Success("Dias bloqueados encontrados", &bd))
+}
