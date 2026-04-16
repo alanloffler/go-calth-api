@@ -17,3 +17,7 @@ func NewBlockedDayRepository(q *sqlc.Queries) *BlockedDayRepository {
 func (r *BlockedDayRepository) Create(ctx context.Context, arg sqlc.CreateBlockedDayParams) (sqlc.BlockedDay, error) {
 	return r.q.CreateBlockedDay(ctx, arg)
 }
+
+func (r *BlockedDayRepository) GetByProfessionalID(ctx context.Context, arg sqlc.GetBlockedDaysProfessionalIDParams) ([]sqlc.BlockedDay, error) {
+	return r.q.GetBlockedDaysProfessionalID(ctx, arg)
+}
