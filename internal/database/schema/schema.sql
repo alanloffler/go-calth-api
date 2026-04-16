@@ -51,7 +51,8 @@ CREATE TABLE users (
   deleted_at TIMESTAMPTZ,
   UNIQUE (business_id, email),
   UNIQUE (business_id, ic),
-  UNIQUE (business_id, user_name)
+  UNIQUE (business_id, user_name),
+  CONSTRAINT uq_users_business_id_id UNIQUE (business_id, id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_business ON users (business_id);
@@ -215,3 +216,18 @@ CREATE TABLE settings (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- // Blocked days //
+CREATE TABLE blocked_days (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  date TIMESTAMPTZ NOT NULL,
+  reason VARCHAR(50) NOT NULL,
+  business_id UUID NOT NULL,
+  professional_id UUID NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fk_blocked_days_professional FOREIGN KEY (business_id, professional_id) REFERENCES users (business_id, id) ON DELETE CASCADE,
+  CONSTRAINT uq_blocked_days_unique UNIQUE (business_id, professional_id, date)
+);
+
+CREATE INDEX idx_blocked_days_business_professional ON blocked_days (business_id, professional_id, date)
