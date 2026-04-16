@@ -11,5 +11,7 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries) {
 	var handler *BlockedDayHandler = NewBlockedDayHandler(repo)
 	var blocked_days *gin.RouterGroup = router.Group("blocked-days")
 
-	blocked_days.POST("", middleware.PermissionMiddleware(q, "patient-update"), handler.Create)
+	blocked_days.POST("", middleware.PermissionMiddleware(q, "professional-update"), handler.Create)
+
+	blocked_days.GET(":professionalId", middleware.PermissionMiddleware(q, "professional-view"), handler.GetByProfessionalID)
 }
