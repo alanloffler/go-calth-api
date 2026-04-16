@@ -46,3 +46,54 @@ func (q *Queries) CreateBlockedDay(ctx context.Context, arg CreateBlockedDayPara
 	)
 	return i, err
 }
+
+const getBlockedDaysProfessionalID = `-- name: GetBlockedDaysProfessionalID :many
+SELECT
+  id,
+  date,
+  reason,
+  business_id,
+  professional_id,
+  created_at,
+  updated_at
+FROM
+  blocked_days
+WHERE
+  business_id = $1
+  AND professional_id = $2
+ORDER BY
+  date DESC
+`
+
+type GetBlockedDaysProfessionalIDParams struct {
+	BusinessID     pgtype.UUID `json:"businessId"`
+	ProfessionalID pgtype.UUID `json:"professionalId"`
+}
+
+func (q *Queries) GetBlockedDaysProfessionalID(ctx context.Context, arg GetBlockedDaysProfessionalIDParams) ([]BlockedDay, error) {
+	rows, err := q.db.Query(ctx, getBlockedDaysProfessionalID, arg.BusinessID, arg.ProfessionalID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []BlockedDay
+	for rows.Next() {
+		var i BlockedDay
+		if err := rows.Scan(
+			&i.ID,
+			&i.Date,
+			&i.Reason,
+			&i.BusinessID,
+			&i.ProfessionalID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
