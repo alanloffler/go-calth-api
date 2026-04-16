@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/alanloffler/go-calth-api/internal/auth"
+	blocked_day "github.com/alanloffler/go-calth-api/internal/blocked-day"
 	"github.com/alanloffler/go-calth-api/internal/business"
 	"github.com/alanloffler/go-calth-api/internal/config"
 	"github.com/alanloffler/go-calth-api/internal/database"
@@ -74,6 +75,7 @@ func main() {
 	// Protected routes
 	protected := router.Group("/")
 	protected.Use(middleware.AuthMiddleware(authService))
+	blocked_day.RegisterRoutes(protected, queries)
 	event.RegisterRoutes(protected, queries, pool, redisClient)
 	medical_history.RegisterRoutes(protected, queries)
 	permission.RegisterRoutes(protected, queries)
