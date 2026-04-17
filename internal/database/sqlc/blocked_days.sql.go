@@ -117,3 +117,34 @@ func (q *Queries) GetBlockedDaysProfessionalID(ctx context.Context, arg GetBlock
 	}
 	return items, nil
 }
+
+const updateBlockedDay = `-- name: UpdateBlockedDay :execrows
+UPDATE blocked_days
+SET
+  date = COALESCE($1, date),
+  reason = COALESCE($2, reason),
+  updated_at = now()
+WHERE
+  business_id = $3
+  AND id = $4
+`
+
+type UpdateBlockedDayParams struct {
+	Date       pgtype.Timestamptz `json:"date"`
+	Reason     pgtype.Text        `json:"reason"`
+	BusinessID pgtype.UUID        `json:"businessId"`
+	ID         pgtype.UUID        `json:"id"`
+}
+
+func (q *Queries) UpdateBlockedDay(ctx context.Context, arg UpdateBlockedDayParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateBlockedDay,
+		arg.Date,
+		arg.Reason,
+		arg.BusinessID,
+		arg.ID,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
