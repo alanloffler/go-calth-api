@@ -23,6 +23,16 @@ WHERE
 ORDER BY
   date DESC;
 
+-- name: UpdateBlockedDay :execrows
+UPDATE blocked_days
+SET
+  date = COALESCE(sqlc.narg ('date'), date),
+  reason = COALESCE(sqlc.narg ('reason'), reason),
+  updated_at = now()
+WHERE
+  business_id = sqlc.arg ('business_id')
+  AND id = sqlc.arg ('id');
+
 -- name: DeleteBlockedDay :execrows
 DELETE FROM blocked_days
 WHERE
