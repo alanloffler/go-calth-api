@@ -22,6 +22,10 @@ func (r *BlockedDayRepository) GetByProfessionalID(ctx context.Context, arg sqlc
 	return r.q.GetBlockedDaysProfessionalID(ctx, arg)
 }
 
+func (r *BlockedDayRepository) Update(ctx context.Context, arg sqlc.UpdateBlockedDayParams) (int64, error) {
+	return r.q.UpdateBlockedDay(ctx, arg)
+}
+
 func (r *BlockedDayRepository) Delete(ctx context.Context, arg sqlc.DeleteBlockedDayParams) (int64, error) {
 	return r.q.DeleteBlockedDay(ctx, arg)
 }
