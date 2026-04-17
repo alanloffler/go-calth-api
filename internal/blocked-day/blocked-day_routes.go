@@ -14,4 +14,6 @@ func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries) {
 	blocked_days.POST("", middleware.PermissionMiddleware(q, "professional-update"), handler.Create)
 
 	blocked_days.GET(":professionalId", middleware.PermissionMiddleware(q, "professional-view"), handler.GetByProfessionalID)
+
+	blocked_days.DELETE(":id", middleware.PermissionMiddleware(q, "professional-update"), handler.Delete)
 }
