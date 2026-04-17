@@ -22,3 +22,9 @@ WHERE
   AND professional_id = $2
 ORDER BY
   date DESC;
+
+-- name: DeleteBlockedDay :execrows
+DELETE FROM blocked_days
+WHERE
+  business_id = $1
+  AND id = $2;
