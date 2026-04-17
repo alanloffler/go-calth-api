@@ -1,6 +1,7 @@
 package blocked_day
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/common/response"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -57,6 +59,13 @@ func (h *BlockedDayHandler) Create(c *gin.Context) {
 		ProfessionalID: professionalID,
 	})
 	if err != nil {
+		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok {
+			if pgErr.Code == "23505" {
+				c.JSON(http.StatusConflict, response.Error(http.StatusConflict, "El día bloqueado ya existe"))
+				return
+			}
+		}
+
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al crear el día bloqueado", err))
 		return
 	}
