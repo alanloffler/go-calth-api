@@ -47,6 +47,26 @@ func (q *Queries) CreateBlockedDay(ctx context.Context, arg CreateBlockedDayPara
 	return i, err
 }
 
+const deleteBlockedDay = `-- name: DeleteBlockedDay :execrows
+DELETE FROM blocked_days
+WHERE
+  business_id = $1
+  AND id = $2
+`
+
+type DeleteBlockedDayParams struct {
+	BusinessID pgtype.UUID `json:"businessId"`
+	ID         pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) DeleteBlockedDay(ctx context.Context, arg DeleteBlockedDayParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteBlockedDay, arg.BusinessID, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const getBlockedDaysProfessionalID = `-- name: GetBlockedDaysProfessionalID :many
 SELECT
   id,
