@@ -33,6 +33,7 @@ type UpdateBlockedDayRequest struct {
 	Reason string `json:"reason" binding:"omitempty,min=3,max=50"`
 }
 
+// TODO: do not create blocked day if exist events previously on that date
 func (h *BlockedDayHandler) Create(c *gin.Context) {
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
