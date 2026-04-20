@@ -224,10 +224,15 @@ CREATE TABLE blocked_days (
   reason VARCHAR(50) NOT NULL,
   business_id UUID NOT NULL,
   professional_id UUID NOT NULL,
+  recurrent BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT fk_blocked_days_professional FOREIGN KEY (business_id, professional_id) REFERENCES users (business_id, id) ON DELETE CASCADE,
   CONSTRAINT uq_blocked_days_unique UNIQUE (business_id, professional_id, date)
 );
 
-CREATE INDEX idx_blocked_days_business_professional ON blocked_days (business_id, professional_id, date)
+CREATE INDEX idx_blocked_days_business_professional ON blocked_days (business_id, professional_id, date);
+
+CREATE INDEX idx_blocked_business_professional_recurrent ON blocked_days (business_id, professional_id)
+WHERE
+  recurrent IS TRUE;
