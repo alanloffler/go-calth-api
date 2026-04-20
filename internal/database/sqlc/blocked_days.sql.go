@@ -17,7 +17,7 @@ INSERT INTO
 VALUES
   ($1, $2, $3, $4)
 RETURNING
-  id, date, reason, business_id, professional_id, created_at, updated_at
+  id, date, reason, business_id, professional_id, recurrent, created_at, updated_at
 `
 
 type CreateBlockedDayParams struct {
@@ -41,6 +41,7 @@ func (q *Queries) CreateBlockedDay(ctx context.Context, arg CreateBlockedDayPara
 		&i.Reason,
 		&i.BusinessID,
 		&i.ProfessionalID,
+		&i.Recurrent,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -90,15 +91,25 @@ type GetBlockedDaysProfessionalIDParams struct {
 	ProfessionalID pgtype.UUID `json:"professionalId"`
 }
 
-func (q *Queries) GetBlockedDaysProfessionalID(ctx context.Context, arg GetBlockedDaysProfessionalIDParams) ([]BlockedDay, error) {
+type GetBlockedDaysProfessionalIDRow struct {
+	ID             pgtype.UUID        `json:"id"`
+	Date           pgtype.Timestamptz `json:"date"`
+	Reason         string             `json:"reason"`
+	BusinessID     pgtype.UUID        `json:"businessId"`
+	ProfessionalID pgtype.UUID        `json:"professionalId"`
+	CreatedAt      pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt      pgtype.Timestamptz `json:"updatedAt"`
+}
+
+func (q *Queries) GetBlockedDaysProfessionalID(ctx context.Context, arg GetBlockedDaysProfessionalIDParams) ([]GetBlockedDaysProfessionalIDRow, error) {
 	rows, err := q.db.Query(ctx, getBlockedDaysProfessionalID, arg.BusinessID, arg.ProfessionalID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []BlockedDay
+	var items []GetBlockedDaysProfessionalIDRow
 	for rows.Next() {
-		var i BlockedDay
+		var i GetBlockedDaysProfessionalIDRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Date,
