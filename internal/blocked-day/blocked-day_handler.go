@@ -26,6 +26,7 @@ type CreateBlockedDayRequest struct {
 	Date           string `json:"date" binding:"required,datetime=2006-01-02T15:04:05Z07:00"`
 	Reason         string `json:"reason" binding:"required,min=3,max=50"`
 	ProfessionalID string `json:"professionalId" binding:"required,uuid"`
+	Recurrent      bool   `json:"recurrent"`
 }
 
 type UpdateBlockedDayRequest struct {
@@ -33,7 +34,6 @@ type UpdateBlockedDayRequest struct {
 	Reason string `json:"reason" binding:"omitempty,min=3,max=50"`
 }
 
-// TODO: do not create blocked day if exist events previously on that date
 func (h *BlockedDayHandler) Create(c *gin.Context) {
 	businessID, ok := ctxkeys.BusinessID(c)
 	if !ok {
@@ -64,6 +64,7 @@ func (h *BlockedDayHandler) Create(c *gin.Context) {
 		Reason:         req.Reason,
 		BusinessID:     businessID,
 		ProfessionalID: professionalID,
+		Recurrent:      pgtype.Bool{Bool: req.Recurrent, Valid: true},
 	})
 	if err != nil {
 		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok {
