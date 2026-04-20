@@ -1,8 +1,14 @@
 -- name: CreateBlockedDay :one
 INSERT INTO
-  blocked_days (date, reason, business_id, professional_id)
+  blocked_days (
+    date,
+    reason,
+    business_id,
+    professional_id,
+    recurrent
+  )
 VALUES
-  ($1, $2, $3, $4)
+  ($1, $2, $3, $4, $5)
 RETURNING
   *;
 
@@ -13,6 +19,7 @@ SELECT
   reason,
   business_id,
   professional_id,
+  recurrent,
   created_at,
   updated_at
 FROM
@@ -28,6 +35,7 @@ UPDATE blocked_days
 SET
   date = COALESCE(sqlc.narg ('date'), date),
   reason = COALESCE(sqlc.narg ('reason'), reason),
+  recurrent = COALESCE(sqlc.narg ('recurrent'), recurrent),
   updated_at = now()
 WHERE
   business_id = sqlc.arg ('business_id')
