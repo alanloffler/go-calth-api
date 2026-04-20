@@ -13,9 +13,15 @@ import (
 
 const createBlockedDay = `-- name: CreateBlockedDay :one
 INSERT INTO
-  blocked_days (date, reason, business_id, professional_id)
+  blocked_days (
+    date,
+    reason,
+    business_id,
+    professional_id,
+    recurrent
+  )
 VALUES
-  ($1, $2, $3, $4)
+  ($1, $2, $3, $4, $5)
 RETURNING
   id, date, reason, business_id, professional_id, recurrent, created_at, updated_at
 `
@@ -25,6 +31,7 @@ type CreateBlockedDayParams struct {
 	Reason         string             `json:"reason"`
 	BusinessID     pgtype.UUID        `json:"businessId"`
 	ProfessionalID pgtype.UUID        `json:"professionalId"`
+	Recurrent      pgtype.Bool        `json:"recurrent"`
 }
 
 func (q *Queries) CreateBlockedDay(ctx context.Context, arg CreateBlockedDayParams) (BlockedDay, error) {
@@ -33,6 +40,7 @@ func (q *Queries) CreateBlockedDay(ctx context.Context, arg CreateBlockedDayPara
 		arg.Reason,
 		arg.BusinessID,
 		arg.ProfessionalID,
+		arg.Recurrent,
 	)
 	var i BlockedDay
 	err := row.Scan(
@@ -75,6 +83,7 @@ SELECT
   reason,
   business_id,
   professional_id,
+  recurrent,
   created_at,
   updated_at
 FROM
@@ -91,31 +100,22 @@ type GetBlockedDaysProfessionalIDParams struct {
 	ProfessionalID pgtype.UUID `json:"professionalId"`
 }
 
-type GetBlockedDaysProfessionalIDRow struct {
-	ID             pgtype.UUID        `json:"id"`
-	Date           pgtype.Timestamptz `json:"date"`
-	Reason         string             `json:"reason"`
-	BusinessID     pgtype.UUID        `json:"businessId"`
-	ProfessionalID pgtype.UUID        `json:"professionalId"`
-	CreatedAt      pgtype.Timestamptz `json:"createdAt"`
-	UpdatedAt      pgtype.Timestamptz `json:"updatedAt"`
-}
-
-func (q *Queries) GetBlockedDaysProfessionalID(ctx context.Context, arg GetBlockedDaysProfessionalIDParams) ([]GetBlockedDaysProfessionalIDRow, error) {
+func (q *Queries) GetBlockedDaysProfessionalID(ctx context.Context, arg GetBlockedDaysProfessionalIDParams) ([]BlockedDay, error) {
 	rows, err := q.db.Query(ctx, getBlockedDaysProfessionalID, arg.BusinessID, arg.ProfessionalID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetBlockedDaysProfessionalIDRow
+	var items []BlockedDay
 	for rows.Next() {
-		var i GetBlockedDaysProfessionalIDRow
+		var i BlockedDay
 		if err := rows.Scan(
 			&i.ID,
 			&i.Date,
 			&i.Reason,
 			&i.BusinessID,
 			&i.ProfessionalID,
+			&i.Recurrent,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -134,15 +134,17 @@ UPDATE blocked_days
 SET
   date = COALESCE($1, date),
   reason = COALESCE($2, reason),
+  recurrent = COALESCE($3, recurrent),
   updated_at = now()
 WHERE
-  business_id = $3
-  AND id = $4
+  business_id = $4
+  AND id = $5
 `
 
 type UpdateBlockedDayParams struct {
 	Date       pgtype.Timestamptz `json:"date"`
 	Reason     pgtype.Text        `json:"reason"`
+	Recurrent  pgtype.Bool        `json:"recurrent"`
 	BusinessID pgtype.UUID        `json:"businessId"`
 	ID         pgtype.UUID        `json:"id"`
 }
@@ -151,6 +153,7 @@ func (q *Queries) UpdateBlockedDay(ctx context.Context, arg UpdateBlockedDayPara
 	result, err := q.db.Exec(ctx, updateBlockedDay,
 		arg.Date,
 		arg.Reason,
+		arg.Recurrent,
 		arg.BusinessID,
 		arg.ID,
 	)
