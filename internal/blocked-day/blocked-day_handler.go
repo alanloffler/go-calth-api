@@ -30,8 +30,9 @@ type CreateBlockedDayRequest struct {
 }
 
 type UpdateBlockedDayRequest struct {
-	Date   string `json:"date" binding:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
-	Reason string `json:"reason" binding:"omitempty,min=3,max=50"`
+	Date      string `json:"date" binding:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	Reason    string `json:"reason" binding:"omitempty,min=3,max=50"`
+	Recurrent bool   `json:"recurrent"`
 }
 
 func (h *BlockedDayHandler) Create(c *gin.Context) {
@@ -129,6 +130,7 @@ func (h *BlockedDayHandler) Update(c *gin.Context) {
 		BusinessID: businessID,
 		ID:         id,
 		Reason:     utils.ToPgText(&req.Reason),
+		Recurrent:  pgtype.Bool{Bool: req.Recurrent, Valid: true},
 	}
 
 	if req.Date != "" {
