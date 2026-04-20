@@ -62,6 +62,7 @@ type BlockedDay struct {
 	Reason         string             `json:"reason"`
 	BusinessID     pgtype.UUID        `json:"businessId"`
 	ProfessionalID pgtype.UUID        `json:"professionalId"`
+	Recurrent      pgtype.Bool        `json:"recurrent"`
 	CreatedAt      pgtype.Timestamptz `json:"createdAt"`
 	UpdatedAt      pgtype.Timestamptz `json:"updatedAt"`
 }
