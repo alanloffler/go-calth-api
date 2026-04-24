@@ -648,6 +648,8 @@ WHERE
   "user"."business_id" = $1
   AND "role"."value" = $2
   AND "user"."deleted_at" IS NULL
+ORDER BY
+  "user".created_at DESC
 `
 
 type GetUsersByRoleParams struct {
