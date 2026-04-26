@@ -194,6 +194,7 @@ FROM
   LEFT JOIN roles "role" ON "role"."id" = "user"."role_id"
   LEFT JOIN role_permissions "rp" ON "rp"."role_id" = "role"."id"
   LEFT JOIN permissions "p" ON "p"."id" = "rp"."permission_id"
+  AND "p".deleted_at IS NULL
 WHERE
   "user"."business_id" = $1
   AND "user"."id" = $2;
