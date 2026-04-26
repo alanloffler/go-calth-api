@@ -66,7 +66,7 @@ type CreateUserData struct {
 }
 
 type UpdateRequest struct {
-	User UpdateUserData `json:"user" binding:"required"`
+	User *UpdateUserData `json:"user" binding:"required"`
 }
 
 type userRole struct {
@@ -389,6 +389,11 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 	}
 
 	var req UpdateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Error de validación de datos", err))
+		return
+	}
+
 	var passwordHash pgtype.Text
 	if req.User.Password != nil {
 		hashed, err := bcrypt.GenerateFromPassword([]byte(*req.User.Password), bcrypt.DefaultCost)
