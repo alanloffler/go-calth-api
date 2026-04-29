@@ -167,7 +167,7 @@ ORDER BY
 LIMIT
   5;
 
--- name: GetMe :many
+-- name: GetMe :one
 SELECT
   "user"."id",
   "user"."ic",
@@ -184,17 +184,10 @@ SELECT
   "user"."deleted_at",
   "role"."id" AS "role_id",
   "role"."name" AS "role_name",
-  "role"."value" AS "role_value",
-  "rp"."role_id" AS "rp_role_id",
-  "rp"."permission_id" AS "rp_permission_id",
-  "p"."id" AS "permission_id",
-  "p"."action_key" AS "permission_action_key"
+  "role"."value" AS "role_value"
 FROM
   users "user"
   LEFT JOIN roles "role" ON "role"."id" = "user"."role_id"
-  LEFT JOIN role_permissions "rp" ON "rp"."role_id" = "role"."id"
-  LEFT JOIN permissions "p" ON "p"."id" = "rp"."permission_id"
-  AND "p".deleted_at IS NULL
 WHERE
   "user"."business_id" = $1
   AND "user"."id" = $2;
