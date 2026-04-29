@@ -164,9 +164,9 @@ SELECT
   p.category,
   p.action_key,
   p.description,
-  (rp.role_id IS NOT NULL) AS in_baseline,
+  COALESCE(rp.role_id IS NOT NULL, false)::boolean AS in_baseline,
   brp.effect AS override_effect,
-  (
+  COALESCE(
     brp.effect = 'grant'
     OR (
       rp.role_id IS NOT NULL
@@ -174,8 +174,9 @@ SELECT
         brp.effect IS NULL
         OR brp.effect <> 'deny'
       )
-    )
-  ) AS is_effective
+    ),
+    false
+  )::boolean AS is_effective
 FROM
   permissions p
   LEFT JOIN role_permissions rp ON rp.permission_id = p.id
@@ -201,9 +202,9 @@ type ListEffectivePermissionsRow struct {
 	Category       string      `json:"category"`
 	ActionKey      string      `json:"actionKey"`
 	Description    string      `json:"description"`
-	InBaseline     interface{} `json:"inBaseline"`
+	InBaseline     bool        `json:"inBaseline"`
 	OverrideEffect pgtype.Text `json:"overrideEffect"`
-	IsEffective    pgtype.Bool `json:"isEffective"`
+	IsEffective    bool        `json:"isEffective"`
 }
 
 func (q *Queries) ListEffectivePermissions(ctx context.Context, arg ListEffectivePermissionsParams) ([]ListEffectivePermissionsRow, error) {
