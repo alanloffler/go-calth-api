@@ -7,6 +7,7 @@ import (
 	"github.com/alanloffler/go-calth-api/internal/auth"
 	blocked_day "github.com/alanloffler/go-calth-api/internal/blocked-day"
 	"github.com/alanloffler/go-calth-api/internal/business"
+	"github.com/alanloffler/go-calth-api/internal/business_role_permission"
 	"github.com/alanloffler/go-calth-api/internal/config"
 	"github.com/alanloffler/go-calth-api/internal/database"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
@@ -79,6 +80,7 @@ func main() {
 	event.RegisterRoutes(protected, queries, pool, redisClient)
 	medical_history.RegisterRoutes(protected, queries)
 	permission.RegisterRoutes(protected, queries)
+	business_role_permission.RegisterRoutes(protected, queries)
 	role.RegisterRoutes(protected, queries, pool)
 	setting.RegisterRoutes(protected, queries)
 	user.RegisterRoutes(protected, queries, pool)
