@@ -89,6 +89,15 @@ type Business struct {
 	DeletedAt      pgtype.Timestamptz `json:"deletedAt"`
 }
 
+type BusinessRolePermission struct {
+	BusinessID   pgtype.UUID        `json:"businessId"`
+	RoleID       pgtype.UUID        `json:"roleId"`
+	PermissionID pgtype.UUID        `json:"permissionId"`
+	Effect       string             `json:"effect"`
+	CreatedAt    pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt    pgtype.Timestamptz `json:"updatedAt"`
+}
+
 type Event struct {
 	ID             pgtype.UUID        `json:"id"`
 	Title          string             `json:"title"`
