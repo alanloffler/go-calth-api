@@ -296,7 +296,7 @@ func (h *AuthHandler) GetMe(c *gin.Context) {
 			RolePermissions: []getMeRolePermission{},
 		}
 		for _, perm := range effective {
-			if !perm.IsEffective.Bool {
+			if !perm.IsEffective {
 				continue
 			}
 			role.RolePermissions = append(role.RolePermissions, getMeRolePermission{
