@@ -246,51 +246,65 @@ func (h *AuthHandler) GetMe(c *gin.Context) {
 		return
 	}
 
-	rows, err := h.repo.GetMe(c.Request.Context(), sqlc.GetMeParams{
-		ID:         userID,
+	roleID, ok := ctxkeys.RoleID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+		return
+	}
+
+	user, err := h.repo.GetMe(c.Request.Context(), sqlc.GetMeParams{
 		BusinessID: businessID,
+		ID:         userID,
 	})
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado"))
+			return
+		}
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al buscar usuario", err))
 		return
 	}
-	if len(rows) == 0 {
-		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado"))
+
+	effective, err := h.repo.ListEffectivePermissions(c.Request.Context(), sqlc.ListEffectivePermissionsParams{
+		BusinessID: businessID,
+		RoleID:     roleID,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al buscar permisos efectivos", err))
 		return
 	}
 
-	first := rows[0]
 	result := getMeResponse{
-		ID:          first.ID,
-		Ic:          first.Ic,
-		UserName:    first.UserName,
-		FirstName:   first.FirstName,
-		LastName:    first.LastName,
-		Email:       first.Email,
-		PhoneNumber: first.PhoneNumber,
-		RoleID:      first.RoleID,
-		BusinessID:  first.BusinessID,
-		CreatedAt:   first.CreatedAt,
-		UpdatedAt:   first.UpdatedAt,
+		ID:          user.ID,
+		Ic:          user.Ic,
+		UserName:    user.UserName,
+		FirstName:   user.FirstName,
+		LastName:    user.LastName,
+		Email:       user.Email,
+		PhoneNumber: user.PhoneNumber,
+		RoleID:      user.RoleID,
+		BusinessID:  user.BusinessID,
+		CreatedAt:   user.CreatedAt,
+		UpdatedAt:   user.UpdatedAt,
 	}
 
-	if first.RoleID_2.Valid {
+	if user.RoleID_2.Valid {
 		role := getMeRole{
-			ID:              first.RoleID_2,
-			Name:            first.RoleName.String,
-			Value:           first.RoleValue.String,
+			ID:              user.RoleID_2,
+			Name:            user.RoleName.String,
+			Value:           user.RoleValue.String,
 			RolePermissions: []getMeRolePermission{},
 		}
-		for _, row := range rows {
-			if !row.RpPermissionID.Valid {
+		for _, perm := range effective {
+			if !perm.IsEffective.Bool {
 				continue
 			}
 			role.RolePermissions = append(role.RolePermissions, getMeRolePermission{
-				RoleID:       row.RpRoleID,
-				PermissionID: row.RpPermissionID,
+				RoleID:       user.RoleID,
+				PermissionID: perm.ID,
 				Permission: getMePermission{
-					ID:        row.PermissionID,
-					ActionKey: row.PermissionActionKey.String,
+					ID:        perm.ID,
+					ActionKey: perm.ActionKey,
 				},
 			})
 		}
