@@ -31,6 +31,12 @@ func PermissionMiddleware(q *sqlc.Queries, permissions any, mode ...PermissionMo
 	}
 
 	return func(c *gin.Context) {
+		businessID, ok := ctxkeys.BusinessID(c)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
+			return
+		}
+
 		roleID, ok := ctxkeys.RoleID(c)
 		if !ok {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no autenticado"))
@@ -39,9 +45,10 @@ func PermissionMiddleware(q *sqlc.Queries, permissions any, mode ...PermissionMo
 
 		var matched int
 		for _, key := range keys {
-			has, err := q.HasPermission(c.Request.Context(), sqlc.HasPermissionParams{
-				RoleID:    roleID,
-				ActionKey: key,
+			has, err := q.HasEffectivePermission(c.Request.Context(), sqlc.HasEffectivePermissionParams{
+				BusinessID: businessID,
+				RoleID:     roleID,
+				ActionKey:  key,
 			})
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al verificar permisos", err))
