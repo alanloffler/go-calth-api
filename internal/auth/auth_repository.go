@@ -27,7 +27,7 @@ func (r *AuthRepository) GetUserByID(ctx context.Context, arg sqlc.GetUserByIDPa
 	return r.q.GetUserByID(ctx, arg)
 }
 
-func (r *AuthRepository) GetMe(ctx context.Context, arg sqlc.GetMeParams) ([]sqlc.GetMeRow, error) {
+func (r *AuthRepository) GetMe(ctx context.Context, arg sqlc.GetMeParams) (sqlc.GetMeRow, error) {
 	return r.q.GetMe(ctx, arg)
 }
 
@@ -37,4 +37,8 @@ func (r *AuthRepository) UpdateRefreshToken(ctx context.Context, arg sqlc.Update
 
 func (r *AuthRepository) ClearRefreshToken(ctx context.Context, id pgtype.UUID) (sqlc.User, error) {
 	return r.q.ClearRefreshToken(ctx, id)
+}
+
+func (r *AuthRepository) ListEffectivePermissions(ctx context.Context, arg sqlc.ListEffectivePermissionsParams) ([]sqlc.ListEffectivePermissionsRow, error) {
+	return r.q.ListEffectivePermissions(ctx, arg)
 }
