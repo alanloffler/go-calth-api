@@ -25,6 +25,7 @@ func AuthMiddleware(service *auth.AuthService) gin.HandlerFunc {
 		c.Set("userID", claims.UserID)
 		c.Set("businessID", claims.BusinessID)
 		c.Set("roleID", claims.RoleID)
+		c.Set("isSuperAdmin", claims.IsSuperAdmin)
 
 		c.Next()
 	}
