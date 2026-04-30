@@ -42,3 +42,16 @@ func (r *AuthRepository) ClearRefreshToken(ctx context.Context, id pgtype.UUID) 
 func (r *AuthRepository) ListEffectivePermissions(ctx context.Context, arg sqlc.ListEffectivePermissionsParams) ([]sqlc.ListEffectivePermissionsRow, error) {
 	return r.q.ListEffectivePermissions(ctx, arg)
 }
+
+// Superadmin
+func (r *AuthRepository) GetSuperAdminByEmail(ctx context.Context, email string) (sqlc.User, error) {
+	return r.q.GetSuperAdminByEmail(ctx, email)
+}
+
+func (r *AuthRepository) GetMeGlobal(ctx context.Context, id pgtype.UUID) (sqlc.GetMeGlobalRow, error) {
+	return r.q.GetMeGlobal(ctx, id)
+}
+
+func (r *AuthRepository) GetUserByIDGlobal(ctx context.Context, id pgtype.UUID) (sqlc.GetUserByIDGlobalRow, error) {
+	return r.q.GetUserByIDGlobal(ctx, id)
+}
