@@ -277,6 +277,116 @@ func (q *Queries) GetMe(ctx context.Context, arg GetMeParams) (GetMeRow, error) 
 	return i, err
 }
 
+const getMeGlobal = `-- name: GetMeGlobal :one
+SELECT
+  "user"."id",
+  "user"."ic",
+  "user"."user_name",
+  "user"."first_name",
+  "user"."last_name",
+  "user"."email",
+  "user"."phone_number",
+  "user"."role_id",
+  "user"."business_id",
+  "user"."refresh_token",
+  "user"."created_at",
+  "user"."updated_at",
+  "user"."deleted_at",
+  "role"."id" AS "role_id",
+  "role"."name" AS "role_name",
+  "role"."value" AS "role_value"
+FROM
+  users "user"
+  LEFT JOIN roles "role" ON "role"."id" = "user"."role_id"
+WHERE
+  "user"."id" = $1
+  AND "user"."deleted_at" IS NULL
+`
+
+type GetMeGlobalRow struct {
+	ID           pgtype.UUID        `json:"id"`
+	Ic           string             `json:"ic"`
+	UserName     string             `json:"userName"`
+	FirstName    string             `json:"firstName"`
+	LastName     string             `json:"lastName"`
+	Email        string             `json:"email"`
+	PhoneNumber  string             `json:"phoneNumber"`
+	RoleID       pgtype.UUID        `json:"roleId"`
+	BusinessID   pgtype.UUID        `json:"businessId"`
+	RefreshToken pgtype.Text        `json:"refreshToken"`
+	CreatedAt    pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt    pgtype.Timestamptz `json:"updatedAt"`
+	DeletedAt    pgtype.Timestamptz `json:"deletedAt"`
+	RoleID_2     pgtype.UUID        `json:"roleId2"`
+	RoleName     pgtype.Text        `json:"roleName"`
+	RoleValue    pgtype.Text        `json:"roleValue"`
+}
+
+func (q *Queries) GetMeGlobal(ctx context.Context, id pgtype.UUID) (GetMeGlobalRow, error) {
+	row := q.db.QueryRow(ctx, getMeGlobal, id)
+	var i GetMeGlobalRow
+	err := row.Scan(
+		&i.ID,
+		&i.Ic,
+		&i.UserName,
+		&i.FirstName,
+		&i.LastName,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.RoleID,
+		&i.BusinessID,
+		&i.RefreshToken,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.RoleID_2,
+		&i.RoleName,
+		&i.RoleValue,
+	)
+	return i, err
+}
+
+const getSuperAdminByEmail = `-- name: GetSuperAdminByEmail :one
+SELECT
+  u.id, u.ic, u.user_name, u.first_name, u.last_name, u.email, u.password, u.phone_number, u.role_id, u.business_id, u.refresh_token, u.created_at, u.updated_at, u.deleted_at
+FROM
+  users u
+WHERE
+  u.email = $1
+  AND u.deleted_at IS NULL
+  AND u.role_id = (
+    SELECT
+      id
+    FROM
+      roles
+    WHERE
+      value = 'superadmin'
+      AND deleted_at IS NULL
+  )
+`
+
+func (q *Queries) GetSuperAdminByEmail(ctx context.Context, email string) (User, error) {
+	row := q.db.QueryRow(ctx, getSuperAdminByEmail, email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Ic,
+		&i.UserName,
+		&i.FirstName,
+		&i.LastName,
+		&i.Email,
+		&i.Password,
+		&i.PhoneNumber,
+		&i.RoleID,
+		&i.BusinessID,
+		&i.RefreshToken,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
 SELECT
   id, ic, user_name, first_name, last_name, email, password, phone_number, role_id, business_id, refresh_token, created_at, updated_at, deleted_at
@@ -372,6 +482,78 @@ type GetUserByIDRow struct {
 func (q *Queries) GetUserByID(ctx context.Context, arg GetUserByIDParams) (GetUserByIDRow, error) {
 	row := q.db.QueryRow(ctx, getUserByID, arg.BusinessID, arg.ID)
 	var i GetUserByIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.Ic,
+		&i.UserName,
+		&i.FirstName,
+		&i.LastName,
+		&i.Email,
+		&i.Password,
+		&i.PhoneNumber,
+		&i.BusinessID,
+		&i.RefreshToken,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.RoleID,
+		&i.RoleName,
+		&i.RoleValue,
+		&i.RoleDescription,
+	)
+	return i, err
+}
+
+const getUserByIDGlobal = `-- name: GetUserByIDGlobal :one
+SELECT
+  "user"."id",
+  "user"."ic",
+  "user"."user_name",
+  "user"."first_name",
+  "user"."last_name",
+  "user"."email",
+  "user"."password",
+  "user"."phone_number",
+  "user"."business_id",
+  "user"."refresh_token",
+  "user"."created_at",
+  "user"."updated_at",
+  "user"."deleted_at",
+  "role"."id" AS "role_id",
+  "role"."name" AS "role_name",
+  "role"."value" AS "role_value",
+  "role"."description" AS "role_description"
+FROM
+  users "user"
+  LEFT JOIN roles "role" ON "role"."id" = "user"."role_id"
+WHERE
+  "user"."id" = $1
+  AND "user"."deleted_at" IS NULL
+`
+
+type GetUserByIDGlobalRow struct {
+	ID              pgtype.UUID        `json:"id"`
+	Ic              string             `json:"ic"`
+	UserName        string             `json:"userName"`
+	FirstName       string             `json:"firstName"`
+	LastName        string             `json:"lastName"`
+	Email           string             `json:"email"`
+	Password        string             `json:"password"`
+	PhoneNumber     string             `json:"phoneNumber"`
+	BusinessID      pgtype.UUID        `json:"businessId"`
+	RefreshToken    pgtype.Text        `json:"refreshToken"`
+	CreatedAt       pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt       pgtype.Timestamptz `json:"updatedAt"`
+	DeletedAt       pgtype.Timestamptz `json:"deletedAt"`
+	RoleID          pgtype.UUID        `json:"roleId"`
+	RoleName        pgtype.Text        `json:"roleName"`
+	RoleValue       pgtype.Text        `json:"roleValue"`
+	RoleDescription pgtype.Text        `json:"roleDescription"`
+}
+
+func (q *Queries) GetUserByIDGlobal(ctx context.Context, id pgtype.UUID) (GetUserByIDGlobalRow, error) {
+	row := q.db.QueryRow(ctx, getUserByIDGlobal, id)
+	var i GetUserByIDGlobalRow
 	err := row.Scan(
 		&i.ID,
 		&i.Ic,
