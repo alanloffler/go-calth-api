@@ -1118,3 +1118,47 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (int64, 
 	}
 	return result.RowsAffected(), nil
 }
+
+const updateUserGlobal = `-- name: UpdateUserGlobal :execrows
+UPDATE users
+SET
+  ic = COALESCE($2, ic),
+  user_name = COALESCE($3, user_name),
+  first_name = COALESCE($4, first_name),
+  last_name = COALESCE($5, last_name),
+  email = COALESCE($6, email),
+  password = COALESCE($7, password),
+  phone_number = COALESCE($8, phone_number),
+  updated_at = now()
+WHERE
+  id = $1
+  AND deleted_at IS NULL
+`
+
+type UpdateUserGlobalParams struct {
+	ID          pgtype.UUID `json:"id"`
+	Ic          pgtype.Text `json:"ic"`
+	UserName    pgtype.Text `json:"userName"`
+	FirstName   pgtype.Text `json:"firstName"`
+	LastName    pgtype.Text `json:"lastName"`
+	Email       pgtype.Text `json:"email"`
+	Password    pgtype.Text `json:"password"`
+	PhoneNumber pgtype.Text `json:"phoneNumber"`
+}
+
+func (q *Queries) UpdateUserGlobal(ctx context.Context, arg UpdateUserGlobalParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateUserGlobal,
+		arg.ID,
+		arg.Ic,
+		arg.UserName,
+		arg.FirstName,
+		arg.LastName,
+		arg.Email,
+		arg.Password,
+		arg.PhoneNumber,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
