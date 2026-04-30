@@ -18,9 +18,10 @@ type TokenPair struct {
 }
 
 type TokenClaims struct {
-	UserID     string `json:"userId"`
-	BusinessID string `json:"businessId"`
-	RoleID     string `json:"roleId"`
+	UserID       string `json:"userId"`
+	BusinessID   string `json:"businessId"`
+	RoleID       string `json:"roleId"`
+	IsSuperAdmin bool   `json:"isSuperAdmin"`
 	jwt.RegisteredClaims
 }
 
@@ -28,13 +29,13 @@ func NewAuthService(cfg *config.Config) *AuthService {
 	return &AuthService{cfg: cfg}
 }
 
-func (s *AuthService) GenerateTokenPair(userID, businessID, roleID string) (*TokenPair, error) {
-	accessToken, err := s.generateToken(userID, businessID, roleID, s.cfg.JwtSecret, s.cfg.JwtAccessExpiry)
+func (s *AuthService) GenerateTokenPair(userID, businessID, roleID string, isSuperAdmin bool) (*TokenPair, error) {
+	accessToken, err := s.generateToken(userID, businessID, roleID, isSuperAdmin, s.cfg.JwtSecret, s.cfg.JwtAccessExpiry)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := s.generateToken(userID, businessID, roleID, s.cfg.JwtRefreshSecret, s.cfg.JwtRefreshExpiry)
+	refreshToken, err := s.generateToken(userID, businessID, roleID, isSuperAdmin, s.cfg.JwtRefreshSecret, s.cfg.JwtRefreshExpiry)
 	if err != nil {
 		return nil, err
 	}
@@ -50,16 +51,17 @@ func (s *AuthService) ValidateRefreshToken(tokenStr string) (*TokenClaims, error
 	return s.validateToken(tokenStr, s.cfg.JwtRefreshSecret)
 }
 
-func (s *AuthService) generateToken(userID, businessID, roleID, secret, expiry string) (string, error) {
+func (s *AuthService) generateToken(userID, businessID, roleID string, isSuperAdmin bool, secret, expiry string) (string, error) {
 	duration, err := time.ParseDuration(expiry)
 	if err != nil {
 		return "", err
 	}
 
 	claims := TokenClaims{
-		UserID:     userID,
-		BusinessID: businessID,
-		RoleID:     roleID,
+		UserID:       userID,
+		BusinessID:   businessID,
+		RoleID:       roleID,
+		IsSuperAdmin: isSuperAdmin,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
