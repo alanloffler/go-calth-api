@@ -164,10 +164,22 @@ func (h *RoleHandler) Create(c *gin.Context) {
 }
 
 func (h *RoleHandler) GetAll(c *gin.Context) {
+	super := ctxkeys.IsSuperAdmin(c)
+
 	permissions, err := h.repo.GetAll(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Roles no encontrados", err))
 		return
+	}
+
+	if !super {
+		filtered := make([]sqlc.Role, 0, len(permissions))
+		for _, r := range permissions {
+			if r.Value != "superadmin" {
+				filtered = append(filtered, r)
+			}
+		}
+		permissions = filtered
 	}
 
 	c.JSON(http.StatusOK, response.Success("Roles encontrados", &permissions))
