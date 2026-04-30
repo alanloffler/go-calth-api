@@ -3,6 +3,7 @@ package role
 import (
 	"net/http"
 
+	"github.com/alanloffler/go-calth-api/internal/common/ctxkeys"
 	"github.com/alanloffler/go-calth-api/internal/common/response"
 	"github.com/alanloffler/go-calth-api/internal/common/utils"
 	"github.com/alanloffler/go-calth-api/internal/database/sqlc"
@@ -173,10 +174,22 @@ func (h *RoleHandler) GetAll(c *gin.Context) {
 }
 
 func (h *RoleHandler) GetAllWithSoftDeleted(c *gin.Context) {
+	super := ctxkeys.IsSuperAdmin(c)
+
 	permissions, err := h.repo.GetAllWithSoftDeleted(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Roles no encontrados", err))
 		return
+	}
+
+	if !super {
+		filtered := make([]sqlc.Role, 0, len(permissions))
+		for _, r := range permissions {
+			if r.Value != "superadmin" {
+				filtered = append(filtered, r)
+			}
+		}
+		permissions = filtered
 	}
 
 	c.JSON(http.StatusOK, response.Success("Roles encontrados", &permissions))
