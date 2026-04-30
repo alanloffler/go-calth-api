@@ -248,13 +248,48 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
+	var profile userByRoleResponse
+
+	if ctxkeys.IsSuperAdmin(c) {
+		row, err := h.repo.GetByIDGlobal(c.Request.Context(), userID)
+		if err != nil {
+			c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado", err))
+			return
+		}
+
+		profile = userByRoleResponse{
+			ID:          row.ID,
+			Ic:          row.Ic,
+			UserName:    row.UserName,
+			FirstName:   row.FirstName,
+			LastName:    row.LastName,
+			Email:       row.Email,
+			PhoneNumber: row.PhoneNumber,
+			BusinessID:  row.BusinessID,
+			CreatedAt:   row.CreatedAt,
+			UpdatedAt:   row.UpdatedAt,
+			DeletedAt:   row.DeletedAt,
+		}
+		if row.RoleID.Valid {
+			profile.Role = &userRole{
+				ID:          row.RoleID,
+				Name:        row.RoleName.String,
+				Value:       row.RoleValue.String,
+				Description: row.RoleDescription.String,
+			}
+		}
+
+		c.JSON(http.StatusOK, response.Success("Usuario encontrado", &profile))
+		return
+	}
+
 	row, err := h.repo.GetByID(c.Request.Context(), sqlc.GetUserByIDParams{BusinessID: businessID, ID: userID})
 	if err != nil {
 		c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado", err))
 		return
 	}
 
-	profile := userByRoleResponse{
+	profile = userByRoleResponse{
 		ID:          row.ID,
 		Ic:          row.Ic,
 		UserName:    row.UserName,
@@ -404,17 +439,35 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 		passwordHash = pgtype.Text{String: string(hashed), Valid: true}
 	}
 
-	affected, err := h.repo.Update(c.Request.Context(), sqlc.UpdateUserParams{
-		BusinessID:  businessID,
-		ID:          userID,
-		Ic:          utils.ToPgText(req.User.Ic),
-		UserName:    utils.ToPgText(req.User.UserName),
-		FirstName:   utils.ToPgText(req.User.FirstName),
-		LastName:    utils.ToPgText(req.User.LastName),
-		Email:       utils.ToPgText(req.User.Email),
-		Password:    passwordHash,
-		PhoneNumber: utils.ToPgText(req.User.PhoneNumber),
-	})
+	var (
+		affected int64
+		err      error
+	)
+
+	if ctxkeys.IsSuperAdmin(c) {
+		affected, err = h.repo.UpdateGlobal(c.Request.Context(), sqlc.UpdateUserGlobalParams{
+			ID:          userID,
+			Ic:          utils.ToPgText(req.User.Ic),
+			UserName:    utils.ToPgText(req.User.UserName),
+			FirstName:   utils.ToPgText(req.User.FirstName),
+			LastName:    utils.ToPgText(req.User.LastName),
+			Email:       utils.ToPgText(req.User.Email),
+			Password:    passwordHash,
+			PhoneNumber: utils.ToPgText(req.User.PhoneNumber),
+		})
+	} else {
+		affected, err = h.repo.Update(c.Request.Context(), sqlc.UpdateUserParams{
+			BusinessID:  businessID,
+			ID:          userID,
+			Ic:          utils.ToPgText(req.User.Ic),
+			UserName:    utils.ToPgText(req.User.UserName),
+			FirstName:   utils.ToPgText(req.User.FirstName),
+			LastName:    utils.ToPgText(req.User.LastName),
+			Email:       utils.ToPgText(req.User.Email),
+			Password:    passwordHash,
+			PhoneNumber: utils.ToPgText(req.User.PhoneNumber),
+		})
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al actualizar usuario", err))
 		return
