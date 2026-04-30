@@ -1,3 +1,72 @@
+-- name: GetSuperAdminByEmail :one
+SELECT
+  u.*
+FROM
+  users u
+WHERE
+  u.email = $1
+  AND u.deleted_at IS NULL
+  AND u.role_id = (
+    SELECT
+      id
+    FROM
+      roles
+    WHERE
+      value = 'superadmin'
+      AND deleted_at IS NULL
+  );
+
+-- name: GetMeGlobal :one
+SELECT
+  "user"."id",
+  "user"."ic",
+  "user"."user_name",
+  "user"."first_name",
+  "user"."last_name",
+  "user"."email",
+  "user"."phone_number",
+  "user"."role_id",
+  "user"."business_id",
+  "user"."refresh_token",
+  "user"."created_at",
+  "user"."updated_at",
+  "user"."deleted_at",
+  "role"."id" AS "role_id",
+  "role"."name" AS "role_name",
+  "role"."value" AS "role_value"
+FROM
+  users "user"
+  LEFT JOIN roles "role" ON "role"."id" = "user"."role_id"
+WHERE
+  "user"."id" = $1
+  AND "user"."deleted_at" IS NULL;
+
+-- name: GetUserByIDGlobal :one
+SELECT
+  "user"."id",
+  "user"."ic",
+  "user"."user_name",
+  "user"."first_name",
+  "user"."last_name",
+  "user"."email",
+  "user"."password",
+  "user"."phone_number",
+  "user"."business_id",
+  "user"."refresh_token",
+  "user"."created_at",
+  "user"."updated_at",
+  "user"."deleted_at",
+  "role"."id" AS "role_id",
+  "role"."name" AS "role_name",
+  "role"."value" AS "role_value",
+  "role"."description" AS "role_description"
+FROM
+  users "user"
+  LEFT JOIN roles "role" ON "role"."id" = "user"."role_id"
+WHERE
+  "user"."id" = $1
+  AND "user"."deleted_at" IS NULL;
+
 -- name: CreateUser :one
 INSERT INTO
   users (
