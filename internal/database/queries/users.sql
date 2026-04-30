@@ -277,6 +277,21 @@ WHERE
   AND id = $2
   AND deleted_at IS NULL;
 
+-- name: UpdateUserGlobal :execrows
+UPDATE users
+SET
+  ic = COALESCE(sqlc.narg ('ic'), ic),
+  user_name = COALESCE(sqlc.narg ('user_name'), user_name),
+  first_name = COALESCE(sqlc.narg ('first_name'), first_name),
+  last_name = COALESCE(sqlc.narg ('last_name'), last_name),
+  email = COALESCE(sqlc.narg ('email'), email),
+  password = COALESCE(sqlc.narg ('password'), password),
+  phone_number = COALESCE(sqlc.narg ('phone_number'), phone_number),
+  updated_at = now()
+WHERE
+  id = $1
+  AND deleted_at IS NULL;
+
 -- name: DeleteUser :execrows
 DELETE FROM users
 WHERE
