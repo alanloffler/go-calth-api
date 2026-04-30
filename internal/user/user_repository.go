@@ -15,9 +15,11 @@ type UserRepositoryInterface interface {
 	GetAllByRole(ctx context.Context, arg sqlc.GetUsersByRoleParams) ([]sqlc.GetUsersByRoleRow, error)
 	GetAllByRoleWithSoftDeleted(ctx context.Context, arg sqlc.GetUsersByRoleWithSoftDeletedParams) ([]sqlc.GetUsersByRoleWithSoftDeletedRow, error)
 	GetByID(ctx context.Context, arg sqlc.GetUserByIDParams) (sqlc.GetUserByIDRow, error)
+	GetByIDGlobal(ctx context.Context, id pgtype.UUID) (sqlc.GetUserByIDGlobalRow, error)
 	GetByIDWithSoftDeleted(ctx context.Context, arg sqlc.GetUserByIDWithSoftDeletedParams) (sqlc.GetUserByIDWithSoftDeletedRow, error)
 	GetByBusinessID(ctx context.Context, businessID pgtype.UUID) ([]sqlc.GetUsersByBusinessIDRow, error)
 	Update(ctx context.Context, arg sqlc.UpdateUserParams) (int64, error)
+	UpdateGlobal(ctx context.Context, arg sqlc.UpdateUserGlobalParams) (int64, error)
 	Delete(ctx context.Context, arg sqlc.DeleteUserParams) (int64, error)
 	SoftDelete(ctx context.Context, id pgtype.UUID) (int64, error)
 	Restore(ctx context.Context, id pgtype.UUID) (int64, error)
@@ -62,6 +64,10 @@ func (r *UserRepository) GetByID(ctx context.Context, arg sqlc.GetUserByIDParams
 	return r.q.GetUserByID(ctx, arg)
 }
 
+func (r *UserRepository) GetByIDGlobal(ctx context.Context, id pgtype.UUID) (sqlc.GetUserByIDGlobalRow, error) {
+	return r.q.GetUserByIDGlobal(ctx, id)
+}
+
 func (r *UserRepository) GetByIDWithSoftDeleted(ctx context.Context, arg sqlc.GetUserByIDWithSoftDeletedParams) (sqlc.GetUserByIDWithSoftDeletedRow, error) {
 	return r.q.GetUserByIDWithSoftDeleted(ctx, arg)
 }
@@ -72,6 +78,10 @@ func (r *UserRepository) GetByBusinessID(ctx context.Context, businessID pgtype.
 
 func (r *UserRepository) Update(ctx context.Context, arg sqlc.UpdateUserParams) (int64, error) {
 	return r.q.UpdateUser(ctx, arg)
+}
+
+func (r *UserRepository) UpdateGlobal(ctx context.Context, arg sqlc.UpdateUserGlobalParams) (int64, error) {
+	return r.q.UpdateUserGlobal(ctx, arg)
 }
 
 func (r *UserRepository) Delete(ctx context.Context, arg sqlc.DeleteUserParams) (int64, error) {
