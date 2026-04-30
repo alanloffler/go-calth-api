@@ -65,7 +65,10 @@ func TestUserHandler_Update_InvalidID(t *testing.T) {
 	router := setupTestRouter()
 
 	handler := &UserHandler{}
-	router.PATCH("/users/:id", handler.Update)
+	router.PATCH("/users/:id", func(c *gin.Context) {
+		c.Set("businessID", "550e8400-e29b-41d4-a716-446655440000")
+		c.Next()
+	}, handler.Update)
 
 	req, _ := http.NewRequest("PATCH", "/users/invalid-uuid", nil)
 	w := httptest.NewRecorder()
@@ -81,10 +84,13 @@ func TestUserHandler_Update_ValidationError(t *testing.T) {
 	router := setupTestRouter()
 
 	mockRepo := &MockUserRepository{}
-	mockRepo.On("Update", mock.Anything, mock.Anything).Return(sqlc.User{}, assert.AnError)
+	mockRepo.On("Update", mock.Anything, mock.Anything).Return(int64(0), assert.AnError)
 
 	handler := &UserHandler{repo: mockRepo}
-	router.PATCH("/users/:id", handler.Update)
+	router.PATCH("/users/:id", func(c *gin.Context) {
+		c.Set("businessID", "550e8400-e29b-41d4-a716-446655440000")
+		c.Next()
+	}, handler.Update)
 
 	body := `{"user": {}}`
 	req, _ := http.NewRequest("PATCH", "/users/550e8400-e29b-41d4-a716-446655440000", bytes.NewBufferString(body))
@@ -102,7 +108,10 @@ func TestUserHandler_Delete_InvalidID(t *testing.T) {
 	router := setupTestRouter()
 
 	handler := &UserHandler{}
-	router.DELETE("/users/:id", handler.Delete)
+	router.DELETE("/users/:id", func(c *gin.Context) {
+		c.Set("businessID", "550e8400-e29b-41d4-a716-446655440000")
+		c.Next()
+	}, handler.Delete)
 
 	req, _ := http.NewRequest("DELETE", "/users/invalid-uuid", nil)
 	w := httptest.NewRecorder()
