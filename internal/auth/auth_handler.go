@@ -35,18 +35,19 @@ type getMeRole struct {
 }
 
 type getMeResponse struct {
-	ID          pgtype.UUID        `json:"id"`
-	Ic          string             `json:"ic"`
-	UserName    string             `json:"userName"`
-	FirstName   string             `json:"firstName"`
-	LastName    string             `json:"lastName"`
-	Email       string             `json:"email"`
-	PhoneNumber string             `json:"phoneNumber"`
-	RoleID      pgtype.UUID        `json:"roleId"`
-	BusinessID  pgtype.UUID        `json:"businessId"`
-	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
-	UpdatedAt   pgtype.Timestamptz `json:"updatedAt"`
-	Role        *getMeRole         `json:"role"`
+	ID           pgtype.UUID        `json:"id"`
+	Ic           string             `json:"ic"`
+	UserName     string             `json:"userName"`
+	FirstName    string             `json:"firstName"`
+	LastName     string             `json:"lastName"`
+	Email        string             `json:"email"`
+	PhoneNumber  string             `json:"phoneNumber"`
+	RoleID       pgtype.UUID        `json:"roleId"`
+	BusinessID   pgtype.UUID        `json:"businessId"`
+	IsSuperAdmin bool               `json:"isSuperAdmin"`
+	CreatedAt    pgtype.Timestamptz `json:"createdAt"`
+	UpdatedAt    pgtype.Timestamptz `json:"updatedAt"`
+	Role         *getMeRole         `json:"role"`
 }
 
 type AuthHandler struct {
@@ -93,15 +94,30 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	user, err := h.repo.GetUserByEmail(c.Request.Context(), sqlc.GetUserByEmailParams{
-		BusinessID: business.ID,
-		Email:      req.Email,
-	})
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Credenciales inválidas", err))
+	var (
+		user         sqlc.User
+		isSuperAdmin bool
+	)
+
+	sa, err := h.repo.GetSuperAdminByEmail(c.Request.Context(), req.Email)
+	switch {
+	case err == nil:
+		user = sa
+		isSuperAdmin = true
+	case errors.Is(err, pgx.ErrNoRows):
+		user, err = h.repo.GetUserByEmail(c.Request.Context(), sqlc.GetUserByEmailParams{
+			BusinessID: business.ID,
+			Email:      req.Email,
+		})
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Credenciales inválidas", err))
+				return
+			}
+			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al buscar usuario", err))
 			return
 		}
+	default:
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al buscar usuario", err))
 		return
 	}
@@ -111,7 +127,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	tokenPair, err := h.service.GenerateTokenPair(user.ID.String(), user.BusinessID.String(), user.RoleID.String())
+	tokenPair, err := h.service.GenerateTokenPair(user.ID.String(), business.ID.String(), user.RoleID.String(), isSuperAdmin)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al generar tokens", err))
 		return
@@ -193,22 +209,52 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	user, err := h.repo.GetUserByID(c.Request.Context(), sqlc.GetUserByIDParams{BusinessID: businessID, ID: userID})
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no encontrado", err))
+	// Look up the stored refresh token + role.
+	// Superadmin: ignore tenant scope (their home business may differ from the active one).
+	// Regular user: keep the (business_id, id) scope as before.
+	var (
+		storedRefreshToken pgtype.Text
+		roleID             pgtype.UUID
+	)
+
+	if claims.IsSuperAdmin {
+		user, err := h.repo.GetUserByIDGlobal(c.Request.Context(), userID)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no encontrado", err))
+				return
+			}
+			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al buscar usuario", err))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al buscar usuario", err))
-		return
+		storedRefreshToken = user.RefreshToken
+		roleID = user.RoleID
+	} else {
+		user, err := h.repo.GetUserByID(c.Request.Context(), sqlc.GetUserByIDParams{BusinessID: businessID, ID: userID})
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Usuario no encontrado", err))
+				return
+			}
+			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al buscar usuario", err))
+			return
+		}
+		storedRefreshToken = user.RefreshToken
+		roleID = user.RoleID
 	}
 
-	if !user.RefreshToken.Valid || user.RefreshToken.String != refreshToken {
+	if !storedRefreshToken.Valid || storedRefreshToken.String != refreshToken {
 		c.JSON(http.StatusUnauthorized, response.Error(http.StatusUnauthorized, "Token de refresco inválido"))
 		return
 	}
 
-	tokenPair, err := h.service.GenerateTokenPair(userID.String(), user.BusinessID.String(), user.RoleID.String())
+	// Preserve the active tenant (businessID from current claims), NOT the user's home business.
+	tokenPair, err := h.service.GenerateTokenPair(
+		userID.String(),
+		businessID.String(),
+		roleID.String(),
+		claims.IsSuperAdmin,
+	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al generar tokens", err))
 		return
@@ -252,6 +298,73 @@ func (h *AuthHandler) GetMe(c *gin.Context) {
 		return
 	}
 
+	isSuperAdmin := ctxkeys.IsSuperAdmin(c)
+
+	var result getMeResponse
+
+	if isSuperAdmin {
+		user, err := h.repo.GetMeGlobal(c.Request.Context(), userID)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				c.JSON(http.StatusNotFound, response.Error(http.StatusNotFound, "Usuario no encontrado"))
+				return
+			}
+			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al buscar usuario", err))
+			return
+		}
+
+		effective, err := h.repo.ListEffectivePermissions(c.Request.Context(), sqlc.ListEffectivePermissionsParams{
+			BusinessID: businessID,
+			RoleID:     roleID,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al buscar permisos efectivos", err))
+			return
+		}
+
+		result = getMeResponse{
+			ID:           user.ID,
+			Ic:           user.Ic,
+			UserName:     user.UserName,
+			FirstName:    user.FirstName,
+			LastName:     user.LastName,
+			Email:        user.Email,
+			PhoneNumber:  user.PhoneNumber,
+			RoleID:       user.RoleID,
+			BusinessID:   businessID, // active tenant from JWT, not user's home business
+			IsSuperAdmin: true,
+			CreatedAt:    user.CreatedAt,
+			UpdatedAt:    user.UpdatedAt,
+		}
+
+		if user.RoleID_2.Valid {
+			role := getMeRole{
+				ID:              user.RoleID_2,
+				Name:            user.RoleName.String,
+				Value:           user.RoleValue.String,
+				RolePermissions: []getMeRolePermission{},
+			}
+			for _, perm := range effective {
+				if !perm.IsEffective {
+					continue
+				}
+				role.RolePermissions = append(role.RolePermissions, getMeRolePermission{
+					RoleID:       user.RoleID,
+					PermissionID: perm.ID,
+					Permission: getMePermission{
+						ID:        perm.ID,
+						ActionKey: perm.ActionKey,
+					},
+				})
+			}
+			result.Role = &role
+		}
+
+		c.JSON(http.StatusOK, response.Success("Usuario encontrado", &result))
+		return
+	}
+
+	// Regular tenant-scoped path.
 	user, err := h.repo.GetMe(c.Request.Context(), sqlc.GetMeParams{
 		BusinessID: businessID,
 		ID:         userID,
@@ -274,7 +387,7 @@ func (h *AuthHandler) GetMe(c *gin.Context) {
 		return
 	}
 
-	result := getMeResponse{
+	result = getMeResponse{
 		ID:          user.ID,
 		Ic:          user.Ic,
 		UserName:    user.UserName,
