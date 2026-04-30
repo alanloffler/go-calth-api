@@ -47,6 +47,11 @@ func (m *MockUserRepository) GetByID(ctx context.Context, arg sqlc.GetUserByIDPa
 	return args.Get(0).(sqlc.GetUserByIDRow), args.Error(1)
 }
 
+func (m *MockUserRepository) GetByIDGlobal(ctx context.Context, id pgtype.UUID) (sqlc.GetUserByIDGlobalRow, error) {
+	args := m.Called(ctx, id)
+	return args.Get(0).(sqlc.GetUserByIDGlobalRow), args.Error(1)
+}
+
 func (m *MockUserRepository) GetByIDWithSoftDeleted(ctx context.Context, arg sqlc.GetUserByIDWithSoftDeletedParams) (sqlc.GetUserByIDWithSoftDeletedRow, error) {
 	args := m.Called(ctx, arg)
 	return args.Get(0).(sqlc.GetUserByIDWithSoftDeletedRow), args.Error(1)
@@ -58,6 +63,11 @@ func (m *MockUserRepository) GetByBusinessID(ctx context.Context, businessID pgt
 }
 
 func (m *MockUserRepository) Update(ctx context.Context, arg sqlc.UpdateUserParams) (int64, error) {
+	args := m.Called(ctx, arg)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockUserRepository) UpdateGlobal(ctx context.Context, arg sqlc.UpdateUserGlobalParams) (int64, error) {
 	args := m.Called(ctx, arg)
 	return args.Get(0).(int64), args.Error(1)
 }
