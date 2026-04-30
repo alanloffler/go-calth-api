@@ -17,6 +17,15 @@ func UserID(c *gin.Context) (pgtype.UUID, bool) {
 	return scanUUID(c, "userID")
 }
 
+func IsSuperAdmin(c *gin.Context) bool {
+	val, exists := c.Get("isSuperAdmin")
+	if !exists {
+		return false
+	}
+	b, ok := val.(bool)
+	return ok && b
+}
+
 func scanUUID(c *gin.Context, key string) (pgtype.UUID, bool) {
 	val, exists := c.Get(key)
 	if !exists {
