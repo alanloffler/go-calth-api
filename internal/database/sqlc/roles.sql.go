@@ -105,6 +105,22 @@ func (q *Queries) GetRoleByValue(ctx context.Context, value string) (Role, error
 	return i, err
 }
 
+const getRoleIDByValue = `-- name: GetRoleIDByValue :one
+SELECT
+  id
+FROM
+  roles
+WHERE
+  value = $1
+`
+
+func (q *Queries) GetRoleIDByValue(ctx context.Context, value string) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, getRoleIDByValue, value)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getRoleWithPermissions = `-- name: GetRoleWithPermissions :many
 SELECT
   r.id,
