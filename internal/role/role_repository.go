@@ -39,6 +39,10 @@ func (r *RoleRepository) GetOneByValue(ctx context.Context, value string) (sqlc.
 	return r.q.GetRoleByValue(ctx, value)
 }
 
+func (r *RoleRepository) GetRoleIDByValue(ctx context.Context, value string) (pgtype.UUID, error) {
+	return r.q.GetRoleIDByValue(ctx, value)
+}
+
 func (r *RoleRepository) Update(ctx context.Context, arg sqlc.UpdateRoleParams) (int64, error) {
 	return r.q.UpdateRole(ctx, arg)
 }
