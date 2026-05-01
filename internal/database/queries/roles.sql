@@ -41,6 +41,14 @@ FROM
 WHERE
   value = $1;
 
+-- name: GetRoleIDByValue :one
+SELECT
+  id
+FROM
+  roles
+WHERE
+  value = $1;
+
 -- name: GetRoleWithPermissions :many
 SELECT
   r.id,
