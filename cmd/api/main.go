@@ -81,13 +81,13 @@ func main() {
 	medical_history.RegisterRoutes(protected, queries)
 	permission.RegisterRoutes(protected, queries)
 	business_role_permission.RegisterRoutes(protected, queries)
-	role.RegisterRoutes(protected, queries, pool)
 	setting.RegisterRoutes(protected, queries)
 	user.RegisterRoutes(protected, queries, pool)
 
 	// Mixed routes (public/protected)
 	auth.RegisterRoutes(router, protected, queries, cfg)
 	business.RegisterRoutes(router, protected, queries, pool, redisClient, cfg.AppDomain)
+	role.RegisterRoutes(router, protected, queries, pool)
 
 	// Public routes
 	health.RegisterRoutes(router, pool)
