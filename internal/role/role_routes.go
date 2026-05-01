@@ -7,10 +7,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func RegisterRoutes(router *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool) {
+func RegisterRoutes(public *gin.Engine, protected *gin.RouterGroup, q *sqlc.Queries, pool *pgxpool.Pool) {
 	var repo *RoleRepository = NewRoleRepository(q)
 	var handler *RoleHandler = NewRoleHandler(repo, pool)
-	var roles *gin.RouterGroup = router.Group("/roles")
+
+	public.GET("/roles/value/:value", handler.GetRoleIDByValue)
+
+	var roles *gin.RouterGroup = protected.Group("/roles")
 
 	roles.POST("", middleware.PermissionMiddleware(q, "roles-create"), handler.Create)
 
