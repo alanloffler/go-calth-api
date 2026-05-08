@@ -108,7 +108,7 @@ func (h *EventHandler) Create(c *gin.Context) {
 	})
 	if err != nil {
 		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		if errors.As(err, &pgErr) && (pgErr.Code == "23505" || pgErr.Code == "23P01") {
 			c.JSON(http.StatusConflict, response.Error(http.StatusConflict, "El horario ya fue ocupado por otro usuario"))
 			return
 		}
@@ -181,7 +181,7 @@ func (h *EventHandler) createRecurring(c *gin.Context, req CreateEventRequest, s
 		})
 		if err != nil {
 			var pgErr *pgconn.PgError
-			if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			if errors.As(err, &pgErr) && (pgErr.Code == "23505" || pgErr.Code == "23P01") {
 				c.JSON(http.StatusConflict, response.Error(http.StatusConflict, "Uno o más horarios ya están ocupados"))
 				return
 			}
@@ -657,8 +657,7 @@ func (h *EventHandler) CheckRecurring(c *gin.Context) {
 		return
 	}
 
-	startDateStr := c.Query("startDate")
-	parsedTime, err := time.Parse(time.RFC3339, startDateStr)
+	parsedTime, err := time.Parse(time.RFC3339, c.Query("startDate"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.Error(http.StatusBadRequest, "Formato de fecha inválido", err))
 		return
@@ -679,22 +678,34 @@ func (h *EventHandler) CheckRecurring(c *gin.Context) {
 		return
 	}
 
-	recurringDates := generateRecurringDates(parsedTime, int32(occurrences))
+	slotDurationMin, err := strconv.Atoi(profile.SlotDuration)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "slotDuration inválido", err))
+		return
+	}
+	slotMs := int64(slotDurationMin) * 60 * 1000
+	slotDur := time.Duration(slotDurationMin) * time.Minute
 
-	existingEvents, err := h.repo.CheckRecurring(c.Request.Context(), sqlc.CheckRecurringEventsParams{
+	horizonStart := parsedTime.Add(-24 * time.Hour)
+	horizonEnd := parsedTime.Add(time.Duration(7+(occurrences-1)*7)*24*time.Hour + slotDur)
+
+	rows, err := h.repo.GetEventsInHorizon(c.Request.Context(), sqlc.GetEventsInHorizonParams{
 		BusinessID:     businessID,
 		ProfessionalID: professionalID,
-		StartDate:      pgtype.Timestamptz{Time: parsedTime, Valid: true},
-		Column4:        pgtype.Text{String: strconv.Itoa(occurrences * 7), Valid: true},
+		HorizonStart:   pgtype.Timestamptz{Time: horizonStart, Valid: true},
+		HorizonEnd:     pgtype.Timestamptz{Time: horizonEnd, Valid: true},
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al verificar eventos recurrentes", err))
 		return
 	}
 
-	busySlots := make(map[string]bool, len(existingEvents))
-	for _, e := range existingEvents {
-		busySlots[e.StartDate.Time.UTC().Format("2006-01-02T15:04")] = true
+	intervals := make([]interval, 0, len(rows))
+	for _, e := range rows {
+		intervals = append(intervals, interval{
+			start: e.StartDate.Time.UnixMilli(),
+			end:   e.EndDate.Time.UnixMilli(),
+		})
 	}
 
 	type recurringResult struct {
@@ -702,36 +713,35 @@ func (h *EventHandler) CheckRecurring(c *gin.Context) {
 		Available bool      `json:"available"`
 	}
 
+	recurringDates := generateRecurringDates(parsedTime, int32(occurrences))
 	results := make([]recurringResult, len(recurringDates))
 	allAvailable := true
 	for i, d := range recurringDates {
-		available := !busySlots[d.UTC().Format("2006-01-02T15:04")]
-		results[i] = recurringResult{
-			Date:      d,
-			Available: available,
-		}
+		startMs := d.UnixMilli()
+		available := !conflictsExisting(intervals, startMs, startMs+slotMs)
+		results[i] = recurringResult{Date: d, Available: available}
 		if !available {
 			allAvailable = false
 		}
 	}
 
-	type checkRecurringResponse struct {
-		Dates      []recurringResult `json:"dates"`
-		Suggestion *time.Time        `json:"suggestion"`
+	suggestions := RecurringSuggestions{
+		SameDay:           []time.Time{},
+		OtherDaysSameHour: []time.Time{},
+		OtherDaysAnyHour:  []time.Time{},
+	}
+	if !allAvailable {
+		suggestions = buildRecurringSuggestions(parsedTime, occurrences, profile, intervals, slotMs)
 	}
 
-	var suggestion *time.Time
-	if !allAvailable {
-		suggestion, err = findSuggestion(c.Request.Context(), h.repo, parsedTime, occurrences, profile, businessID, professionalID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, response.Error(http.StatusInternalServerError, "Error al buscar sugerencia", err))
-			return
-		}
+	type checkRecurringResponse struct {
+		Dates       []recurringResult    `json:"dates"`
+		Suggestions RecurringSuggestions `json:"suggestions"`
 	}
 
 	c.JSON(http.StatusOK, response.Success("Recurrencia verificada", &checkRecurringResponse{
-		Dates:      results,
-		Suggestion: suggestion,
+		Dates:       results,
+		Suggestions: suggestions,
 	}))
 }
 
