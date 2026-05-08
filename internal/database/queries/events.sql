@@ -714,19 +714,20 @@ WHERE
   AND e.id = $2
   AND e.deleted_at IS NULL;
 
--- name: CheckRecurringEvents :many
+-- name: GetEventsInHorizon :many
 SELECT
-  id,
-  business_id,
-  professional_id,
-  start_date
+  start_date,
+  end_date
 FROM
   events
 WHERE
   business_id = $1
   AND professional_id = $2
-  AND start_date >= $3
-  AND start_date < ($3 + ($4 || ' days')::interval);
+  AND start_date < sqlc.arg ('horizon_end')
+  AND end_date > sqlc.arg ('horizon_start')
+  AND deleted_at IS NULL
+ORDER BY
+  start_date;
 
 -- name: UpdateStatus :execrows
 UPDATE events
